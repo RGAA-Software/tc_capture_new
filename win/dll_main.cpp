@@ -3,7 +3,7 @@
 //
 
 #include "easyhook/easyhook.h"
-#include "inject_params.h"
+#include "tc_capture/inject_params.h"
 #include "tc_common/log.h"
 
 //#ifdef CAPTURETEX_EXPORTS

@@ -4,13 +4,7 @@
 
 #pragma comment(lib, "Winmm.lib")
 
-WCHAR fileName[] = L"loopback-capture.wav";
-HMMIO hFile = nullptr;
-
-// REFERENCE_TIME time units per second and per millisecond
 #define REFTIMES_PER_SEC  10000000
-#define REFTIMES_PER_MILLISEC  10000
-
 #define EXIT_ON_ERROR(hres)  \
                   if (FAILED(hres)) { goto Exit; }
 #define SAFE_RELEASE(punk)  \
@@ -22,16 +16,6 @@ const IID IID_IMMDeviceEnumerator = __uuidof(IMMDeviceEnumerator);
 const IID IID_IAudioClient = __uuidof(IAudioClient);
 const IID IID_IAudioCaptureClient = __uuidof(IAudioCaptureClient);
 
-//class MyAudioSink
-//{
-//public:
-//	HRESULT CopyData(BYTE* pData, UINT32 NumFrames, BOOL* pDone, WAVEFORMATEX* pwfx, HMMIO hFile);
-//};
-//
-//HRESULT WriteWaveHeader(HMMIO hFile, LPCWAVEFORMATEX pwfx, MMCKINFO* pckRIFF, MMCKINFO* pckData);
-//HRESULT FinishWaveFile(HMMIO hFile, MMCKINFO* pckRIFF, MMCKINFO* pckData);
-//HRESULT RecordAudioStream(MyAudioSink* pMySink);
-
 namespace tc
 {
 
@@ -39,12 +23,8 @@ namespace tc
 		return std::make_shared<WASAPIAudioCapture>();
 	}
 
-	WASAPIAudioCapture::WASAPIAudioCapture() {
-
-	}
-
-	WASAPIAudioCapture::~WASAPIAudioCapture() { 
-	}
+	WASAPIAudioCapture::WASAPIAudioCapture() = default;
+	WASAPIAudioCapture::~WASAPIAudioCapture() = default;
 
 	int WASAPIAudioCapture::Prepare() {
 		HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
@@ -85,9 +65,6 @@ namespace tc
             nullptr, (void**)&pAudioClient);
         EXIT_ON_ERROR(hr)
 
-        //hr = pAudioClient->GetMixFormat(&pwfx);
-        //EXIT_ON_ERROR(hr)
-
         WAVEFORMATEX waveFormat;
         waveFormat.wFormatTag = WAVE_FORMAT_PCM;
         waveFormat.nChannels = 2;
@@ -103,7 +80,6 @@ namespace tc
 
         pwfx = &waveFormat;
 
-   
         hr = pAudioClient->Initialize(
             AUDCLNT_SHAREMODE_SHARED,
             AUDCLNT_STREAMFLAGS_LOOPBACK,
@@ -142,14 +118,12 @@ namespace tc
             //Sleep(hnsActualDuration / REFTIMES_PER_MILLISEC / 2);
      
             Sleep(16);
-            //std::cout << "------- duration : " << (hnsActualDuration / REFTIMES_PER_MILLISEC / 2) << std::endl;
 
             hr = pCaptureClient->GetNextPacketSize(&packetLength);
             EXIT_ON_ERROR(hr)
 
             while (packetLength != 0) {
                 if (exit_) {
-                    std::cout << "Exit inner loop" << std::endl;
                     break;
                 }
 
@@ -178,7 +152,6 @@ namespace tc
                             memcpy((left_data->DataAddr() + i / 4 * 2), ((char*)pData + i), 2);
                             memcpy((right_data->DataAddr() + i / 4 * 2), ((char*)pData + i + 2), 2);
                         }
-                        //LOGI("l : {0:d}, r : {1:d}", left_data->Size(), right_data->Size());
                         split_data_callback_(left_data, right_data);
                     }   
                 }
@@ -198,15 +171,11 @@ namespace tc
         }
 
         hr = pAudioClient->Stop();
-        std::cout << "stopped recording .." << hr << " " << GetLastError() << std::endl;
         EXIT_ON_ERROR(hr)
         if (file_saver_) {
-            std::cout << "finish recoding ..." << std::endl;
             hr = std::static_pointer_cast<WAVAudioFileSaver>(file_saver_)->FinishWaveFile(&ckData, &ckRIFF);
         }
-            
         if (FAILED(hr)) {
-            // FinishWaveFile does it's own logging
             return hr;
         }
 
@@ -228,6 +197,4 @@ namespace tc
         exit_ = TRUE;
         return 0;
 	}
-
-
 }

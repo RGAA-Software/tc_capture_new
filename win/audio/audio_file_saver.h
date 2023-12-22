@@ -35,7 +35,7 @@ namespace tc
 
 	private:
 
-		HMMIO hFile = NULL;
+		HMMIO file_ = nullptr;
 
 	};
 

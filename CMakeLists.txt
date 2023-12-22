@@ -4,11 +4,19 @@ project(tc_capture)
 set(CMAKE_CXX_STANDARD 20)
 
 if (WIN32)
+    ## capture
+    set(CAPTURE_SRCS
+            tc_capture.cpp
+            win/audio/audio_file_saver.cpp
+            win/audio/wasapi_audio_capture.cpp
+    )
+    add_library(tc_capture ${CAPTURE_SRCS})
+    target_link_libraries(tc_capture Winmm)
 
+    ## capture dll
     set(DLL_SRCS
             win/dll_main.cpp
     )
-    add_library(tc_capture tc_capture.cpp)
     add_library(tc_capture_library SHARED ${DLL_SRCS})
     target_link_libraries(tc_capture_library tc_common EasyHook64)
 

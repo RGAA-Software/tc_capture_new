@@ -24,7 +24,7 @@ namespace tc
 
 	class WAVAudioFileSaver : public IAudioFileSaver {
 	public:
-		WAVAudioFileSaver(const std::wstring& path);
+		explicit WAVAudioFileSaver(const std::wstring& path);
 		~WAVAudioFileSaver();
 
 		int WriteData(char* data, uint32_t data_length) override;

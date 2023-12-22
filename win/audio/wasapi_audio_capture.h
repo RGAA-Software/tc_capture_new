@@ -18,7 +18,7 @@ namespace tc
 	class WASAPIAudioCapture : public IAudioCapture {
 	public:
 
-		static AudioCapturePtr Create();
+		static AudioCapturePtr Make();
 
 		WASAPIAudioCapture();
 		~WASAPIAudioCapture();
@@ -30,7 +30,7 @@ namespace tc
 	
 	private:
 
-		BOOL bDone = FALSE;
+		bool exit_ = false;
 	};
 
 }

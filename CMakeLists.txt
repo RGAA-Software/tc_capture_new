@@ -9,6 +9,7 @@ if (WIN32)
             tc_capture.cpp
             win/audio/audio_file_saver.cpp
             win/audio/wasapi_audio_capture.cpp
+            win/audio/audio_capture_factory.cpp
     )
     add_library(tc_capture ${CAPTURE_SRCS})
     target_link_libraries(tc_capture Winmm)
@@ -25,6 +26,8 @@ elseif (APPLE)
 elseif (UNIX)
 
 endif ()
+
+add_subdirectory(win/tests)
 
 #add_custom_command(TARGET tc_capture_library POST_BUILD
 #

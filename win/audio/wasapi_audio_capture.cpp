@@ -5,7 +5,7 @@
 #pragma comment(lib, "Winmm.lib")
 
 WCHAR fileName[] = L"loopback-capture.wav";
-HMMIO hFile = NULL;
+HMMIO hFile = nullptr;
 
 // REFERENCE_TIME time units per second and per millisecond
 #define REFTIMES_PER_SEC  10000000
@@ -14,8 +14,8 @@ HMMIO hFile = NULL;
 #define EXIT_ON_ERROR(hres)  \
                   if (FAILED(hres)) { goto Exit; }
 #define SAFE_RELEASE(punk)  \
-                  if ((punk) != NULL)  \
-                    { (punk)->Release(); (punk) = NULL; }
+                  if ((punk) != nullptr)  \
+                    { (punk)->Release(); (punk) = nullptr; }
 
 const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
 const IID IID_IMMDeviceEnumerator = __uuidof(IMMDeviceEnumerator);
@@ -35,7 +35,7 @@ const IID IID_IAudioCaptureClient = __uuidof(IAudioCaptureClient);
 namespace tc
 {
 
-	AudioCapturePtr WASAPIAudioCapture::Create() {
+	AudioCapturePtr WASAPIAudioCapture::Make() {
 		return std::make_shared<WASAPIAudioCapture>();
 	}
 
@@ -47,7 +47,7 @@ namespace tc
 	}
 
 	int WASAPIAudioCapture::Prepare() {
-		HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+		HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 		return SUCCEEDED(hr) ? 0 : -1;
 	}
 
@@ -57,11 +57,11 @@ namespace tc
         REFERENCE_TIME hnsActualDuration;
         UINT32 bufferFrameCount;
         UINT32 numFramesAvailable;
-        IMMDeviceEnumerator* pEnumerator = NULL;
-        IMMDevice* pDevice = NULL;
-        IAudioClient* pAudioClient = NULL;
-        IAudioCaptureClient* pCaptureClient = NULL;
-        WAVEFORMATEX* pwfx = NULL;
+        IMMDeviceEnumerator* pEnumerator = nullptr;
+        IMMDevice* pDevice = nullptr;
+        IAudioClient* pAudioClient = nullptr;
+        IAudioCaptureClient* pCaptureClient = nullptr;
+        WAVEFORMATEX* pwfx = nullptr;
         UINT32 packetLength = 0;
 
         BYTE* pData;
@@ -71,7 +71,7 @@ namespace tc
         MMCKINFO ckData = { 0 };
 
         hr = CoCreateInstance(
-            CLSID_MMDeviceEnumerator, NULL,
+            CLSID_MMDeviceEnumerator, nullptr,
             CLSCTX_ALL, IID_IMMDeviceEnumerator,
             (void**)&pEnumerator);
         EXIT_ON_ERROR(hr)
@@ -82,7 +82,7 @@ namespace tc
 
         hr = pDevice->Activate(
             IID_IAudioClient, CLSCTX_ALL,
-            NULL, (void**)&pAudioClient);
+            nullptr, (void**)&pAudioClient);
         EXIT_ON_ERROR(hr)
 
         //hr = pAudioClient->GetMixFormat(&pwfx);
@@ -97,8 +97,8 @@ namespace tc
         waveFormat.nBlockAlign = 4;
         waveFormat.cbSize = 0;
 
-        if (format_callback) {
-            format_callback(waveFormat.nSamplesPerSec, waveFormat.nChannels, waveFormat.wBitsPerSample);
+        if (format_callback_) {
+            format_callback_(waveFormat.nSamplesPerSec, waveFormat.nChannels, waveFormat.wBitsPerSample);
         }
 
         pwfx = &waveFormat;
@@ -110,7 +110,7 @@ namespace tc
             hnsRequestedDuration,
             0,
             pwfx,
-            NULL);
+            nullptr);
         EXIT_ON_ERROR(hr)
 
         // Get the size of the allocated buffer.
@@ -121,8 +121,8 @@ namespace tc
             IID_IAudioCaptureClient,
             (void**)&pCaptureClient);
         EXIT_ON_ERROR(hr)
-        if (file_saver) {
-            hr = std::static_pointer_cast<WAVAudioFileSaver>(file_saver)->WriteWaveHeader(pwfx, &ckRIFF, &ckData);
+        if (file_saver_) {
+            hr = std::static_pointer_cast<WAVAudioFileSaver>(file_saver_)->WriteWaveHeader(pwfx, &ckRIFF, &ckData);
         }
             
         if (FAILED(hr)) {
@@ -137,8 +137,7 @@ namespace tc
         EXIT_ON_ERROR(hr)
 
         // Each loop fills about half of the shared buffer.
-        while (bDone == FALSE)
-        {
+        while (!exit_) {
             // Sleep for half the buffer duration.
             //Sleep(hnsActualDuration / REFTIMES_PER_MILLISEC / 2);
      
@@ -148,54 +147,44 @@ namespace tc
             hr = pCaptureClient->GetNextPacketSize(&packetLength);
             EXIT_ON_ERROR(hr)
 
-            while (packetLength != 0)
-            {
-                if (bDone == TRUE) {
+            while (packetLength != 0) {
+                if (exit_) {
                     std::cout << "Exit inner loop" << std::endl;
                     break;
                 }
-                //Sleep(5);
 
-                auto begin = TimeExt::GetCurrentTimestamp();
                 // Get the available data in the shared buffer.
                 hr = pCaptureClient->GetBuffer(
                     &pData,
                     &numFramesAvailable,
-                    &flags, NULL, NULL);
+                    &flags, nullptr, nullptr);
                 EXIT_ON_ERROR(hr)
 
-                if (flags & AUDCLNT_BUFFERFLAGS_SILENT)
-                {
-                    pData = NULL;  // Tell CopyData to write silence.
+                if (flags & AUDCLNT_BUFFERFLAGS_SILENT) {
+                    pData = nullptr;  // Tell CopyData to write silence.
                 }
 
                 LONG bytes_to_write = numFramesAvailable * pwfx->nBlockAlign;
                 if (pData && bytes_to_write > 0) {
-                    if (data_callback) {
+                    if (data_callback_) {
                         auto data = Data::Make((char*)pData, bytes_to_write);
-                        data_callback(data);
+                        data_callback_(data);
                     }
 
-                    if (split_data_callback) {
+                    if (split_data_callback_) {
                         auto left_data = Data::Make(nullptr, bytes_to_write / 2);
                         auto right_data = Data::Make(nullptr, bytes_to_write / 2);
-                        //for (int i = 0; i < bytes_to_write; i += 8) {
-                        //    memcpy((left_data->DataAddr() + i / 8 * 4), ((char*)pData + i), 4);
-                        //    memcpy((right_data->DataAddr() + i / 8 * 4), ((char*)pData + i + 4), 4);
-                        //}
-
                         for (int i = 0; i < bytes_to_write; i += 4) {
                             memcpy((left_data->DataAddr() + i / 4 * 2), ((char*)pData + i), 2);
                             memcpy((right_data->DataAddr() + i / 4 * 2), ((char*)pData + i + 2), 2);
                         }
-
                         //LOGI("l : {0:d}, r : {1:d}", left_data->Size(), right_data->Size());
-                        split_data_callback(std::move(left_data), std::move(right_data));
+                        split_data_callback_(left_data, right_data);
                     }   
                 }
 
-                if (file_saver && pData && bytes_to_write > 0) {
-                    file_saver->WriteData((char*)pData, bytes_to_write);
+                if (file_saver_ && pData && bytes_to_write > 0) {
+                    file_saver_->WriteData((char*)pData, bytes_to_write);
                 }
                     
                 EXIT_ON_ERROR(hr)
@@ -205,24 +194,15 @@ namespace tc
 
                 hr = pCaptureClient->GetNextPacketSize(&packetLength);
                 EXIT_ON_ERROR(hr)
-
-                auto end = TimeExt::GetCurrentTimestamp();
-                //std::cout << "time : " << (end - begin) << std::endl;
             }
-
-            //static int cnt = 0;
-            //std::cout << "cnt : " << cnt << std::endl;
-            //if (cnt++ > 10000) {
-            //    break;
-            //}
         }
 
-        hr = pAudioClient->Stop();  // Stop recording.
+        hr = pAudioClient->Stop();
         std::cout << "stopped recording .." << hr << " " << GetLastError() << std::endl;
         EXIT_ON_ERROR(hr)
-        if (file_saver) {
+        if (file_saver_) {
             std::cout << "finish recoding ..." << std::endl;
-            hr = std::static_pointer_cast<WAVAudioFileSaver>(file_saver)->FinishWaveFile(&ckData, &ckRIFF);
+            hr = std::static_pointer_cast<WAVAudioFileSaver>(file_saver_)->FinishWaveFile(&ckData, &ckRIFF);
         }
             
         if (FAILED(hr)) {
@@ -245,7 +225,7 @@ namespace tc
 	}
 
 	int WASAPIAudioCapture::Stop() {
-        bDone = TRUE;
+        exit_ = TRUE;
         return 0;
 	}
 

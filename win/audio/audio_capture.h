@@ -8,8 +8,8 @@
 
 typedef std::function<void()> OnPrepareCallback;
 typedef std::function<void(int samples, int channels, int bits)> OnFormatCallback;
-typedef std::function<void(tc::DataPtr data)> OnDataCallback;
-typedef std::function<void(tc::DataPtr left, tc::DataPtr right)> OnSplitDataCallback;
+typedef std::function<void(const tc::DataPtr& data)> OnDataCallback;
+typedef std::function<void(const tc::DataPtr& left, const tc::DataPtr& right)> OnSplitDataCallback;
 typedef std::function<void()> OnPauseCallback;
 typedef std::function<void()> OnStopCallback;
 
@@ -25,43 +25,43 @@ namespace tc
 		virtual int Stop() = 0;
 
 		void RegisterPrepareCallback(const OnPrepareCallback& cbk) {
-			prepare_callback = cbk;
+            prepare_callback_ = cbk;
 		}
 
 		void RegisterFormatCallback(const OnFormatCallback& cbk) {
-			format_callback = cbk;
+            format_callback_ = cbk;
 		}
 
 		void RegisterDataCallback(const OnDataCallback& cbk) {
-			data_callback = cbk;
+            data_callback_ = cbk;
 		}
 
 		void RegisterSplitDataCallback(const OnSplitDataCallback& cbk) {
-			split_data_callback = cbk;
+            split_data_callback_ = cbk;
 		}
 
 		void RegisterPauseCallback(const OnPauseCallback& cbk) {
-			pause_callback = cbk;
+            pause_callback_ = cbk;
 		}
 
 		void RegisterStopCallback(const OnStopCallback& cbk) {
-			stop_callback = cbk;
+            stop_callback_ = cbk;
 		}
 
 		void SetAudioFileSaver(AudioFileSaverPtr saver) {
-			file_saver = saver;
+            file_saver_ = saver;
 		}
 
 	protected:
 
-		OnPrepareCallback prepare_callback{ nullptr };
-		OnFormatCallback format_callback{ nullptr };
-		OnDataCallback data_callback{ nullptr };
-		OnSplitDataCallback split_data_callback{ nullptr };
-		OnPauseCallback pause_callback{ nullptr };
-		OnStopCallback stop_callback{ nullptr };
+		OnPrepareCallback prepare_callback_{nullptr };
+		OnFormatCallback format_callback_{nullptr };
+		OnDataCallback data_callback_{nullptr };
+		OnSplitDataCallback split_data_callback_{nullptr };
+		OnPauseCallback pause_callback_{nullptr };
+		OnStopCallback stop_callback_{nullptr };
 
-		AudioFileSaverPtr file_saver{ nullptr };
+		AudioFileSaverPtr file_saver_{nullptr };
 	};
 
 	typedef std::shared_ptr<IAudioCapture> AudioCapturePtr;

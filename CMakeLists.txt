@@ -3,6 +3,15 @@ project(tc_capture)
 
 set(CMAKE_CXX_STANDARD 20)
 
+add_definitions(-DUNICODE -D_UNICODE -DMT)
+add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/win)
+
+find_package(libyuv CONFIG REQUIRED)
+
 if (WIN32)
     ## capture
     set(CAPTURE_SRCS
@@ -17,9 +26,21 @@ if (WIN32)
     ## capture dll
     set(DLL_SRCS
             win/dll_main.cpp
+
+            ## hk_video
+            win/hk_video/capture_dxgi.cpp
+            win/hk_video/capture_dxgi_d3d11.cpp
+            win/hk_video/capture_dxgi_d3d11on12.cpp
+            win/hk_video/capturetex.cpp
+            win/hk_video/d3d_utils.cpp
+            win/hk_video/hook_dxgi.cpp
+            win/hk_video/HookEvent.cpp
+            win/hk_video/SharedTexture.cpp
+
+            ## hk_audio
     )
     add_library(tc_capture_library SHARED ${DLL_SRCS})
-    target_link_libraries(tc_capture_library tc_common EasyHook64)
+    target_link_libraries(tc_capture_library tc_common EasyHook64 yuv)
 
 elseif (APPLE)
 

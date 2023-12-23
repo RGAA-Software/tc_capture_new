@@ -8,6 +8,8 @@
 #include <memory>
 #include <string>
 
+#include <Poco/NamedEvent.h>
+
 namespace tc
 {
 
@@ -31,11 +33,8 @@ namespace tc
 
     private:
 
-        std::shared_ptr<IpcShm> ipc_shm_host_to_client_ = nullptr;
-        std::shared_ptr<IpcMsgQueue> ipc_mq_host_to_client_ = nullptr;
-
-        std::shared_ptr<IpcShm> ipc_shm_client_to_host_ = nullptr;
-        std::shared_ptr<IpcMsgQueue> ipc_mq_client_to_host_ = nullptr;
+        std::shared_ptr<Poco::NamedEvent> client_to_host_event_ = nullptr;
+        std::shared_ptr<Poco::NamedEvent> host_to_client_event_ = nullptr;
 
     };
 

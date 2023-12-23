@@ -11,6 +11,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/win)
 
 find_package(libyuv CONFIG REQUIRED)
+find_package(Poco COMPONENTS Net XML Zip Data REQUIRED)
 
 if (WIN32)
     ## capture
@@ -46,7 +47,7 @@ if (WIN32)
             ## hk_audio
     )
     add_library(tc_capture_library SHARED ${DLL_SRCS})
-    target_link_libraries(tc_capture_library tc_common EasyHook64 yuv)
+    target_link_libraries(tc_capture_library tc_common EasyHook64 yuv Poco::Net Poco::XML Poco::Zip Poco::Data)
 
 elseif (APPLE)
 

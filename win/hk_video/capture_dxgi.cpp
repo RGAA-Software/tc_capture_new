@@ -46,7 +46,7 @@ bool CaptureDxgi::Setup(IDXGISwapChain *swap) noexcept {
         swap_ = swap;
         capture_ = tc_capture_d3d11on12::Capture;
         free_ = tc_capture_d3d11on12::Free;
-        LOGI("%s: USE ID3D12Device\n", __func__);
+        LOGI("{}: USE ID3D12Device", __func__);
         return true;
     }
 

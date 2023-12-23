@@ -8,7 +8,7 @@
 #include "easyhook/easyhook.h"
 #include "tc_capture/inject_params.h"
 #include "tc_common/log.h"
-#include "hk_video/capturetex.h"
+#include "hk_video/capture_texture.h"
 #include "hk_video/hook_event.h"
 
 //#ifdef CAPTURETEX_EXPORTS
@@ -30,7 +30,8 @@ extern "C" CAPTURETEX_API void __stdcall NativeInjectionEntryPoint(REMOTE_ENTRY_
         memcpy(&inject_data, remote_info->UserData, remote_info->UserDataSize);
     }
 
-    Logger::InitLog("tc_capture_inject.log", true);
+    auto log_path = std::string(inject_data.host_exe_folder) + "/tc_capture_inject.log";
+    Logger::InitLog(log_path, true);
     LOGI("----------------------------------------------------");
     LOGI("Inject host : {}", inject_data.host_exe_folder);
 

@@ -1,6 +1,6 @@
 #include "framework.h"
 #include "capture_dxgi_d3d11.h"
-#include "capturetex.h"
+#include "capture_texture.h"
 #include "d3d_utils.h"
 #include "hk_utils/time_measure.hpp"
 #include "shared_texture.h"
@@ -83,8 +83,7 @@ namespace tc_capture_d3d11
         HRESULT Initialize(IDXGISwapChain *swap) {
             HRESULT hr = swap->GetDevice(__uuidof(ID3D11Device), reinterpret_cast<void **>(&device_));
             if (FAILED(hr)) {
-                ATLTRACE2(atlTraceException, 0,
-                          "%s: Failed to get device from swap, #0x%08X\n", __func__, hr);
+                ATLTRACE2(atlTraceException, 0, "%s: Failed to get device from swap, #0x%08X\n", __func__, hr);
                 return hr;
             }
 
@@ -116,7 +115,7 @@ namespace tc_capture_d3d11
 
     static uint64_t g_frame_index = 0;
 
-    void Capture(void *swap, void *backbuffer) {
+    void Capture(void *swap, void* back_buffer) {
         bool should_update = false;
         if (!initialized_) {
             HRESULT hr = Initialize(static_cast<IDXGISwapChain *>(swap));
@@ -127,7 +126,7 @@ namespace tc_capture_d3d11
             should_update = true;
         }
 
-        auto dxgi_backbuffer = static_cast<IDXGIResource *>(backbuffer);
+        auto dxgi_backbuffer = static_cast<IDXGIResource *>(back_buffer);
         CComQIPtr<ID3D11Texture2D> acquired_texture(dxgi_backbuffer);
         if (!acquired_texture) {
             ATLTRACE2(atlTraceException, 0, "!QueryInterface(ID3D11Texture2D)\n");
@@ -221,35 +220,6 @@ namespace tc_capture_d3d11
 
         }
 #endif
-
-        //if (should_update) {
-        //	SharedVideoFrameInfo* svfi = g_capture_tex.GetSharedVideoFrameInfo();
-        //	svfi->timestamp = tick.QuadPart;
-        //	svfi->type = VideoFrameType::kTexture;
-        //	svfi->width = desc.Width;
-        //	svfi->height = desc.Height;
-        //	svfi->format = desc.Format;
-        //	svfi->window = reinterpret_cast<std::uint64_t>(window_);
-        //}
-
-        //VideoFrameStats stats = {};
-        //stats.timestamp = tick.QuadPart;
-        //stats.elapsed.preprocess = tc::TimeMeasure::Delta(tick.QuadPart);
-
-        //if (!g_capture_tex.CreateSharedVideoTextureFrames()) {
-        //	return;
-        //}
-
-        //if (!g_capture_tex.ShareTexture(new_texture, device_, context_)) {
-        //	return;
-        //}
-        //stats.elapsed.total = tc::TimeMeasure::Delta(stats.timestamp);
-
-        //auto frame = g_capture_tex.GetAvailablePackedVideoTextureFrame();
-        //frame->stats.timestamp = stats.timestamp;
-        //frame->stats.elapsed.preprocess = stats.elapsed.preprocess;
-        //frame->stats.elapsed.total = stats.elapsed.total;
-        //g_capture_tex.SetSharedFrameReadyEvent();
     }
 
     void FreeResource() {

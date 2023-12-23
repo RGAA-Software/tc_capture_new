@@ -1,7 +1,7 @@
 #include "framework.h"
 #include "capture_dxgi_d3d11on12.h"
 #include <d3d11on12.h>
-#include "capturetex.h"
+#include "capture_texture.h"
 #include "d3d_utils.h"
 #include "tc_common/log.h"
 #include "hk_utils/time_measure.hpp"
@@ -156,7 +156,7 @@ namespace tc_capture_d3d11on12
 
     static uint64_t g_frame_index = 0;
 
-    void Capture(void *swap, void *) {
+    void Capture(void *swap, void*) {
         bool should_update = false;
         if (!initialized_) {
             HRESULT hr = Initialize(static_cast<IDXGISwapChain *>(swap));
@@ -172,30 +172,29 @@ namespace tc_capture_d3d11on12
 
         size_t index = current_backbuffer_;
         if (is_dxgi_1_4_) {
-            IDXGISwapChain3 *swap3 = reinterpret_cast<IDXGISwapChain3 *>(swap);
+            auto swap3 = reinterpret_cast<IDXGISwapChain3*>(swap);
             index = swap3->GetCurrentBackBufferIndex();
             if (++current_backbuffer_ >= backbuffer_count_) {
                 index = 0;
             }
         }
 
-        ID3D11Resource *backbuffer = backbuffer11_[index];
-        device11on12_->AcquireWrappedResources(&backbuffer, 1);
+        ID3D11Resource* back_buffer = backbuffer11_[index];
+        device11on12_->AcquireWrappedResources(&back_buffer, 1);
 
         D3D11_TEXTURE2D_DESC desc;
         CComPtr<ID3D11Texture2D> new_texture;
-        HRESULT hr = CaptureTexture(device11_, context11_, backbuffer, desc, new_texture, shared_texture);
+        HRESULT hr = CaptureTexture(device11_, context11_, back_buffer, desc, new_texture, shared_texture);
         //LOGI("After capture Texture in d3d12.");
-        device11on12_->ReleaseWrappedResources(&backbuffer, 1);
+        device11on12_->ReleaseWrappedResources(&back_buffer, 1);
         context11_->Flush();
         if (FAILED(hr)) {
-            LOGI("!CaptureTexture(), #0x%08X\n", hr);
+            LOGE("!CaptureTexture(), {}", (uint64_t )hr);
             return;
         }
 
         uint64_t handle = shared_texture->GetSharedHandle();
-        LOGI("FROM D3D12 : shared handle : {}, format : {}, frame_index: {}", (uint64_t) handle, (int) desc.Format,
-             g_frame_index);
+        LOGI("FROM D3D12 : shared handle : {}, format : {}, frame_index: {}", (uint64_t) handle, (int) desc.Format, g_frame_index);
 //		auto ipc_message = IPCFrameMessage::MakeEmptyMessage();
 //		ipc_message->type = IPCMessageType::kSharedTextureHandle;
 //		ipc_message->sender = IPCMessageSender::kSenderClient;

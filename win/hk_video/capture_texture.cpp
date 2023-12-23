@@ -2,7 +2,7 @@
 #include <crtdefs.h>
 #include "framework.h"
 
-#include "capturetex.h"
+#include "capture_texture.h"
 
 #include <d3d11.h>
 #include <format>
@@ -83,7 +83,7 @@ void CaptureTex::Free() noexcept {
     }
 
     FreeSharedVideoTextureFrames();
-    FreeSharedVideoFrameInfo();
+    //FreeSharedVideoFrameInfo();
 
     encoder_started_event_.Close();
     stop_event_.Close();
@@ -217,85 +217,85 @@ int CaptureTex::HookThread() noexcept {
     return -1;
 }
 
-bool CaptureTex::ShareTexture(ID3D11Texture2D *new_texture,
-                              ID3D11Device *device,
-                              ID3D11DeviceContext *context) noexcept {
-    if (nullptr == new_texture || nullptr == device || nullptr == context) {
-        return false;
-    }
-
-    D3D11_TEXTURE2D_DESC new_texture_desc;
-    new_texture->GetDesc(&new_texture_desc);
-
-    bool should_share_texture = false;
-    D3D11_TEXTURE2D_DESC shared_texture_desc;
-    size_t index = frame_count_ % kNumberOfSharedFrames;
-    if (shared_textures_[index].texture) {
-        shared_textures_[index].texture->GetDesc(&shared_texture_desc);
-        if (shared_texture_desc.Width != new_texture_desc.Width ||
-            shared_texture_desc.Height != new_texture_desc.Height) {
-            new_texture->GetDesc(&shared_texture_desc);
-            should_share_texture = true;
-        }
-    } else {
-        new_texture->GetDesc(&shared_texture_desc);
-        should_share_texture = true;
-    }
-
-    if (should_share_texture) {
-        shared_texture_desc.Usage = D3D11_USAGE_DEFAULT;
-        shared_texture_desc.MiscFlags |=
-                D3D11_RESOURCE_MISC_SHARED_NTHANDLE | D3D11_RESOURCE_MISC_SHARED;
-        CComPtr<ID3D11Texture2D> shared_texture;
-        HRESULT hr =
-                device->CreateTexture2D(&shared_texture_desc, NULL, &shared_texture);
-        if (FAILED(hr)) {
-            ATLTRACE2(atlTraceException, 0,
-                      "!CreateTexture2D(D3D11_RESOURCE_MISC_SHARED_NTHANDLE) [%d], "
-                      "#0x%08X, #0x%08X\n",
-                      index, hr, device->GetDeviceRemovedReason());
-            return false;
-        }
-
-        CComPtr<IDXGIResource1> shared_resource;
-        hr = shared_texture->QueryInterface(IID_PPV_ARGS(&shared_resource));
-        if (FAILED(hr)) {
-            ATLTRACE2(atlTraceException, 0,
-                      "!QueryInterface(IDXGIResource1) [%d], #0x%08X\n", index, hr);
-            return false;
-        }
-
-        auto instance_id = GetCurrentProcessId();
-        std::wstring shared_handle_name =
-                std::format(kSharedTextureHandleNameFormat, instance_id, texture_id_);
-        ATLTRACE2(atlTraceUtil, 0, L"shared_handle_name %s\n",
-                  shared_handle_name.data());
-
-        HANDLE shared_handle = nullptr;
-        hr = shared_resource->CreateSharedHandle(
-                NULL, DXGI_SHARED_RESOURCE_READ | DXGI_SHARED_RESOURCE_WRITE,
-                shared_handle_name.data(), &shared_handle);
-        if (FAILED(hr)) {
-            ATLTRACE2(atlTraceException, 0, "!CreateSharedHandle(), #0x%08X\n", hr);
-            return false;
-        }
-
-        if (shared_textures_[index].handle) {
-            CloseHandle(shared_textures_[index].handle);
-        }
-        shared_textures_[index].handle = shared_handle;
-        shared_textures_[index].texture = shared_texture;
-
-        auto frame = GetAvailablePackedVideoTextureFrame();
-        frame->instance_id = instance_id;
-        frame->texture_id = texture_id_++;
-        ATLTRACE2(atlTraceUtil, 0,
-                  L"Update SharedHandle[%d] shared_handle_name: %s\n", index,
-                  shared_handle_name.data());
-    }
-    context->CopyResource(shared_textures_[index].texture, new_texture);
-    return true;
-}
+//bool CaptureTex::ShareTexture(ID3D11Texture2D *new_texture,
+//                              ID3D11Device *device,
+//                              ID3D11DeviceContext *context) noexcept {
+//    if (nullptr == new_texture || nullptr == device || nullptr == context) {
+//        return false;
+//    }
+//
+//    D3D11_TEXTURE2D_DESC new_texture_desc;
+//    new_texture->GetDesc(&new_texture_desc);
+//
+//    bool should_share_texture = false;
+//    D3D11_TEXTURE2D_DESC shared_texture_desc;
+//    size_t index = frame_count_ % kNumberOfSharedFrames;
+//    if (shared_textures_[index].texture) {
+//        shared_textures_[index].texture->GetDesc(&shared_texture_desc);
+//        if (shared_texture_desc.Width != new_texture_desc.Width ||
+//            shared_texture_desc.Height != new_texture_desc.Height) {
+//            new_texture->GetDesc(&shared_texture_desc);
+//            should_share_texture = true;
+//        }
+//    } else {
+//        new_texture->GetDesc(&shared_texture_desc);
+//        should_share_texture = true;
+//    }
+//
+//    if (should_share_texture) {
+//        shared_texture_desc.Usage = D3D11_USAGE_DEFAULT;
+//        shared_texture_desc.MiscFlags |=
+//                D3D11_RESOURCE_MISC_SHARED_NTHANDLE | D3D11_RESOURCE_MISC_SHARED;
+//        CComPtr<ID3D11Texture2D> shared_texture;
+//        HRESULT hr =
+//                device->CreateTexture2D(&shared_texture_desc, NULL, &shared_texture);
+//        if (FAILED(hr)) {
+//            ATLTRACE2(atlTraceException, 0,
+//                      "!CreateTexture2D(D3D11_RESOURCE_MISC_SHARED_NTHANDLE) [%d], "
+//                      "#0x%08X, #0x%08X\n",
+//                      index, hr, device->GetDeviceRemovedReason());
+//            return false;
+//        }
+//
+//        CComPtr<IDXGIResource1> shared_resource;
+//        hr = shared_texture->QueryInterface(IID_PPV_ARGS(&shared_resource));
+//        if (FAILED(hr)) {
+//            ATLTRACE2(atlTraceException, 0,
+//                      "!QueryInterface(IDXGIResource1) [%d], #0x%08X\n", index, hr);
+//            return false;
+//        }
+//
+//        auto instance_id = GetCurrentProcessId();
+//        std::wstring shared_handle_name =
+//                std::format(kSharedTextureHandleNameFormat, instance_id, texture_id_);
+//        ATLTRACE2(atlTraceUtil, 0, L"shared_handle_name %s\n",
+//                  shared_handle_name.data());
+//
+//        HANDLE shared_handle = nullptr;
+//        hr = shared_resource->CreateSharedHandle(
+//                NULL, DXGI_SHARED_RESOURCE_READ | DXGI_SHARED_RESOURCE_WRITE,
+//                shared_handle_name.data(), &shared_handle);
+//        if (FAILED(hr)) {
+//            ATLTRACE2(atlTraceException, 0, "!CreateSharedHandle(), #0x%08X\n", hr);
+//            return false;
+//        }
+//
+//        if (shared_textures_[index].handle) {
+//            CloseHandle(shared_textures_[index].handle);
+//        }
+//        shared_textures_[index].handle = shared_handle;
+//        shared_textures_[index].texture = shared_texture;
+//
+//        auto frame = GetAvailablePackedVideoTextureFrame();
+//        frame->instance_id = instance_id;
+//        frame->texture_id = texture_id_++;
+//        ATLTRACE2(atlTraceUtil, 0,
+//                  L"Update SharedHandle[%d] shared_handle_name: %s\n", index,
+//                  shared_handle_name.data());
+//    }
+//    context->CopyResource(shared_textures_[index].texture, new_texture);
+//    return true;
+//}
 
 void CaptureTex::FreeSharedTexture() noexcept {
     for (auto &s: shared_textures_) {

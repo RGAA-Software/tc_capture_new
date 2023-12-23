@@ -3,7 +3,7 @@
 #include "hook_dxgi.h"
 
 #include "capture_dxgi.h"
-#include "capturetex.h"
+#include "capture_texture.h"
 
 #include "hk_utils/memory.h"
 #include "hk_utils/time_measure.hpp"
@@ -26,25 +26,26 @@ bool HookD3D11::resize_buffers_called_ = false;
 bool HookD3D11::Hook() noexcept {
     HMODULE dxgi_module = GetModuleHandle(_T("dxgi.dll"));
     if (nullptr == dxgi_module) {
-        LOGI("GetModuleHandle failed...");
+        LOGE("HookD3D11 GetModuleHandle dxgi.dll failed.");
         return false;
     }
 
-    bool hooked_11 = false;
     HMODULE d3d11_module = GetModuleHandle(_T("d3d11.dll"));
-    if (nullptr != d3d11_module) {
-        hooked_11 = HookD3D(d3d11_module);
-        LOGI("Hook d3d11_module " + std::to_string(hooked_11));
+    if (nullptr == d3d11_module) {
+        LOGE("HookD3D11 GetModuleHandle d3d11.dll failed.");
+        return false;
     }
 
+    bool hooked_11 = HookD3D(d3d11_module);
+
     bool hooked_12 = false;
-    //if (nullptr != GetModuleHandle(_T("d3d12.dll"))) {
-    //	loaded_d3d11_module_ = LoadLibrary(_T("d3d11.dll"));
-    //	if (nullptr != loaded_d3d11_module_) {
-    //		hooked_12 = HookD3D(loaded_d3d11_module_);
-    //	}
-    //	LOGI("Hook d3d12_module " + std::to_string(hooked_12));
-    //}
+//    if (nullptr != GetModuleHandle(_T("d3d12.dll"))) {
+//    	loaded_d3d11_module_ = LoadLibrary(_T("d3d11.dll"));
+//    	if (nullptr != loaded_d3d11_module_) {
+//    		hooked_12 = HookD3D(loaded_d3d11_module_);
+//    	}
+//    	LOGI("Hook d3d12_module " + std::to_string(hooked_12));
+//    }
 
     return hooked_12 || hooked_11;
 }
@@ -60,10 +61,9 @@ bool HookD3D11::HookD3D(HMODULE d3d11_module) noexcept {
     assert(nullptr != d3d11_module);
 
     const auto d3d11_create_device_and_swap_chain =
-            reinterpret_cast<PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN>(GetProcAddress(d3d11_module,
-                                                                                    "D3D11CreateDeviceAndSwapChain"));
+            reinterpret_cast<PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN>(GetProcAddress(d3d11_module, "D3D11CreateDeviceAndSwapChain"));
     if (nullptr == d3d11_create_device_and_swap_chain) {
-        LOGI("No D3D11CreateDeviceAndSwapChain when hook");
+        LOGE("No D3D11CreateDeviceAndSwapChain when hook.");
         return false;
     }
 

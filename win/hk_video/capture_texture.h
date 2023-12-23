@@ -28,7 +28,7 @@ public:
 
     bool AttemptToHook() noexcept;
 
-    const SECURITY_ATTRIBUTES *GetSA() const noexcept {
+    [[nodiscard]] const SECURITY_ATTRIBUTES *GetSA() const noexcept {
         assert(nullptr != sa_.lpSecurityDescriptor);
         return &sa_;
     }
@@ -38,7 +38,7 @@ public:
         return &sa_;
     }
 
-    HANDLE GetStopEvent() const noexcept {
+    [[nodiscard]] HANDLE GetStopEvent() const noexcept {
         assert(nullptr != stop_event_);
         return stop_event_;
     }
@@ -61,48 +61,41 @@ public:
         return true;
     }
 
-    SharedVideoFrameInfo *GetSharedVideoFrameInfo() const noexcept {
-        assert(nullptr != shared_frame_info_);
-        return shared_frame_info_;
-    }
+//    SharedVideoFrameInfo *GetSharedVideoFrameInfo() const noexcept {
+//        assert(nullptr != shared_frame_info_);
+//        return shared_frame_info_;
+//    }
 
-    void FreeSharedVideoFrameInfo() noexcept { shared_frame_info_.Unmap(); }
+    //void FreeSharedVideoFrameInfo() noexcept { shared_frame_info_.Unmap(); }
 
+//    PackedVideoTextureFrame *GetPackedVideoTextureFrame(size_t index) const noexcept {
+//        assert(index < kNumberOfSharedFrames);
+//        auto shared_frame = static_cast<SharedVideoTextureFrames *>(shared_frames_.GetData());
+//        return static_cast<PackedVideoTextureFrame *>(shared_frame->frames) + index;
+//    }
 
-    PackedVideoTextureFrame *GetPackedVideoTextureFrame(
-            size_t index) const noexcept {
-        assert(index < kNumberOfSharedFrames);
-        auto shared_frame =
-                static_cast<SharedVideoTextureFrames *>(shared_frames_.GetData());
-        return static_cast<PackedVideoTextureFrame *>(shared_frame->frames) + index;
-    }
+//    PackedVideoTextureFrame *GetAvailablePackedVideoTextureFrame() const noexcept {
+//        return GetPackedVideoTextureFrame(frame_count_ % kNumberOfSharedFrames);
+//    }
 
-    PackedVideoTextureFrame *GetAvailablePackedVideoTextureFrame()
-    const noexcept {
-        return GetPackedVideoTextureFrame(frame_count_ % kNumberOfSharedFrames);
-    }
+//    size_t GetFrameCount() const noexcept { return frame_count_; }
 
-    size_t GetFrameCount() const noexcept { return frame_count_; }
-
-    void SetSharedFrameReadyEvent() noexcept {
-        ++frame_count_;
-        SetEvent(shared_frame_ready_event_);
-    }
+//    void SetSharedFrameReadyEvent() noexcept {
+//        ++frame_count_;
+//        SetEvent(shared_frame_ready_event_);
+//    }
 
     void FreeSharedVideoTextureFrames() noexcept {
         shared_frames_.Unmap();
         shared_frame_ready_event_.Close();
     }
 
-    bool ShareTexture(ID3D11Texture2D *new_texture,
-                      ID3D11Device *device,
-                      ID3D11DeviceContext *context) noexcept;
+    // bool ShareTexture(ID3D11Texture2D *new_texture, ID3D11Device *device, ID3D11DeviceContext *context) noexcept;
 
     void FreeSharedTexture() noexcept;
 
 private:
     bool Initialize() noexcept;
-
     int HookThread() noexcept;
 
 private:

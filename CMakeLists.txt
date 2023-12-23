@@ -36,7 +36,7 @@ if (WIN32)
             win/hk_video/capture_dxgi.cpp
             win/hk_video/capture_dxgi_d3d11.cpp
             win/hk_video/capture_dxgi_d3d11on12.cpp
-            win/hk_video/capturetex.cpp
+            win/hk_video/capture_texture.cpp
             win/hk_video/d3d_utils.cpp
             win/hk_video/hook_dxgi.cpp
             win/hk_video/hook_event.cpp

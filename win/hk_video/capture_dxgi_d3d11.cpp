@@ -5,11 +5,15 @@
 #include "hk_utils/time_measure.hpp"
 #include "shared_texture.h"
 
-#include "tc_common/log.h"
 #include <libyuv.h>
 
 #include <d3d11.h>
 #include <fstream>
+
+#include "client_ipc_manager.h"
+#include "capture_message.h"
+#include "tc_common/data.h"
+#include "tc_common/log.h"
 
 using namespace tc;
 
@@ -162,6 +166,12 @@ namespace tc_capture_d3d11
 //		InterCommClient::Instance()->SendBack(IPCFrameMessage::ConvertToData(ipc_message));
         g_frame_index++;
         //LOGI("Hook....{}", g_frame_index);
+
+        CaptureMessage msg{};
+        msg.frame_index_ = g_frame_index;
+        msg.handle_ = handle;
+        auto data = Data::Make((char*)&msg, sizeof(CaptureMessage));
+        ClientIpcManager::Instance()->Send(data);
 
 #if 0
         {

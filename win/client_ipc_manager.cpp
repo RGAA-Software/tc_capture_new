@@ -7,6 +7,8 @@
 #include "tc_common/ipc_shm.h"
 #include "tc_common/ipc_msg_queue.h"
 #include "tc_common/log.h"
+#include "tc_common/data.h"
+#include "tc_common/time_ext.h"
 
 #include <thread>
 
@@ -16,36 +18,105 @@ namespace tc
     ClientIpcManager::ClientIpcManager() = default;
 
     void ClientIpcManager::Init(uint32_t listening_port) {
-
-        auto ipc_shm_host_to_client_name = "ipc_shm_host_to_client_" + std::to_string(listening_port);
+        this->listen_port_ = listening_port;
         auto ipc_shm_client_to_host_name = "ipc_shm_client_to_host_" + std::to_string(listening_port);
 
         auto ipc_event_host_to_client_name = "ipc_event_host_to_client_" + std::to_string(listening_port);
         auto ipc_event_client_to_host_name = "ipc_event_client_to_host_" + std::to_string(listening_port);
 
+        auto mtx_host_to_client_name = "mtx_host_to_client_" + std::to_string(listening_port);
+        auto mtx_client_to_host_name = "mtx_client_to_host_" + std::to_string(listening_port);
+
         host_to_client_event_ = std::make_shared<Poco::NamedEvent>(ipc_event_host_to_client_name);
         client_to_host_event_ = std::make_shared<Poco::NamedEvent>(ipc_event_client_to_host_name);
+        LOGI("After create event...");
+
+        client_to_host_shm_ = std::make_shared<Poco::SharedMemory>(ipc_shm_client_to_host_name, kShmSize, Poco::SharedMemory::AccessMode::AM_WRITE);
+        LOGI("After create shm...");
+
+        host_to_client_mtx_ = std::make_shared<Poco::NamedMutex>(mtx_host_to_client_name);
+        client_to_host_mtx_ = std::make_shared<Poco::NamedMutex>(mtx_client_to_host_name);
+        LOGI("After create mtx...");
+    }
+
+    static uint64_t last_send_time = TimeExt::GetCurrentTimestamp();
+
+    void ClientIpcManager::Send(const char* data, int size) {
+        if (size > kShmSize) {
+            return;
+        }
+
+        auto current_time = TimeExt::GetCurrentTimestamp();
+        auto diff = current_time - last_send_time;
+        last_send_time = current_time;
+        LOGI("diff: {}", diff);
+
+        client_to_host_mtx_->lock();
+        auto begin = client_to_host_shm_->begin();
+        auto header = FixHeader {
+            .buffer_length = static_cast<uint32_t>(size),
+            .buffer_index = buffer_index_++,
+            .buffer_timestamp = TimeExt::GetCurrentTimePointUS(),
+        };
+        memcpy(begin, (char*)&header, sizeof(FixHeader));
+        memcpy(begin + sizeof(FixHeader), data, size);
+        client_to_host_mtx_->unlock();
+
+        client_to_host_event_->set();
+    }
+
+    void ClientIpcManager::Send(const std::shared_ptr<Data>& data) {
+        this->Send(data->CStr(), data->Size());
+    }
+
+    void ClientIpcManager::Send(const std::string &data) {
+        this->Send(data.c_str(), data.size());
     }
 
     void ClientIpcManager::MockSend() {
-        std::thread t([=]() {
+        std::thread t([this]() {
+            std::ostringstream ss;
+            ss << "Good...";
             for (int i = 0; i < 100000000; i++) {
-                this->client_to_host_event_->set();
-                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-                LOGI("ipc msg send: {}", i);
+                //std::string data = "current index = " + std::to_string(i) + ", ok.";
+//                ss.clear();
+//                ss << "current index : " << i << ", ok.";
+                this->Send("Good");
+                std::this_thread::sleep_for(std::chrono::milliseconds(17));
+
+//                auto current_time = TimeExt::GetCurrentTimestamp();
+//                auto diff = current_time - last_send_time;
+//                last_send_time = current_time;
+//                LOGI("diff: {}", diff);
             }
         });
         t.detach();
     }
 
-    void ClientIpcManager::MockReceive() {
-        std::thread t([=] () {
-            for (;;) {
-                this->host_to_client_event_->wait();
-                LOGI("Receive from Host...");
+    void ClientIpcManager::Wait() {
+        recv_thread_ = std::make_shared<std::thread>([=, this] () {
+            while(!exit_) {
+                host_to_client_event_->wait();
+                if (!host_to_client_shm_) {
+                    auto ipc_shm_host_to_client_name = "ipc_shm_host_to_client_" + std::to_string(listen_port_);
+                    host_to_client_shm_ = std::make_shared<Poco::SharedMemory>(ipc_shm_host_to_client_name, kShmSize, Poco::SharedMemory::AccessMode::AM_READ);
+                }
+                host_to_client_mtx_->lock();
+                auto begin = host_to_client_shm_->begin();
+                auto header = (FixHeader*)begin;
+                auto buffer = Data::Make(begin + sizeof(FixHeader), (int)header->buffer_length);
+                host_to_client_mtx_->unlock();
+
+                LOGI("Wait from Host: {}", buffer->AsString());
             }
         });
-        t.detach();
+    }
+
+    void ClientIpcManager::Exit() {
+        exit_ = true;
+        if (recv_thread_ && recv_thread_->joinable()) {
+            recv_thread_->join();
+        }
     }
 
 }

@@ -1,16 +1,8 @@
-#include "SharedTexture.h"
-
+#include "shared_texture.h"
 #include "tc_common/log.h"
 
 namespace tc
 {
-	SharedTexture::SharedTexture() {
-
-	}
-
-	SharedTexture::~SharedTexture() {
-
-	}
 
 	bool SharedTexture::CopyCapturedTexture(ID3D11Device* device, ID3D11DeviceContext* context, ID3D11Texture2D* src) {
 		D3D11_TEXTURE2D_DESC in_desc;
@@ -86,7 +78,7 @@ namespace tc
 		if (!texture) {
 			return 0;
 		}
-		HANDLE tex_handle = NULL;
+		HANDLE tex_handle = nullptr;
 		CComPtr<IDXGIResource> resource = nullptr;
 		auto hr = texture->QueryInterface(__uuidof(IDXGIResource), reinterpret_cast<void**>(&resource));
 		if (SUCCEEDED(hr)) {

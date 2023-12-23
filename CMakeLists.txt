@@ -27,6 +27,11 @@ if (WIN32)
     set(DLL_SRCS
             win/dll_main.cpp
 
+            ## hk_utils
+            win/hk_utils/env.h
+            win/hk_utils/module.hpp
+            win/hk_utils/shellapi.h
+
             ## hk_video
             win/hk_video/capture_dxgi.cpp
             win/hk_video/capture_dxgi_d3d11.cpp
@@ -34,8 +39,8 @@ if (WIN32)
             win/hk_video/capturetex.cpp
             win/hk_video/d3d_utils.cpp
             win/hk_video/hook_dxgi.cpp
-            win/hk_video/HookEvent.cpp
-            win/hk_video/SharedTexture.cpp
+            win/hk_video/hook_event.cpp
+            win/hk_video/shared_texture.cpp
 
             ## hk_audio
     )

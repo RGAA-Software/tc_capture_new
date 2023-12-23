@@ -9,7 +9,7 @@
 #include "tc_capture/inject_params.h"
 #include "tc_common/log.h"
 #include "hk_video/capturetex.h"
-#include "hk_video/HookEvent.h"
+#include "hk_video/hook_event.h"
 
 //#ifdef CAPTURETEX_EXPORTS
 #define CAPTURETEX_API __declspec(dllexport)

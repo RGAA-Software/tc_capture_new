@@ -16,6 +16,7 @@ namespace tc
         uint32_t enable_gpu_router = 0;
         uint64_t gpu_router_target_lid = 0;
         uint64_t gpu_router_target_hid = 0;
+        uint32_t listening_port = 0;
     };
 }
 

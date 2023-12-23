@@ -6,10 +6,11 @@
 #include <Windows.h>
 
 #include "easyhook/easyhook.h"
-#include "tc_capture/inject_params.h"
+#include "inject_params.h"
 #include "tc_common/log.h"
 #include "hk_video/capture_texture.h"
 #include "hk_video/hook_event.h"
+#include "client_ipc_manager.h"
 
 //#ifdef CAPTURETEX_EXPORTS
 #define CAPTURETEX_API __declspec(dllexport)
@@ -19,6 +20,7 @@
 
 CaptureTex g_capture_tex;
 HookEvent* g_hook_event = HookEvent::Instance();
+ClientIpcManager* ipc_manager = ClientIpcManager::Instance();
 
 using namespace tc;
 
@@ -33,7 +35,12 @@ extern "C" CAPTURETEX_API void __stdcall NativeInjectionEntryPoint(REMOTE_ENTRY_
     auto log_path = std::string(inject_data.host_exe_folder) + "/tc_capture_inject.log";
     Logger::InitLog(log_path, true);
     LOGI("----------------------------------------------------");
-    LOGI("Inject host : {}", inject_data.host_exe_folder);
+    LOGI("Inject host  : {}", inject_data.host_exe_folder);
+    LOGI("Inject listening port  : {}", inject_data.listening_port);
+
+    ipc_manager->Init(inject_data.listening_port);
+    ipc_manager->MockSend();
+    ipc_manager->MockReceive();
 
 //    for (int i = 0; i < 100; i++) {
 //        LOGI("----------------------------------------------------");

@@ -81,7 +81,7 @@ HRESULT CaptureTexture(ID3D11Device *device,
     assert(acquired_texture);
     acquired_texture->GetDesc(&desc);
 
-    LOGI("Capture acquired_texture : {}", (int) desc.Format);
+    //LOGI("Capture acquired_texture : {}", (int) desc.Format);
 
     if (desc.SampleDesc.Count > 1) {
         // MSAA content must be resolved before being copied to a staging texture
@@ -160,7 +160,7 @@ HRESULT CaptureTexture(ID3D11Device *device,
         //// context->CopyResource(staging, source);
 
         //
-        LOGI("COPY>>>>>>>");
+        //LOGI("COPY>>>>>>>");
         shared_texture->CopyCapturedTexture(device, context, acquired_texture);
     }
 

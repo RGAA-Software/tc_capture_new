@@ -161,7 +161,7 @@ namespace tc_capture_d3d11
 //		ipc_message->frame_index = g_frame_index++;
 //		InterCommClient::Instance()->SendBack(IPCFrameMessage::ConvertToData(ipc_message));
         g_frame_index++;
-        LOGI("Hook....{}", g_frame_index);
+        //LOGI("Hook....{}", g_frame_index);
 
 #if 0
         {

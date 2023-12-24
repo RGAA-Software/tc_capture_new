@@ -167,13 +167,7 @@ namespace tc_capture_d3d11
         g_frame_index++;
         //LOGI("Hook....{}", g_frame_index);
 
-        CaptureMessage msg{};
-        msg.frame_index_ = g_frame_index;
-        msg.handle_ = handle;
-        auto data = Data::Make((char*)&msg, sizeof(CaptureMessage));
-        ClientIpcManager::Instance()->Send(data);
-
-#if 0
+#if 1
         {
             D3D11_TEXTURE2D_DESC desc;
             shared_texture->texture->GetDesc(&desc);
@@ -184,7 +178,7 @@ namespace tc_capture_d3d11
             LOGI(msg);
 
             std::vector<uint8_t> yuv_frame_data_;
-            yuv_frame_data_.resize(4 * width * height);
+            yuv_frame_data_.resize(1.5 * width * height);
             size_t pixel_size = width * height;
 
             const int uv_stride = width >> 1;
@@ -207,11 +201,11 @@ namespace tc_capture_d3d11
 
             LOGI("the format is : " + std::to_string(desc.Format));
 
-            {
-                std::ofstream rgba_file("capture_yuv_tex.rgba", std::ios::binary);
-                rgba_file.write((char*)mapped_rect.pBits, width * height * 4);
-                rgba_file.close();
-            }
+//            {
+//                std::ofstream rgba_file("capture_yuv_tex.rgba", std::ios::binary);
+//                rgba_file.write((char*)mapped_rect.pBits, width * height * 4);
+//                rgba_file.close();
+//            }
 
             if (DXGI_FORMAT_R8G8B8A8_UNORM == desc.Format) {
                 libyuv::ARGBToI420(mapped_rect.pBits, mapped_rect.Pitch, y, width, u, uv_stride, v, uv_stride, width, height);
@@ -224,10 +218,31 @@ namespace tc_capture_d3d11
             }
 
             LOGI("desc.Format: " + std::to_string(desc.Format) + " the yuv size : " + std::to_string(yuv_frame_data_.size()));
-            std::ofstream yuv_file("capture_yuv_tex.yuv", std::ios::binary);
-            yuv_file.write((char*)yuv_frame_data_.data(), width * height * 1.5);
-            yuv_file.close();
+//            std::ofstream yuv_file("capture_yuv_tex.yuv", std::ios::binary);
+//            yuv_file.write((char*)yuv_frame_data_.data(), width * height * 1.5);
+//            yuv_file.close();
 
+            CaptureVideoFrame capture_video_frame_msg{};
+            capture_video_frame_msg.type = kCaptureVideoFrame;
+            capture_video_frame_msg.data_length = yuv_frame_data_.size();
+            capture_video_frame_msg.capture_type_ = kCaptureVideoBySharedMemory;
+            capture_video_frame_msg.frame_width_ = width;
+            capture_video_frame_msg.frame_height_ = height;
+            capture_video_frame_msg.frame_index_ = g_frame_index;
+            capture_video_frame_msg.handle_ = 0;
+            auto data = Data::Make(nullptr, sizeof(CaptureVideoFrame) + yuv_frame_data_.size());
+            memcpy(data->DataAddr(), &capture_video_frame_msg, sizeof(CaptureVideoFrame));
+            memcpy(data->DataAddr() + sizeof(CaptureVideoFrame), yuv_frame_data_.data(), yuv_frame_data_.size());
+            ClientIpcManager::Instance()->Send(data);
+
+//            CaptureAudioFrame capture_audio_frame_msg{};
+//            capture_audio_frame_msg.type = kCaptureVideoFrame;
+//            capture_audio_frame_msg.data_length = 0;
+//            capture_audio_frame_msg.frame_index_ = g_frame_index;
+//
+//            auto data = Data::Make(nullptr, sizeof(CaptureAudioFrame));
+//            memcpy(data->DataAddr(), &capture_audio_frame_msg, sizeof(CaptureAudioFrame));
+//            ClientIpcManager::Instance()->Send(data);
         }
 #endif
     }

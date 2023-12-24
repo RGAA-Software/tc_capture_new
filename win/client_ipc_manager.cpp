@@ -17,8 +17,9 @@ namespace tc
 
     ClientIpcManager::ClientIpcManager() = default;
 
-    void ClientIpcManager::Init(uint32_t listening_port) {
+    void ClientIpcManager::Init(uint32_t listening_port, uint32_t shm_buffer_size) {
         this->listen_port_ = listening_port;
+        this->shm_buffer_size_ = shm_buffer_size;
         auto ipc_shm_client_to_host_name = "ipc_shm_client_to_host_" + std::to_string(listening_port);
 
         auto ipc_event_host_to_client_name = "ipc_event_host_to_client_" + std::to_string(listening_port);
@@ -29,20 +30,18 @@ namespace tc
 
         host_to_client_event_ = std::make_shared<Poco::NamedEvent>(ipc_event_host_to_client_name);
         client_to_host_event_ = std::make_shared<Poco::NamedEvent>(ipc_event_client_to_host_name);
-        LOGI("After create event...");
 
-        client_to_host_shm_ = std::make_shared<Poco::SharedMemory>(ipc_shm_client_to_host_name, kShmSize, Poco::SharedMemory::AccessMode::AM_WRITE);
-        LOGI("After create shm...");
+        client_to_host_shm_ = std::make_shared<Poco::SharedMemory>(ipc_shm_client_to_host_name, shm_buffer_size, Poco::SharedMemory::AccessMode::AM_WRITE);
+        LOGI("Shm buffer size: {}", shm_buffer_size);
 
         host_to_client_mtx_ = std::make_shared<Poco::NamedMutex>(mtx_host_to_client_name);
         client_to_host_mtx_ = std::make_shared<Poco::NamedMutex>(mtx_client_to_host_name);
-        LOGI("After create mtx...");
     }
 
     static uint64_t last_send_time = TimeExt::GetCurrentTimestamp();
 
     void ClientIpcManager::Send(const char* data, int size) {
-        if (size > kShmSize) {
+        if (size > shm_buffer_size_) {
             return;
         }
 
@@ -99,7 +98,7 @@ namespace tc
                 host_to_client_event_->wait();
                 if (!host_to_client_shm_) {
                     auto ipc_shm_host_to_client_name = "ipc_shm_host_to_client_" + std::to_string(listen_port_);
-                    host_to_client_shm_ = std::make_shared<Poco::SharedMemory>(ipc_shm_host_to_client_name, kShmSize, Poco::SharedMemory::AccessMode::AM_READ);
+                    host_to_client_shm_ = std::make_shared<Poco::SharedMemory>(ipc_shm_host_to_client_name, kHostToClientShmSize, Poco::SharedMemory::AccessMode::AM_READ);
                 }
                 host_to_client_mtx_->lock();
                 auto begin = host_to_client_shm_->begin();
@@ -107,7 +106,7 @@ namespace tc
                 auto buffer = Data::Make(begin + sizeof(FixHeader), (int)header->buffer_length);
                 host_to_client_mtx_->unlock();
 
-                LOGI("Wait from Host: {}", buffer->AsString());
+                LOGI("WaitForMessage from Host: {}", buffer->AsString());
             }
         });
     }

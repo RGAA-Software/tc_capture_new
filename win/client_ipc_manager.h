@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <mutex>
 
 #include <Poco/NamedEvent.h>
 #include <Poco/SharedMemory.h>
@@ -63,6 +64,8 @@ namespace tc
         std::shared_ptr<Poco::NamedEvent> host_to_client_event_ = nullptr;
         std::shared_ptr<Poco::SharedMemory> host_to_client_shm_ = nullptr;
         std::shared_ptr<Poco::NamedMutex> host_to_client_mtx_ = nullptr;
+
+        std::mutex shm_send_mtx_;
 
     };
 

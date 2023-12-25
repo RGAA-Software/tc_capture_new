@@ -207,10 +207,10 @@ namespace tc_capture_d3d11
 //                rgba_file.close();
 //            }
 
-            if (DXGI_FORMAT_R8G8B8A8_UNORM == desc.Format) {
+            if (DXGI_FORMAT_B8G8R8A8_UNORM == desc.Format) {
                 libyuv::ARGBToI420(mapped_rect.pBits, mapped_rect.Pitch, y, width, u, uv_stride, v, uv_stride, width, height);
             }
-            else if (DXGI_FORMAT_B8G8R8A8_UNORM == desc.Format) {
+            else if (DXGI_FORMAT_R8G8B8A8_UNORM == desc.Format) {
                 libyuv::ABGRToI420(mapped_rect.pBits, mapped_rect.Pitch, y, width, u, uv_stride, v, uv_stride, width, height);
             }
             else {

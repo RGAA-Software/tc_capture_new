@@ -19,9 +19,9 @@ namespace tc
 
     class CaptureBaseMessage {
     public:
-        uint32_t type;
+        uint32_t type = 0;
         // shm 中的数据大小
-        uint32_t data_length;
+        uint32_t data_length = 0;
     };
 
     class CaptureVideoFrame : public CaptureBaseMessage {
@@ -37,7 +37,11 @@ namespace tc
 
     class CaptureAudioFrame: public CaptureBaseMessage {
     public:
-        uint64_t frame_index_;
+        CaptureAudioFrame() : CaptureBaseMessage() {
+            type = kCaptureAudioFrame;
+        }
+    public:
+        uint64_t frame_index_{};
     };
 
     class CaptureDebugInfo : public CaptureBaseMessage {

@@ -9,6 +9,7 @@
 #include "tc_common/log.h"
 #include "tc_common/data.h"
 #include "tc_common/time_ext.h"
+#include "capture_message.h"
 
 #include <thread>
 
@@ -41,6 +42,8 @@ namespace tc
     static uint64_t last_send_time = TimeExt::GetCurrentTimestamp();
 
     void ClientIpcManager::Send(const char* data, int size) {
+        std::lock_guard<std::mutex> guard(shm_send_mtx_);
+
         if (size > shm_buffer_size_) {
             return;
         }
@@ -80,7 +83,11 @@ namespace tc
                 //std::string data = "current index = " + std::to_string(i) + ", ok.";
 //                ss.clear();
 //                ss << "current index : " << i << ", ok.";
-                this->Send("Good");
+                CaptureAudioFrame capture_audio_frame_msg{};
+                capture_audio_frame_msg.frame_index_ = i;
+                auto data = Data::Make(nullptr, sizeof(CaptureAudioFrame));
+                memcpy(data->DataAddr(), &capture_audio_frame_msg, sizeof(CaptureAudioFrame));
+                this->Send(data);
                 std::this_thread::sleep_for(std::chrono::milliseconds(17));
 
 //                auto current_time = TimeExt::GetCurrentTimestamp();

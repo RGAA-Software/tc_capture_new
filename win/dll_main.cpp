@@ -41,7 +41,7 @@ extern "C" CAPTURETEX_API void __stdcall NativeInjectionEntryPoint(REMOTE_ENTRY_
 
     ipc_manager->Init(inject_data.listening_port, inject_data.shm_client_to_host_buffer_size);
     ipc_manager->Wait();
-    //ipc_manager->MockSend();
+    ipc_manager->MockSend();
 
 //    for (int i = 0; i < 100; i++) {
 //        LOGI("----------------------------------------------------");

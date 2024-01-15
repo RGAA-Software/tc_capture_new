@@ -148,12 +148,36 @@ namespace tc_capture_d3d11
             return;
         }
 
-        if (!shared_texture->texture) {
+        if (!shared_texture->texture_) {
             LOGE("Not have Texture....");
             return;
         }
 
+
         uint64_t handle = shared_texture->GetSharedHandle();
+#if 1   // send shared handle
+        {
+            // 暂时在这里获取 adapter_uid， 不过获取的太频繁了
+            auto adapter_uid = tc::GetAdapterUid(device_);
+            CaptureVideoFrame capture_video_frame_msg{};
+            capture_video_frame_msg.type = kCaptureVideoFrame;
+            capture_video_frame_msg.capture_type_ = kCaptureVideoByHandle;
+            capture_video_frame_msg.data_length = 0;
+            capture_video_frame_msg.frame_width_ = desc.Width;
+            capture_video_frame_msg.frame_height_ = desc.Height;
+            capture_video_frame_msg.frame_index_ = g_frame_index;
+            capture_video_frame_msg.handle_ = handle;
+            capture_video_frame_msg.frame_format_ = desc.Format;
+            if(adapter_uid.has_value()) {
+                capture_video_frame_msg.adapter_uid_ = adapter_uid.value();
+            }
+            //capture_video_frame_msg.adapter_uid_ = 78007;
+            auto data = Data::Make(nullptr, sizeof(CaptureVideoFrame));
+            memcpy(data->DataAddr(), &capture_video_frame_msg, sizeof(CaptureVideoFrame));
+            ClientIpcManager::Instance()->Send(data);
+        }
+#endif
+
         //LOGI("shared handle : %llu, format : %d, frame_index: %llu", handle, desc.Format, g_frame_index);
 //		auto ipc_message = IPCFrameMessage::MakeEmptyMessage();
 //		ipc_message->type = IPCMessageType::kSharedTextureHandle;
@@ -167,10 +191,10 @@ namespace tc_capture_d3d11
         g_frame_index++;
         //LOGI("Hook....{}", g_frame_index);
 
-#if 1
+#if 0   // send image data
         {
             D3D11_TEXTURE2D_DESC desc;
-            shared_texture->texture->GetDesc(&desc);
+            shared_texture->texture_->GetDesc(&desc);
 
             auto width = desc.Width;
             auto height = desc.Height;
@@ -187,7 +211,7 @@ namespace tc_capture_d3d11
             uint8_t* v = u + (pixel_size >> 2);
 
             CComPtr<IDXGISurface> staging_surface = nullptr;
-            hr = shared_texture->texture->QueryInterface(IID_PPV_ARGS(&staging_surface));
+            hr = shared_texture->texture_->QueryInterface(IID_PPV_ARGS(&staging_surface));
             if (FAILED(hr)) {
                 LOGE("!QueryInterface(IDXGISurface) err");
                 return;

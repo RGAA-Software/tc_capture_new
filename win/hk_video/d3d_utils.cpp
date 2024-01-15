@@ -84,7 +84,7 @@ HRESULT CaptureTexture(ID3D11Device *device,
     //LOGI("Capture acquired_texture : {}", (int) desc.Format);
 
     if (desc.SampleDesc.Count > 1) {
-        // MSAA content must be resolved before being copied to a staging texture
+        // MSAA content must be resolved before being copied to a staging texture_
         desc.SampleDesc.Count = 1;
         desc.SampleDesc.Quality = 0;
 
@@ -96,7 +96,7 @@ HRESULT CaptureTexture(ID3D11Device *device,
         assert(new_texture);
 
         DXGI_FORMAT format = EnsureNotTypeless(desc.Format);
-        LOGI("Capture texture 2 : {}", (int) format);
+        LOGI("Capture texture_ 2 : {}", (int) format);
 
         UINT support = 0;
         hr = device->CheckFormatSupport(format, &support);
@@ -133,7 +133,7 @@ HRESULT CaptureTexture(ID3D11Device *device,
         //
         shared_texture->CopyCapturedTexture(device, context, new_texture);
     } else if ((desc.Usage == D3D11_USAGE_STAGING) && (desc.CPUAccessFlags & D3D11_CPU_ACCESS_READ)) {
-        // Handle case where the source is already a staging texture we can use
+        // Handle case where the source is already a staging texture_ we can use
         // directly
         staging = acquired_texture;
         LOGI("staging = acquired_texture;");
@@ -141,7 +141,7 @@ HRESULT CaptureTexture(ID3D11Device *device,
         //
         shared_texture->CopyCapturedTexture(device, context, acquired_texture);
     } else {
-        // Otherwise, create a staging texture from the non-MSAA source
+        // Otherwise, create a staging texture_ from the non-MSAA source
         // 导致编码非常慢
         //// desc.BindFlags = 0;
         //// desc.MiscFlags &= D3D11_RESOURCE_MISC_TEXTURECUBE;
@@ -165,4 +165,36 @@ HRESULT CaptureTexture(ID3D11Device *device,
     }
 
     return S_OK;
+}
+
+namespace tc {
+    std::optional<int64_t> GetAdapterUid(CComPtr<ID3D11Device> d3d11_device) {
+        // 通过ID3D11Device 在获取Adapter信息
+        CComPtr<IDXGIDevice> dxgi_device;
+        auto res = d3d11_device.QueryInterface(&dxgi_device);
+        if (res != S_OK || !dxgi_device)
+        {
+            //std::cout << "ID3D11Device is not an implementation of IDXGIDevice, this usually "
+            //             "means the system does not support DirectX 11. Error "
+            //          << tc::GetErrorStr(res) << " with code: " << res;
+            return {};
+        }
+
+        IDXGIAdapter* adapter_temp = nullptr;
+        dxgi_device->GetAdapter(&adapter_temp);
+        DXGI_ADAPTER_DESC adapterDesc;
+        auto hr = adapter_temp->GetDesc(&adapterDesc);
+        if (SUCCEEDED(hr))
+        {
+            int64_t  temp_uid = adapterDesc.AdapterLuid.LowPart;
+            printf("---------------------temp_uid = %llu\n", temp_uid);
+            return {temp_uid};
+        }
+        else
+        {
+            // 获取适配器描述信息失败，处理错误
+            printf("can not get temp_uid\n");
+            return {};
+        }
+    }
 }

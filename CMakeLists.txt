@@ -11,43 +11,43 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/win)
 
 find_package(libyuv CONFIG REQUIRED)
-find_package(Poco COMPONENTS Net XML Zip Data REQUIRED)
+find_package(Poco COMPONENTS Foundation REQUIRED)
 
 if (WIN32)
     ## capture
     set(CAPTURE_SRCS
-            tc_capture.cpp
-            win/audio/audio_file_saver.cpp
-            win/audio/wasapi_audio_capture.cpp
-            win/audio/audio_capture_factory.cpp
+        tc_capture.cpp
+        win/audio/audio_file_saver.cpp
+        win/audio/wasapi_audio_capture.cpp
+        win/audio/audio_capture_factory.cpp
     )
     add_library(tc_capture ${CAPTURE_SRCS})
     target_link_libraries(tc_capture Winmm)
 
     ## capture dll
     set(DLL_SRCS
-            win/dll_main.cpp
-            win/client_ipc_manager.cpp
+        win/dll_main.cpp
+        win/client_ipc_manager.cpp
 
-            ## hk_utils
-            win/hk_utils/env.h
-            win/hk_utils/module.hpp
-            win/hk_utils/shellapi.h
+        ## hk_utils
+        win/hk_utils/env.h
+        win/hk_utils/module.hpp
+        win/hk_utils/shellapi.h
 
-            ## hk_video
-            win/hk_video/capture_dxgi.cpp
-            win/hk_video/capture_dxgi_d3d11.cpp
-            win/hk_video/capture_dxgi_d3d11on12.cpp
-            win/hk_video/capture_texture.cpp
-            win/hk_video/d3d_utils.cpp
-            win/hk_video/hook_dxgi.cpp
-            win/hk_video/hook_event.cpp
-            win/hk_video/shared_texture.cpp
+        ## hk_video
+        win/hk_video/capture_dxgi.cpp
+        win/hk_video/capture_dxgi_d3d11.cpp
+        win/hk_video/capture_dxgi_d3d11on12.cpp
+        win/hk_video/capture_texture.cpp
+        win/hk_video/d3d_utils.cpp
+        win/hk_video/hook_dxgi.cpp
+        win/hk_video/hook_event.cpp
+        win/hk_video/shared_texture.cpp
 
-            ## hk_audio
+        ## hk_audio
     )
     add_library(tc_capture_library SHARED ${DLL_SRCS})
-    target_link_libraries(tc_capture_library tc_common EasyHook64 yuv Poco::Net Poco::XML Poco::Zip Poco::Data)
+    target_link_libraries(tc_capture_library tc_common EasyHook64 yuv Poco::Foundation)
 
 elseif (APPLE)
 

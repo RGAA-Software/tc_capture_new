@@ -8,13 +8,14 @@ namespace tc
 		D3D11_TEXTURE2D_DESC in_desc;
 		src->GetDesc(&in_desc);
 
-		if (in_desc.Width != curr_desc.Width || in_desc.Height != curr_desc.Height || in_desc.Format != curr_desc.Format) {
+		if (in_desc.Width != curr_desc_.Width || in_desc.Height != curr_desc_.Height || in_desc.Format != curr_desc_.Format) {
 			
-			if (texture) {
-				texture.Release();
-				texture = nullptr;
+			if (texture_) {
+				texture_.Release();
+                texture_ = nullptr;
 			}
 
+#if 0
 			D3D11_TEXTURE2D_DESC desc = {};
 			memset(&desc, 0, sizeof(D3D11_TEXTURE2D_DESC));
 			desc.Width = in_desc.Width;
@@ -42,6 +43,8 @@ namespace tc
 			LOGI("Create Texture : width : {}, height : {}, the old format is :{} , new format : {}",
 					  desc.Width, desc.Height, (int)in_desc.Format, (int)desc.Format);
 
+#endif
+
 			D3D11_TEXTURE2D_DESC desc11 = {};
 			desc11.Width = in_desc.Width;
 			desc11.Height = in_desc.Height;
@@ -50,7 +53,8 @@ namespace tc
 			desc11.ArraySize = 1;
 			desc11.SampleDesc.Count = 1;
 			desc11.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-			desc11.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+			//desc11.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+            desc11.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
             // JUST TEST...
             desc11.BindFlags = 0;
@@ -59,28 +63,30 @@ namespace tc
             desc11.SampleDesc.Quality = 0;
             desc11.SampleDesc.Count = 1;
 
-			auto hr = device->CreateTexture2D(&desc11, nullptr, &texture);
+			auto hr = device->CreateTexture2D(&desc11, nullptr, &texture_);
 			if (FAILED(hr)) {
-				LOGE("create_d3d11_stage_surface: failed to create texture {} , {}", hr, GetLastError());
+				LOGE("create_d3d11_stage_surface: failed to create texture_ {} , {}", hr, GetLastError());
 				return false;
 			}
 
-			this->curr_desc = in_desc;
+			this->curr_desc_ = in_desc;
 		}
 
 		//
-		context->CopyResource(texture, src);
+        LockMutex();
+		context->CopyResource(texture_, src);
+        ReleaseMutex();
 
 		return true;
 	}
 
 	uint64_t SharedTexture::GetSharedHandle() {
-		if (!texture) {
+		if (!texture_) {
 			return 0;
 		}
 		HANDLE tex_handle = nullptr;
 		CComPtr<IDXGIResource> resource = nullptr;
-		auto hr = texture->QueryInterface(__uuidof(IDXGIResource), reinterpret_cast<void**>(&resource));
+		auto hr = texture_->QueryInterface(__uuidof(IDXGIResource), reinterpret_cast<void**>(&resource));
 		if (SUCCEEDED(hr)) {
 			hr = resource->GetSharedHandle(&tex_handle);
 			if (FAILED(hr)) {
@@ -96,4 +102,45 @@ namespace tc
 		}
 		return (uint64_t)tex_handle;
 	}
-}
+
+    bool SharedTexture::LockMutex() {
+        if(!texture_) {
+            LOGI("SharedTexture texture_ is null ");
+            return false;
+        }
+        HRESULT hres;
+        CComPtr<IDXGIKeyedMutex> key_mutex;
+        if (FAILED(hres = texture_.QueryInterface<IDXGIKeyedMutex>(&key_mutex)))
+        {
+            printf("D3D11Texture2DReleaseMutex IDXGIKeyedMutex. error\n");
+            return false;
+        }
+        if (FAILED(hres = key_mutex->AcquireSync(0,INFINITE)))
+        {
+            printf("D3D11Texture2DReleaseMutex AcquireSync failed.\n");
+            return false;
+        }
+        return  true;
+    }
+
+    bool SharedTexture::ReleaseMutex() {
+        if(!texture_) {
+            LOGI("SharedTexture texture_ is null");
+            return false;
+        }
+        HRESULT hres;
+        CComPtr<IDXGIKeyedMutex> key_mutex;
+        if(FAILED(hres = texture_.QueryInterface<IDXGIKeyedMutex>(&key_mutex)))
+        {
+            printf("D3D11Texture2DReleaseMutex IDXGIKeyedMutex. error\n");
+            return false;
+        }
+        if(FAILED(hres = key_mutex->ReleaseSync(0)))
+        {
+            printf("D3D11Texture2DReleaseMutex ReleaseSync failed.\n");
+            return false;
+        }
+        return true;
+    }
+
+} // namespace tc

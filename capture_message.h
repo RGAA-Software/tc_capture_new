@@ -9,11 +9,12 @@
 
 namespace tc
 {
-
+    // type
     constexpr auto kCaptureVideoFrame = 0x0001;
     constexpr auto kCaptureAudioFrame = 0x0002;
     constexpr auto kCaptureDebugInfo = 0x0003;
 
+    // capture_type_
     constexpr auto kCaptureVideoByHandle = 0x1000;
     constexpr auto kCaptureVideoBySharedMemory = 0x1001;
 
@@ -28,11 +29,13 @@ namespace tc
     public:
         // constexpr auto kCaptureVideoByHandle = 0x1000;
         // constexpr auto kCaptureVideoBySharedMemory = 0x1001;
-        uint32_t capture_type_;
-        uint32_t frame_width_;
-        uint32_t frame_height_;
-        uint64_t frame_index_;
-        uint64_t handle_;
+        uint32_t capture_type_ = 0;
+        uint32_t frame_width_ = 0;
+        uint32_t frame_height_ = 0;
+        uint64_t frame_index_ = 0;
+        uint64_t frame_format_ = 0;
+        uint64_t handle_ = 0;
+        int64_t adapter_uid_ = -1; // -1表示没获取到
     };
 
     class CaptureAudioFrame: public CaptureBaseMessage {

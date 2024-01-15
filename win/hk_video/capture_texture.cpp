@@ -230,8 +230,8 @@ int CaptureTex::HookThread() noexcept {
 //    bool should_share_texture = false;
 //    D3D11_TEXTURE2D_DESC shared_texture_desc;
 //    size_t index = frame_count_ % kNumberOfSharedFrames;
-//    if (shared_textures_[index].texture) {
-//        shared_textures_[index].texture->GetDesc(&shared_texture_desc);
+//    if (shared_textures_[index].texture_) {
+//        shared_textures_[index].texture_->GetDesc(&shared_texture_desc);
 //        if (shared_texture_desc.Width != new_texture_desc.Width ||
 //            shared_texture_desc.Height != new_texture_desc.Height) {
 //            new_texture->GetDesc(&shared_texture_desc);
@@ -284,7 +284,7 @@ int CaptureTex::HookThread() noexcept {
 //            CloseHandle(shared_textures_[index].handle);
 //        }
 //        shared_textures_[index].handle = shared_handle;
-//        shared_textures_[index].texture = shared_texture;
+//        shared_textures_[index].texture_ = shared_texture;
 //
 //        auto frame = GetAvailablePackedVideoTextureFrame();
 //        frame->instance_id = instance_id;
@@ -293,7 +293,7 @@ int CaptureTex::HookThread() noexcept {
 //                  L"Update SharedHandle[%d] shared_handle_name: %s\n", index,
 //                  shared_handle_name.data());
 //    }
-//    context->CopyResource(shared_textures_[index].texture, new_texture);
+//    context->CopyResource(shared_textures_[index].texture_, new_texture);
 //    return true;
 //}
 

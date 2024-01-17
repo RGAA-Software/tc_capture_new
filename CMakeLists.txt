@@ -20,6 +20,8 @@ if (WIN32)
         win/audio/audio_file_saver.cpp
         win/audio/wasapi_audio_capture.cpp
         win/audio/audio_capture_factory.cpp
+            win/desktop/desktop_capture.h
+            win/desktop/desktop_capture.cpp
     )
     add_library(tc_capture ${CAPTURE_SRCS})
     target_link_libraries(tc_capture Winmm)
@@ -45,6 +47,10 @@ if (WIN32)
         win/hk_video/shared_texture.cpp
 
         ## hk_audio
+
+        ## desktop_capture
+        win/desktop_capture/dda_capture.cpp
+        win/desktop_capture/desktop_capture.cpp
     )
     add_library(tc_capture_library SHARED ${DLL_SRCS})
     target_link_libraries(tc_capture_library tc_common EasyHook64 yuv Poco::Foundation)

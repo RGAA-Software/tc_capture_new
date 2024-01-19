@@ -311,21 +311,23 @@ void DDACapture::OnCaptureFrame(ID3D11Texture2D* texture, uint8_t monitor_index)
         create_desc.Usage = D3D11_USAGE_DEFAULT;
         create_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
         create_desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
-
-        if (FAILED(hres = d3d11_device_->CreateTexture2D(&create_desc, NULL, &last_list_texture_[monitor_index].texture2d_)))
+        hres = d3d11_device_->CreateTexture2D(&create_desc, NULL, &last_list_texture_[monitor_index].texture2d_);
+        if (FAILED(hres))
         {
             printf("desktop capture create texture failed with:%s", StringExt::GetErrorStr(hres).c_str());
             return;
         }
 
         ComPtr<IDXGIResource> dxgiResource;
-        if (FAILED(hres = last_list_texture_[monitor_index].texture2d_.As<IDXGIResource>(&dxgiResource)))
+        hres = last_list_texture_[monitor_index].texture2d_.As<IDXGIResource>(&dxgiResource);
+        if (FAILED(hres))
         {
             printf("desktop capture as IDXGIResource failed with:%s", StringExt::GetErrorStr(hres).c_str());
             return;
         }
         HANDLE handle;
-        if (FAILED(hres = dxgiResource->GetSharedHandle(&handle)))
+        hres = dxgiResource->GetSharedHandle(&handle);
+        if (FAILED(hres))
         {
             printf("desktop capture get shared handle failed with:%s", StringExt::GetErrorStr(hres).c_str());
             return;
@@ -335,12 +337,14 @@ void DDACapture::OnCaptureFrame(ID3D11Texture2D* texture, uint8_t monitor_index)
 
     HRESULT hres;
     ComPtr<IDXGIKeyedMutex> keyMutex;
-    if(FAILED(hres = last_list_texture_[monitor_index].texture2d_.As<IDXGIKeyedMutex>(&keyMutex)))
+    hres = last_list_texture_[monitor_index].texture2d_.As<IDXGIKeyedMutex>(&keyMutex);
+    if(FAILED(hres))
     {
         printf("desktop frame capture as IDXGIKeyedMutex failed:%s", StringExt::GetErrorStr(hres).c_str());
         return ;
     }
-    if (FAILED(hres = keyMutex->AcquireSync(0, INFINITE)))
+    hres = keyMutex->AcquireSync(0, INFINITE);
+    if (FAILED(hres))
     {
         printf("desktop frame capture texture AcquireSync failed with:%s", StringExt::GetErrorStr(hres).c_str());
         return;
@@ -357,8 +361,6 @@ void DDACapture::OnCaptureFrame(ID3D11Texture2D* texture, uint8_t monitor_index)
 
 void DDACapture::SendTextureHandle(const HANDLE& shared_handle, EMonitorIndex current_monitor_index_) {
     printf("current_monitor_index_ = %d, shared_handle = %p\n", current_monitor_index_, shared_handle);
-
-
     //RecvD3D11Texture2DShareHandle(d3d11_device_, shared_handle, static_cast<int>(current_monitor_index_));
 
 }

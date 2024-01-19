@@ -2,18 +2,19 @@
 // Created by Administrator on 2024/1/17.
 //
 
-#ifndef TC_APPLICATION_DESKTOP_CAPTURE_H
-#define TC_APPLICATION_DESKTOP_CAPTURE_H
+#ifndef TC_WIN_APPLICATION_DESKTOP_CAPTURE_H
+#define TC_WIN_APPLICATION_DESKTOP_CAPTURE_H
 
 #include <memory>
+#include "tc_capture/desktop_capture.h"
 
 namespace tc {
 
-    class WGCCapture;
+    class WGCCapture; // to do
 
     class DDACapture;
 
-    class WinDesktopCapture
+    class WinDesktopCapture : public DesktopCapture
     {
     public:
         WinDesktopCapture();

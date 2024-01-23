@@ -11,13 +11,13 @@
 namespace tc {
 
     class WGCCapture; // to do
-
     class DDACapture;
+    class MessageNotifier;
 
     class WinDesktopCapture : public DesktopCapture
     {
     public:
-        WinDesktopCapture();
+        WinDesktopCapture(const std::shared_ptr<MessageNotifier>& msg_notifier);
         bool StartCapture();
         void StopCapture();
     private:

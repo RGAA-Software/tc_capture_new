@@ -3,14 +3,14 @@
 //
 
 #include "win_desktop_capture.h"
-
+#include "tc_common/message_notifier.h"
 #include "dda_capture.h"
 
 namespace tc {
-// 支持dda采集了(仅在控制台会话下)，但目前暂不开启dda采集
-    WinDesktopCapture::WinDesktopCapture()
+    WinDesktopCapture::WinDesktopCapture(const std::shared_ptr<MessageNotifier>& msg_notifier) : DesktopCapture(msg_notifier)
     {
         dda_capture_ = std::make_shared<DDACapture>();
+        dda_capture_->msg_notifier_ = msg_notifier;
         dda_capture_->Init();
     }
 

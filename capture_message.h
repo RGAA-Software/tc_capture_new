@@ -36,6 +36,7 @@ namespace tc
         uint64_t frame_format_ = 0;
         uint64_t handle_ = 0;
         int64_t adapter_uid_ = -1; // -1表示没获取到
+        int8_t capture_index_ = -1; //采集画面的索引，通常用于桌面采集，比如第一块屏幕的画面，第二块屏幕的画面 ...
     };
 
     class CaptureAudioFrame: public CaptureBaseMessage {

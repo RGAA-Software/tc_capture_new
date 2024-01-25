@@ -6,11 +6,11 @@
 #include <Windows.h>
 
 #include "easyhook/easyhook.h"
-#include "inject_params.h"
 #include "tc_common/log.h"
 #include "hk_video/capture_texture.h"
 #include "hk_video/hook_event.h"
 #include "client_ipc_manager.h"
+#include "client_manager.h"
 
 //#ifdef CAPTURETEX_EXPORTS
 #define CAPTURETEX_API __declspec(dllexport)
@@ -21,25 +21,23 @@
 CaptureTex g_capture_tex;
 HookEvent* g_hook_event = HookEvent::Instance();
 ClientIpcManager* ipc_manager = ClientIpcManager::Instance();
+ClientManager* client_manager = ClientManager::Instance();
 
 using namespace tc;
 
 extern "C" CAPTURETEX_API void __stdcall NativeInjectionEntryPoint(REMOTE_ENTRY_INFO * remote_info) {
-    InjectParams inject_data;
-    memset(&inject_data, 0, sizeof(InjectParams));
-    bool has_user_data = remote_info->UserData != nullptr;
-    if (has_user_data) {
-        memcpy(&inject_data, remote_info->UserData, remote_info->UserDataSize);
-    }
+    client_manager->CopyUserData(remote_info->UserData, (int)remote_info->UserDataSize);
+    auto params = client_manager->GetInjectParams();
 
-    auto log_path = std::string(inject_data.host_exe_folder) + "/tc_capture_inject.log";
+    auto log_path = std::string(params->host_exe_folder) + "/tc_capture_inject.log";
     Logger::InitLog(log_path, true);
     LOGI("----------------------------------------------------");
-    LOGI("Inject host  : {}", inject_data.host_exe_folder);
-    LOGI("Inject listening port  : {}", inject_data.listening_port);
-    LOGI("Inject client to host buffer size: {}", inject_data.shm_client_to_host_buffer_size);
+    LOGI("Inject host  : {}", params->host_exe_folder);
+    LOGI("Inject listening port  : {}", params->listening_port);
+    LOGI("Inject client to host buffer size: {}", params->shm_client_to_host_buffer_size);
+    LOGI("Inject send video by shm: {}", params->send_video_frame_by_shm);
 
-    ipc_manager->Init(inject_data.listening_port, inject_data.shm_client_to_host_buffer_size);
+    ipc_manager->Init(params->listening_port, params->shm_client_to_host_buffer_size);
     ipc_manager->Wait();
     ipc_manager->MockSend();
 

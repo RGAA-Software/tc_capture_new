@@ -18,6 +18,7 @@ namespace tc
         uint64_t gpu_router_target_hid = 0;
         uint32_t listening_port = 0;
         uint32_t shm_client_to_host_buffer_size = 0;
+        uint32_t send_video_frame_by_shm = 0;
     };
 }
 

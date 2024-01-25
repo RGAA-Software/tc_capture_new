@@ -31,6 +31,7 @@ if (WIN32)
 
     ## capture dll
     set(DLL_SRCS
+        win/client_manager.cpp
         win/dll_main.cpp
         win/client_ipc_manager.cpp
 

@@ -14,6 +14,7 @@
 #include "capture_message.h"
 #include "tc_common/data.h"
 #include "tc_common/log.h"
+#include "client_manager.h"
 
 using namespace tc;
 
@@ -153,10 +154,9 @@ namespace tc_capture_d3d11
             return;
         }
 
-
-        uint64_t handle = shared_texture->GetSharedHandle();
-#if 1   // send shared handle
-        {
+        auto client_manager = ClientManager::Instance();
+        auto send_video_frame_by_handle = !client_manager->GetInjectParams()->send_video_frame_by_shm;
+        if (send_video_frame_by_handle){
             // 暂时在这里获取 adapter_uid， 不过获取的太频繁了
             auto adapter_uid = tc::GetAdapterUid(device_);
             CaptureVideoFrame capture_video_frame_msg{};
@@ -166,7 +166,7 @@ namespace tc_capture_d3d11
             capture_video_frame_msg.frame_width_ = desc.Width;
             capture_video_frame_msg.frame_height_ = desc.Height;
             capture_video_frame_msg.frame_index_ = g_frame_index;
-            capture_video_frame_msg.handle_ = handle;
+            capture_video_frame_msg.handle_ = shared_texture->GetSharedHandle();;
             capture_video_frame_msg.frame_format_ = desc.Format;
             if(adapter_uid.has_value()) {
                 capture_video_frame_msg.adapter_uid_ = adapter_uid.value();
@@ -175,24 +175,9 @@ namespace tc_capture_d3d11
             auto data = Data::Make(nullptr, sizeof(CaptureVideoFrame));
             memcpy(data->DataAddr(), &capture_video_frame_msg, sizeof(CaptureVideoFrame));
             ClientIpcManager::Instance()->Send(data);
+            LOGI("by handle, Send with handle : {} ", g_frame_index);
         }
-#endif
-
-        //LOGI("shared handle : %llu, format : %d, frame_index: %llu", handle, desc.Format, g_frame_index);
-//		auto ipc_message = IPCFrameMessage::MakeEmptyMessage();
-//		ipc_message->type = IPCMessageType::kSharedTextureHandle;
-//		ipc_message->sender = IPCMessageSender::kSenderClient;
-//		ipc_message->handle = handle;
-//		ipc_message->format = desc.Format;
-//		ipc_message->width = desc.Width;
-//		ipc_message->height = desc.Height;
-//		ipc_message->frame_index = g_frame_index++;
-//		InterCommClient::Instance()->SendBack(IPCFrameMessage::ConvertToData(ipc_message));
-        g_frame_index++;
-        //LOGI("Hook....{}", g_frame_index);
-
-#if 0   // send image data
-        {
+        else {
             D3D11_TEXTURE2D_DESC desc;
             shared_texture->texture_->GetDesc(&desc);
 
@@ -223,7 +208,7 @@ namespace tc_capture_d3d11
                 return;
             }
 
-            LOGI("the format is : " + std::to_string(desc.Format));
+            //LOGI("the format is : " + std::to_string(desc.Format));
 
 //            {
 //                std::ofstream rgba_file("capture_yuv_tex.rgba", std::ios::binary);
@@ -241,7 +226,7 @@ namespace tc_capture_d3d11
                 libyuv::ARGBToI420(mapped_rect.pBits, mapped_rect.Pitch, y, width, u, uv_stride, v, uv_stride, width, height);
             }
 
-            LOGI("desc.Format: " + std::to_string(desc.Format) + " the yuv size : " + std::to_string(yuv_frame_data_.size()));
+            LOGI("by shm, desc.Format: " + std::to_string(desc.Format) + " the yuv size : " + std::to_string(yuv_frame_data_.size()));
 //            std::ofstream yuv_file("capture_yuv_tex.yuv", std::ios::binary);
 //            yuv_file.write((char*)yuv_frame_data_.data(), width * height * 1.5);
 //            yuv_file.close();
@@ -258,17 +243,9 @@ namespace tc_capture_d3d11
             memcpy(data->DataAddr(), &capture_video_frame_msg, sizeof(CaptureVideoFrame));
             memcpy(data->DataAddr() + sizeof(CaptureVideoFrame), yuv_frame_data_.data(), yuv_frame_data_.size());
             ClientIpcManager::Instance()->Send(data);
-
-//            CaptureAudioFrame capture_audio_frame_msg{};
-//            capture_audio_frame_msg.type = kCaptureVideoFrame;
-//            capture_audio_frame_msg.data_length = 0;
-//            capture_audio_frame_msg.frame_index_ = g_frame_index;
-//
-//            auto data = Data::Make(nullptr, sizeof(CaptureAudioFrame));
-//            memcpy(data->DataAddr(), &capture_audio_frame_msg, sizeof(CaptureAudioFrame));
-//            ClientIpcManager::Instance()->Send(data);
         }
-#endif
+
+        g_frame_index++;
     }
 
     void FreeResource() {

@@ -8,11 +8,16 @@ add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/win)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/win/hk_obs)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/win/hk_obs/d3d8_api)
 
 find_package(libyuv CONFIG REQUIRED)
 find_package(Poco COMPONENTS Foundation REQUIRED)
 
 if (WIN32)
+
+    add_subdirectory(win/hk_obs)
+
     ## capture
     set(CAPTURE_SRCS
         tc_capture.cpp

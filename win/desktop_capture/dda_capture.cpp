@@ -279,7 +279,7 @@ namespace tc {
 
                     if (texture) {
                         ++captured_texture_count;
-                        printf("OnCaptureFrame index = %d\n", index);
+                        //printf("OnCaptureFrame index = %d\n", index);
                         std::string dds_name = "frame_index_" + std::to_string(index);
                         //DebugOutDDS(texture, dds_name);
                         OnCaptureFrame(texture, index);
@@ -377,7 +377,7 @@ namespace tc {
     }
 
     void DDACapture::SendTextureHandle(const HANDLE& shared_handle, EMonitorIndex current_monitor_index, int width, int height, DXGI_FORMAT format) {
-        printf("current_monitor_index_ = %d, shared_handle = %p\n", current_monitor_index, shared_handle);
+        //printf("current_monitor_index_ = %d, shared_handle = %p\n", current_monitor_index, shared_handle);
         //RecvD3D11Texture2DShareHandle(d3d11_device_, shared_handle, static_cast<int>(current_monitor_index_));
 
         if(msg_notifier_) {

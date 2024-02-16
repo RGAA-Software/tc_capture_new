@@ -8,6 +8,8 @@
 #else
 #include "graphics-hook-ver.h"
 #include "obfuscate.h"
+#include "tc_common/log.h"
+#include <string>
 #endif
 
 #define DEBUG_OUTPUT
@@ -181,7 +183,7 @@ static inline bool init_hook_info(void)
 		return false;
 	}
 
-	global_hook_info = MapViewOfFile(filemap_hook_info, FILE_MAP_ALL_ACCESS,
+	global_hook_info = (hook_info*)MapViewOfFile(filemap_hook_info, FILE_MAP_ALL_ACCESS,
 					 0, 0, sizeof(struct hook_info));
 	if (!global_hook_info) {
 		hlog("Failed to map the hook info file mapping: %lu",
@@ -232,7 +234,7 @@ static DWORD WINAPI dummy_window_thread(LPVOID *unused)
 static inline void init_dummy_window_thread(void)
 {
 	HANDLE thread =
-		CreateThread(NULL, 0, dummy_window_thread, NULL, 0, NULL);
+		CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(dummy_window_thread), NULL, 0, NULL);
 	if (!thread) {
 		hlog("Failed to create temp D3D window thread: %lu",
 		     GetLastError());
@@ -572,7 +574,7 @@ bool capture_init_shtex(struct shtex_data **data, HWND window, uint32_t cx,
 		return false;
 	}
 
-	*data = shmem_info;
+	*data = static_cast<shtex_data *>(shmem_info);
 	(*data)->tex_handle = (uint32_t)handle;
 
 	global_hook_info->hook_ver_major = HOOK_VER_MAJOR;
@@ -699,7 +701,7 @@ void shmem_texture_data_unlock(int idx)
 
 static inline bool init_shmem_thread(uint32_t pitch, uint32_t cy)
 {
-	struct shmem_data *data = shmem_info;
+	struct shmem_data *data = static_cast<shmem_data *>(shmem_info);
 
 	thread_data.pitch = pitch;
 	thread_data.cy = cy;
@@ -754,7 +756,7 @@ bool capture_init_shmem(struct shmem_data **data, HWND window, uint32_t cx,
 		return false;
 	}
 
-	*data = shmem_info;
+	*data = static_cast<shmem_data *>(shmem_info);
 
 	/* to ensure fast copy rate, align texture data to 256bit addresses */
 	align_pos = (uintptr_t)shmem_info;
@@ -867,6 +869,9 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID unused1)
 
 		dll_inst = hinst;
 
+        auto log_path = "D:/thunder_cloud/tc_application/cmake-build-relwithdebinfo/tc_graphics.log";
+        tc::Logger::InitLog(log_path, true);
+
 		if (!init_dll()) {
 			DbgOut("[OBS] Duplicate hook library");
 			return false;
@@ -925,8 +930,8 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID unused1)
 	return true;
 }
 
-__declspec(dllexport) LRESULT CALLBACK
-	dummy_debug_proc(int code, WPARAM wparam, LPARAM lparam)
+#if 0
+__declspec(dllexport) LRESULT CALLBACK dummy_debug_proc(int code, WPARAM wparam, LPARAM lparam)
 {
 	static bool hooking = true;
 	MSG *msg = (MSG *)lparam;
@@ -945,3 +950,4 @@ __declspec(dllexport) LRESULT CALLBACK
 
 	return CallNextHookEx(0, code, wparam, lparam);
 }
+#endif

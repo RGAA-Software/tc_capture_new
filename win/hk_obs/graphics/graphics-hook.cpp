@@ -453,9 +453,10 @@ static inline void hlogv(const char *format, va_list args)
 		if (!ipc_pipe_client_write(&pipe, message, (size_t)num + 1)) {
 			ipc_pipe_client_free(&pipe);
 		}
-		DbgOut("[OBS] ");
-		DbgOut(message);
-		DbgOut("\n");
+//		DbgOut("[OBS] ");
+//		DbgOut(message);
+//		DbgOut("\n");
+        LOGI("[OBS] {}", message);
 	}
 }
 
@@ -871,6 +872,12 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID unused1)
 
         auto log_path = "D:/thunder_cloud/tc_application/cmake-build-relwithdebinfo/tc_graphics.log";
         tc::Logger::InitLog(log_path, true);
+
+        // test
+        char buffer[128] = {0};
+        GetEnvironmentVariableA("test", buffer, 128);
+        LOGI("variable: {}", buffer);
+        // test end
 
 		if (!init_dll()) {
 			DbgOut("[OBS] Duplicate hook library");

@@ -9,16 +9,14 @@
 #include "graphics-hook-ver.h"
 #include "obfuscate.h"
 #include "tc_common/log.h"
+#include "tc_common/string_ext.h"
+#include "tc_common/file_ext.h"
+#include "hook_manager.h"
+#include "hook_ipc.h"
 #include <string>
 #endif
 
-#define DEBUG_OUTPUT
-
-#ifdef DEBUG_OUTPUT
-#define DbgOut(x) OutputDebugStringA(x)
-#else
-#define DbgOut(x)
-#endif
+using namespace tc;
 
 struct thread_data {
 	CRITICAL_SECTION mutexes[NUM_BUFFERS];
@@ -77,7 +75,7 @@ bool init_pipe(void)
 
 	const bool success = ipc_pipe_client_open(&pipe, new_name);
 	if (!success) {
-		DbgOut("[OBS] Failed to open pipe\n");
+		LOGE("[OBS] Failed to open pipe");
 	}
 
 	return success;
@@ -343,7 +341,7 @@ static inline bool attempt_hook(void)
 
 	if (!d3d9_hooked) {
 		if (!d3d9_hookable()) {
-			DbgOut("[OBS] no D3D9 hook address found!\n");
+			LOGE("[OBS] no D3D9 hook address found!");
 			d3d9_hooked = true;
 		} else {
 			d3d9_hooked = hook_d3d9();
@@ -355,7 +353,7 @@ static inline bool attempt_hook(void)
 
 	if (!dxgi_hooked) {
 		if (!dxgi_hookable()) {
-			DbgOut("[OBS] no DXGI hook address found!\n");
+			LOGE("[OBS] no DXGI hook address found!");
 			dxgi_hooked = true;
 		} else {
 			dxgi_hooked = hook_dxgi();
@@ -436,7 +434,7 @@ static inline void capture_loop(void)
 static DWORD WINAPI main_capture_thread(HANDLE thread_handle)
 {
 	if (!init_hook(thread_handle)) {
-		DbgOut("[OBS] Failed to init hook\n");
+		LOGE("[OBS] Failed to init hook");
 		free_hook();
 		return 0;
 	}
@@ -863,24 +861,34 @@ static bool init_dll(void)
 	return !!dup_hook_mutex;
 }
 
+std::string GetDllPath(HMODULE module) {
+    wchar_t path[MAX_PATH] = { 0 };
+    if (GetModuleFileName(module, path, MAX_PATH)) {
+        auto w_path = std::wstring(path);
+        auto u_path = tc::StringExt::ToUTF8(w_path);
+        return tc::FileExt::GetFileFolder(u_path);
+    }
+    return "";
+}
+
+static HookManager* g_hook_manager = HookManager::Instance();
+
 BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID unused1)
 {
 	if (reason == DLL_PROCESS_ATTACH) {
 		wchar_t name[MAX_PATH];
 
 		dll_inst = hinst;
+        g_hook_manager->Init();
 
-        auto log_path = "D:/thunder_cloud/tc_application/cmake-build-relwithdebinfo/tc_graphics.log";
+        std::string dll_path = GetDllPath(hinst);
+        auto log_path = std::format("{}/tc_graphics_{}.log", dll_path, 0);
         tc::Logger::InitLog(log_path, true);
 
-        // test
-        char buffer[128] = {0};
-        GetEnvironmentVariableA("test", buffer, 128);
-        LOGI("variable: {}", buffer);
-        // test end
+        LOGI("Dll path: {}", dll_path);
 
 		if (!init_dll()) {
-			DbgOut("[OBS] Duplicate hook library");
+			LOGE("[OBS] Duplicate hook library");
 			return false;
 		}
 
@@ -891,7 +899,7 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID unused1)
 					       SYNCHRONIZE, false, 0);
 
 		if (!success)
-			DbgOut("[OBS] Failed to get current thread handle");
+			LOGE("[OBS] Failed to get current thread handle");
 
 		if (!init_signals()) {
 			return false;

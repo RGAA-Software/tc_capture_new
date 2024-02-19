@@ -21,7 +21,7 @@ message("--> ${DETOURS_LIBRARY}")
 message("--> ${VCPKG_ROOT}/packages/detours_x64-windows-static/include/detours")
 
 #find_package(spdlog CONFIG REQUIRED)
-find_package(fmt CONFIG REQUIRED)
+#find_package(fmt CONFIG REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
         graphics/d3d8-capture.cpp

@@ -3,6 +3,7 @@ project(tc_capture)
 
 set(CMAKE_CXX_STANDARD 20)
 
+add_definitions(-DUNICODE -D_UNICODE -DWIN32_LEAN_AND_MEAN -DNOMINMAX -DENABLE_JEMALLOC=0)
 add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
@@ -59,8 +60,9 @@ if (WIN32)
 
         ## hk_audio
     )
+
     add_library(tc_capture_library SHARED ${DLL_SRCS})
-    target_link_libraries(tc_capture_library jemalloc tc_common EasyHook64 yuv Iphlpapi.lib PocoFoundationmt.lib)
+    target_link_libraries(tc_capture_library tc_common EasyHook64 yuv Iphlpapi.lib PocoFoundationmt.lib)
 
 elseif (APPLE)
 

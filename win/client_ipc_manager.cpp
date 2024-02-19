@@ -16,6 +16,10 @@
 namespace tc
 {
 
+    std::shared_ptr<ClientIpcManager> ClientIpcManager::Make() {
+        return std::make_shared<ClientIpcManager>();
+    }
+
     ClientIpcManager::ClientIpcManager() = default;
 
     void ClientIpcManager::Init(uint32_t listening_port, uint32_t shm_buffer_size) {

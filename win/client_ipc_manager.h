@@ -31,10 +31,14 @@ namespace tc
     class ClientIpcManager {
     public:
 
+        // for easy-hook
         static ClientIpcManager* Instance() {
             static ClientIpcManager mgr;
             return &mgr;
         }
+
+        // for obs hook
+        static std::shared_ptr<ClientIpcManager> Make();
 
         ClientIpcManager();
 

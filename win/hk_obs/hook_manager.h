@@ -11,6 +11,8 @@
 namespace tc
 {
 
+    class HookIpc;
+
     class HookManager {
     public:
 
@@ -20,6 +22,10 @@ namespace tc
         }
 
         void Init();
+
+    private:
+
+        std::shared_ptr<HookIpc> hook_ipc_ = nullptr;
 
     };
 

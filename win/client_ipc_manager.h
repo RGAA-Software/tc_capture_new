@@ -42,7 +42,7 @@ namespace tc
 
         ClientIpcManager();
 
-        void Init(uint32_t listening_port, uint32_t shm_buffer_size);
+        void Init(uint32_t pid, uint32_t shm_buffer_size);
         void Send(const std::string& data);
         void Send(const std::shared_ptr<Data>& data);
         void Send(const char* data, int size);
@@ -54,10 +54,9 @@ namespace tc
     private:
 
     private:
-
+        uint32_t pid_;
         bool exit_ = false;
         uint32_t buffer_index_ = 0;
-        uint32_t listen_port_ = 0;
         uint32_t shm_buffer_size_ = 0;
         std::shared_ptr<std::thread> recv_thread_ = nullptr;
 

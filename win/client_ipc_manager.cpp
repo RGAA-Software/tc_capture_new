@@ -22,16 +22,16 @@ namespace tc
 
     ClientIpcManager::ClientIpcManager() = default;
 
-    void ClientIpcManager::Init(uint32_t listening_port, uint32_t shm_buffer_size) {
-        this->listen_port_ = listening_port;
+    void ClientIpcManager::Init(uint32_t pid, uint32_t shm_buffer_size) {
+        this->pid_ = pid;
         this->shm_buffer_size_ = shm_buffer_size;
-        auto ipc_shm_client_to_host_name = "ipc_shm_client_to_host_" + std::to_string(listening_port);
+        auto ipc_shm_client_to_host_name = "ipc_shm_client_to_host_" + std::to_string(this->pid_);
 
-        auto ipc_event_host_to_client_name = "ipc_event_host_to_client_" + std::to_string(listening_port);
-        auto ipc_event_client_to_host_name = "ipc_event_client_to_host_" + std::to_string(listening_port);
+        auto ipc_event_host_to_client_name = "ipc_event_host_to_client_" + std::to_string(this->pid_);
+        auto ipc_event_client_to_host_name = "ipc_event_client_to_host_" + std::to_string(this->pid_);
 
-        auto mtx_host_to_client_name = "mtx_host_to_client_" + std::to_string(listening_port);
-        auto mtx_client_to_host_name = "mtx_client_to_host_" + std::to_string(listening_port);
+        auto mtx_host_to_client_name = "mtx_host_to_client_" + std::to_string(this->pid_);
+        auto mtx_client_to_host_name = "mtx_client_to_host_" + std::to_string(this->pid_);
 
         host_to_client_event_ = std::make_shared<Poco::NamedEvent>(ipc_event_host_to_client_name);
         client_to_host_event_ = std::make_shared<Poco::NamedEvent>(ipc_event_client_to_host_name);
@@ -108,7 +108,7 @@ namespace tc
             while(!exit_) {
                 host_to_client_event_->wait();
                 if (!host_to_client_shm_) {
-                    auto ipc_shm_host_to_client_name = "ipc_shm_host_to_client_" + std::to_string(listen_port_);
+                    auto ipc_shm_host_to_client_name = "ipc_shm_host_to_client_" + std::to_string(pid_);
                     host_to_client_shm_ = std::make_shared<Poco::SharedMemory>(ipc_shm_host_to_client_name, kHostToClientShmSize, Poco::SharedMemory::AccessMode::AM_READ);
                 }
                 host_to_client_mtx_->lock();

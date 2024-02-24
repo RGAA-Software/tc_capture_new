@@ -5,6 +5,7 @@
 #include <inttypes.h>
 
 #include "graphics-hook.h"
+#include "tc_common/log.h"
 
 #include <detours/detours.h>
 
@@ -48,6 +49,7 @@ static void STDMETHODCALLTYPE SwapChainDestructed(void *pData)
 		dxgi_possible_swap_queue_count = 0;
 		dxgi_present_attempted = false;
 
+        LOGI("SwapChainDestructed and free....");
 		data.free();
 		data.free = nullptr;
 	}
@@ -83,7 +85,6 @@ static bool setup_dxgi(IDXGISwapChain *swap)
 
 		if (level >= D3D_FEATURE_LEVEL_11_0) {
 			hlog("Found D3D11 11.0 device on swap chain");
-
 			init_swap_data(swap, d3d11_capture, d3d11_free);
 			return true;
 		}
@@ -141,7 +142,7 @@ static HRESULT STDMETHODCALLTYPE hook_resize_buffers(IDXGISwapChain *swap,
 						     DXGI_FORMAT format,
 						     UINT flags)
 {
-	hlog_verbose("ResizeBuffers callback");
+	LOGI("ResizeBuffers callback and free");
 
 	data.swap = nullptr;
 	data.capture = nullptr;
@@ -187,6 +188,7 @@ static void update_mismatch_count(bool match)
 			dxgi_possible_swap_queue_count = 0;
 			dxgi_present_attempted = false;
 
+            LOGI("update_mismatch_count");
 			data.free();
 			data.free = nullptr;
 
@@ -213,10 +215,11 @@ static HRESULT STDMETHODCALLTYPE hook_present(IDXGISwapChain *swap,
 	}
 
 	if (!data.swap && !capture_active()) {
+        LOGI("Setup dxgi....");
 		setup_dxgi(swap);
 	}
 
-	hlog_verbose(
+	hlog(
 		"Present callback: sync_interval=%u, flags=%u, current_swap=0x%" PRIX64
 		", expected_swap=0x%" PRIX64,
 		sync_interval, flags, swap, data.swap);
@@ -278,6 +281,7 @@ hook_present1(IDXGISwapChain1 *swap, UINT sync_interval, UINT flags,
 	}
 
 	if (!data.swap && !capture_active()) {
+        LOGI("Present1 setup_dxig....");
 		setup_dxgi(swap);
 	}
 

@@ -191,8 +191,7 @@ static inline bool frame_ready(uint64_t interval)
 
 static inline bool capture_ready(void)
 {
-	return capture_active() &&
-	       frame_ready(global_hook_info->frame_interval);
+	return capture_active() && frame_ready(global_hook_info->frame_interval);
 }
 
 static inline bool capture_stopped(void)
@@ -232,7 +231,7 @@ static inline bool capture_should_init(void)
 	bool should_init = false;
 
 	if (!capture_active()) {
-		if (capture_restarted()) {
+		//if (capture_restarted()) {
 			if (capture_alive()) {
 				if (!ipc_pipe_client_valid(&pipe)) {
 					init_pipe();
@@ -240,13 +239,11 @@ static inline bool capture_should_init(void)
 
 				should_init = true;
 			} else {
-				hlog_verbose(
-					"capture_should_init: inactive, restarted, not alive");
+				hlog("capture_should_init: inactive, restarted, not alive");
 			}
-		} else {
-			hlog_verbose(
-				"capture_should_init: inactive, not restarted");
-		}
+//		} else {
+//			hlog("capture_should_init: inactive, not restarted");
+//		}
 	}
 
 	return should_init;

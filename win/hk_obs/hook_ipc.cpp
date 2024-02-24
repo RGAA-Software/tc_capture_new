@@ -17,9 +17,11 @@ namespace tc
         client_ipc_mgr_ = ClientIpcManager::Make();
         client_ipc_mgr_->Init(pid, kHostToClientShmSize);
         client_ipc_mgr_->Wait();
-        client_ipc_mgr_->MockSend();
+        //client_ipc_mgr_->MockSend();
     }
 
-
+    void HookIpc::Send(std::shared_ptr<Data>&& data) {
+        client_ipc_mgr_->Send(std::move(data));
+    }
 
 }

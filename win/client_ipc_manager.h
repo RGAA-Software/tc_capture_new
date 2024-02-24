@@ -45,6 +45,7 @@ namespace tc
         void Init(uint32_t pid, uint32_t shm_buffer_size);
         void Send(const std::string& data);
         void Send(const std::shared_ptr<Data>& data);
+        void Send(std::shared_ptr<Data>&& data);
         void Send(const char* data, int size);
         void Wait();
         void Exit();

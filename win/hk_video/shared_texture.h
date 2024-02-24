@@ -18,8 +18,8 @@ namespace tc
 		bool CopyCapturedTexture(ID3D11Device* device, ID3D11DeviceContext* context, ID3D11Texture2D* src);
 		uint64_t GetSharedHandle();
 
+    private:
         bool LockMutex();
-
         bool ReleaseMutex();
 
 	public:

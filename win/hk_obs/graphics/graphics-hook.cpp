@@ -183,6 +183,17 @@ static inline bool init_hook_info(void)
 
 	global_hook_info = (hook_info*)MapViewOfFile(filemap_hook_info, FILE_MAP_ALL_ACCESS,
 					 0, 0, sizeof(struct hook_info));
+
+    //test beg
+    // dxgi
+    //    present=0x15e0
+    //    present1=0x68dc0
+    //    resize=0x22f40
+    global_hook_info->offsets.dxgi.present = 0x15e0;
+    global_hook_info->offsets.dxgi.present1 = 0x68dc0;
+    global_hook_info->offsets.dxgi.resize = 0x22f40;
+    // test end
+
 	if (!global_hook_info) {
 		hlog("Failed to map the hook info file mapping: %lu",
 		     GetLastError());
@@ -335,6 +346,7 @@ static inline bool attempt_hook(void)
 
 #ifdef COMPILE_D3D12_HOOK
 	if (!d3d12_hooked) {
+        LOGI("Hook d3d12...");
 		d3d12_hooked = hook_d3d12();
 	}
 #endif
@@ -344,6 +356,7 @@ static inline bool attempt_hook(void)
 			LOGE("[OBS] no D3D9 hook address found!");
 			d3d9_hooked = true;
 		} else {
+            LOGI("Hook d3d9...");
 			d3d9_hooked = hook_d3d9();
 			if (d3d9_hooked) {
 				return true;
@@ -356,6 +369,7 @@ static inline bool attempt_hook(void)
 			LOGE("[OBS] no DXGI hook address found!");
 			dxgi_hooked = true;
 		} else {
+            LOGI("Hook dxgi...");
 			dxgi_hooked = hook_dxgi();
 			if (dxgi_hooked) {
 				return true;
@@ -364,6 +378,7 @@ static inline bool attempt_hook(void)
 	}
 
 	if (!gl_hooked) {
+        LOGI("Hook gl...");
 		gl_hooked = hook_gl();
 		if (gl_hooked) {
 			return true;
@@ -376,6 +391,7 @@ static inline bool attempt_hook(void)
 		if (!d3d8_hookable()) {
 			d3d8_hooked = true;
 		} else {
+            LOGI("Hook d3d8...");
 			d3d8_hooked = hook_d3d8();
 			if (d3d8_hooked) {
 				return true;
@@ -417,7 +433,9 @@ static inline bool attempt_hook(void)
 
 static inline void capture_loop(void)
 {
-	WaitForSingleObject(signal_init, INFINITE);
+    LOGI("Before wait signal init ...");
+	//WaitForSingleObject(signal_init, INFINITE);
+    LOGI("After wait signal init ...");
 
 	while (!attempt_hook())
 		Sleep(40);
@@ -439,6 +457,7 @@ static DWORD WINAPI main_capture_thread(HANDLE thread_handle)
 		return 0;
 	}
 
+    LOGI("Start capture loop...");
 	capture_loop();
 	return 0;
 }
@@ -902,15 +921,19 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID unused1)
 			LOGE("[OBS] Failed to get current thread handle");
 
 		if (!init_signals()) {
+            LOGE("init signals failed.");
 			return false;
 		}
 		if (!init_system_path()) {
+            LOGE("init system path failed.");
 			return false;
 		}
 		if (!init_hook_info()) {
+            LOGE("init hook info failed.");
 			return false;
 		}
 		if (!init_mutexes()) {
+            LOGE("init mutexes failed.");
 			return false;
 		}
 
@@ -918,6 +941,7 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID unused1)
 		 * by the next FreeLibrary call */
 		GetModuleFileNameW(hinst, name, MAX_PATH);
 		LoadLibraryW(name);
+        LOGI("LoadLibrary: {}", StringExt::ToUTF8(name));
 
 		capture_thread = CreateThread(
 			NULL, 0, (LPTHREAD_START_ROUTINE)main_capture_thread,
@@ -926,6 +950,7 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID unused1)
 			CloseHandle(cur_thread);
 			return false;
 		}
+        LOGI("CreateThread for main_capture_thread success.");
 
 	} else if (reason == DLL_PROCESS_DETACH) {
 		if (!dup_hook_mutex) {

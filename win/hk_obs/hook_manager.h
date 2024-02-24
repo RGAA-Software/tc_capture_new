@@ -12,6 +12,7 @@ namespace tc
 {
 
     class HookIpc;
+    class Data;
 
     class HookManager {
     public:
@@ -22,6 +23,8 @@ namespace tc
         }
 
         void Init();
+
+        std::shared_ptr<HookIpc> GetIpcChannel();
 
     private:
 

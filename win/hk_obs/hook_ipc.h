@@ -9,6 +9,7 @@
 
 namespace tc
 {
+    class Data;
     class ClientIpcManager;
 
     class HookIpc {
@@ -16,7 +17,9 @@ namespace tc
 
         static std::shared_ptr<HookIpc> Make(uint32_t pid);
 
-        HookIpc(uint32_t pid);
+        explicit HookIpc(uint32_t pid);
+
+        void Send(std::shared_ptr<Data>&& data);
 
     private:
         uint32_t current_pid_{};

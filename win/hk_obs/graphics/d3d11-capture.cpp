@@ -1,8 +1,19 @@
 #include <d3d11.h>
 #include <dxgi.h>
+#include <atlbase.h>
 
 #include "dxgi-helpers.hpp"
 #include "graphics-hook.h"
+#include "tc_common/log.h"
+#include "tc_common/data.h"
+#include "hook_manager.h"
+#include "hook_ipc.h"
+#include "capture_message.h"
+#include "../hk_video/d3d_utils.h"
+
+using namespace tc;
+
+static uint64_t g_frame_index = 0;
 
 struct d3d11_data {
 	ID3D11Device *device;         /* do not release */
@@ -82,8 +93,7 @@ static bool create_d3d11_stage_surface(ID3D11Texture2D **tex)
 	return true;
 }
 
-static bool create_d3d11_tex(uint32_t cx, uint32_t cy, ID3D11Texture2D **tex,
-			     HANDLE *handle)
+static bool create_d3d11_tex(uint32_t cx, uint32_t cy, ID3D11Texture2D **tex, HANDLE *handle)
 {
 	HRESULT hr;
 
@@ -198,14 +208,15 @@ static bool d3d11_shmem_init(HWND window)
 	return true;
 }
 
+static std::shared_ptr<SharedTexture> g_shared_texture = nullptr;
+
 static bool d3d11_shtex_init(HWND window)
 {
 	bool success;
-
 	data.using_shtex = true;
+	success = create_d3d11_tex(data.cx, data.cy, &data.texture, &data.handle);
 
-	success =
-		create_d3d11_tex(data.cx, data.cy, &data.texture, &data.handle);
+    g_shared_texture = std::make_shared<SharedTexture>();
 
 	if (!success) {
 		hlog("d3d11_shtex_init: failed to create texture");
@@ -243,8 +254,10 @@ static void d3d11_init(IDXGISwapChain *swap)
 	const bool success = global_hook_info->force_shmem
 				     ? d3d11_shmem_init(window)
 				     : d3d11_shtex_init(window);
-	if (!success)
-		d3d11_free();
+	if (!success) {
+        LOGI("init ... free");
+        d3d11_free();
+    }
 }
 
 static inline void d3d11_copy_texture(ID3D11Resource *dst, ID3D11Resource *src)
@@ -303,18 +316,49 @@ static inline void d3d11_shmem_capture(ID3D11Resource *backbuffer)
 	data.cur_tex = next_tex;
 }
 
+#if 0
+uint64_t GetSharedHandle() {
+    if (!data.texture) {
+        return 0;
+    }
+    HANDLE tex_handle = nullptr;
+    CComPtr<IDXGIResource> resource = nullptr;
+    auto hr = data.texture->QueryInterface(__uuidof(IDXGIResource), reinterpret_cast<void**>(&resource));
+    if (SUCCEEDED(hr)) {
+        hr = resource->GetSharedHandle(&tex_handle);
+        if (FAILED(hr)) {
+            LOGE("GetSharedHandle Failed !!!");
+            return 0;
+        }
+    }
+    else {
+        LOGE("Query resource error : {0:x}", hr);
+    }
+    if (!tex_handle) {
+        return 0;
+    }
+    return (uint64_t)tex_handle;
+}
+#endif
+
 void d3d11_capture(void *swap_ptr, void *backbuffer_ptr)
 {
 	IDXGIResource *dxgi_backbuffer = (IDXGIResource *)backbuffer_ptr;
 	IDXGISwapChain *swap = (IDXGISwapChain *)swap_ptr;
 
 	HRESULT hr;
-	if (capture_should_stop()) {
-		d3d11_free();
+	if (/*capture_should_stop()*/false) {
+		//d3d11_free();
 	}
-	if (capture_should_init()) {
+
+    //static bool should_init = true;
+	if (!capture_active()/*capture_should_init()*/) {
+        //should_init = false;
+        LOGI("-----------------> d3d11 init ....");
 		d3d11_init(swap);
 	}
+    LOGI("d3d11 apture.... : {}", capture_ready());
+    LOGI("capture active: {}, frame_ready: {}", capture_active(), frame_ready(global_hook_info->frame_interval));
 	if (capture_ready()) {
 		ID3D11Resource *backbuffer;
 
@@ -327,10 +371,41 @@ void d3d11_capture(void *swap_ptr, void *backbuffer_ptr)
 			return;
 		}
 
-		if (data.using_shtex)
-			d3d11_shtex_capture(backbuffer);
-		else
-			d3d11_shmem_capture(backbuffer);
+        LOGI("capture data... : {}", data.using_shtex);
+
+		if (data.using_shtex) {
+            d3d11_shtex_capture(backbuffer);
+
+            g_shared_texture->CopyCapturedTexture(data.device, data.context, data.texture);
+
+            D3D11_TEXTURE2D_DESC desc;
+            data.texture->GetDesc(&desc);
+            auto hook_mgr = HookManager::Instance();
+            auto ipc_channel = hook_mgr->GetIpcChannel();
+            auto adapter_uid = tc::GetAdapterUid(data.device);
+            CaptureVideoFrame capture_video_frame_msg{};
+            capture_video_frame_msg.type = kCaptureVideoFrame;
+            capture_video_frame_msg.capture_type_ = kCaptureVideoByHandle;
+            capture_video_frame_msg.data_length = 0;
+            capture_video_frame_msg.frame_width_ = desc.Width;
+            capture_video_frame_msg.frame_height_ = desc.Height;
+            capture_video_frame_msg.frame_index_ = g_frame_index++;
+            capture_video_frame_msg.handle_ = g_shared_texture->GetSharedHandle();
+            capture_video_frame_msg.frame_format_ = desc.Format;
+            if(adapter_uid.has_value()) {
+                capture_video_frame_msg.adapter_uid_ = adapter_uid.value();
+            }
+
+            LOGI("Shared handle: {}", capture_video_frame_msg.handle_);
+
+            //capture_video_frame_msg.adapter_uid_ = 78007;
+            auto msg_data = Data::Make(nullptr, sizeof(CaptureVideoFrame));
+            memcpy(msg_data->DataAddr(), &capture_video_frame_msg, sizeof(CaptureVideoFrame));
+            ipc_channel->Send(std::move(msg_data));
+        }
+		else {
+            d3d11_shmem_capture(backbuffer);
+        }
 
 		backbuffer->Release();
 	}

@@ -11,6 +11,7 @@
 #include <detours/detours.h>
 
 #include "dxgi-helpers.hpp"
+#include "tc_common/log.h"
 
 #define MAX_BACKBUFFERS 8
 
@@ -420,8 +421,12 @@ bool hook_d3d12(void)
 {
 	HMODULE d3d12_module = get_system_module("d3d12.dll");
 	if (!d3d12_module) {
-		hlog_verbose(
-			"Failed to find d3d12.dll. Skipping hook attempt.");
+		LOGW("Failed to find d3d12.dll, will load it.");
+        LoadLibraryA("d3d12.dll");
+        d3d12_module = get_system_module("d3d12.dll");
+        if (!d3d12_module) {
+            LOGE("can't load d3d12...");
+        }
 		return false;
 	}
 

@@ -39,6 +39,8 @@ add_library(${PROJECT_NAME} SHARED
         hook_manager.cpp
         hook_ipc.cpp
         ../client_ipc_manager.cpp
+        ../hk_video/d3d_utils.cpp
+        ../hk_video/shared_texture.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC ${DETOURS_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${DETOURS_LIBRARY} tc_ipc_util tc_common dxgi d3d11 d3d12 dxguid Iphlpapi.lib PocoFoundationmt.lib)

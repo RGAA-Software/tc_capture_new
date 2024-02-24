@@ -55,7 +55,7 @@ namespace tc
         auto current_time = TimeExt::GetCurrentTimestamp();
         auto diff = current_time - last_send_time;
         last_send_time = current_time;
-        LOGI("diff: {}", diff);
+        //LOGI("diff: {}", diff);
 
         client_to_host_mtx_->lock();
         auto begin = client_to_host_shm_->begin();
@@ -72,6 +72,10 @@ namespace tc
     }
 
     void ClientIpcManager::Send(const std::shared_ptr<Data>& data) {
+        this->Send(data->CStr(), data->Size());
+    }
+
+    void ClientIpcManager::Send(std::shared_ptr<Data>&& data) {
         this->Send(data->CStr(), data->Size());
     }
 

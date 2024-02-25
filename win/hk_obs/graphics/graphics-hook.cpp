@@ -11,8 +11,10 @@
 #include "tc_common/log.h"
 #include "tc_common/string_ext.h"
 #include "tc_common/file_ext.h"
+#include "tc_common/process_util.h"
 #include "hook_manager.h"
 #include "hook_ipc.h"
+#include "offsets/get-graphics-offsets.h"
 #include <string>
 #endif
 
@@ -176,27 +178,14 @@ static inline bool init_hook_info(void)
 {
 	filemap_hook_info = create_hook_info(GetCurrentProcessId());
 	if (!filemap_hook_info) {
-		hlog("Failed to create hook info file mapping: %lu",
-		     GetLastError());
+		hlog("Failed to create hook info file mapping: %lu", GetLastError());
 		return false;
 	}
 
 	global_hook_info = (hook_info*)MapViewOfFile(filemap_hook_info, FILE_MAP_ALL_ACCESS,
 					 0, 0, sizeof(struct hook_info));
-
-    //test beg
-    // dxgi
-    //    present=0x15e0
-    //    present1=0x68dc0
-    //    resize=0x22f40
-    global_hook_info->offsets.dxgi.present = 0x15e0;
-    global_hook_info->offsets.dxgi.present1 = 0x68dc0;
-    global_hook_info->offsets.dxgi.resize = 0x22f40;
-    // test end
-
 	if (!global_hook_info) {
-		hlog("Failed to map the hook info file mapping: %lu",
-		     GetLastError());
+		hlog("Failed to map the hook info file mapping: %lu", GetLastError());
 		return false;
 	}
 
@@ -334,6 +323,16 @@ static inline bool attempt_hook(void)
 	static bool d3d12_hooked = false;
 	static bool dxgi_hooked = false;
 	static bool gl_hooked = false;
+    auto hook_mgr = HookManager::Instance();
+    if (hook_mgr->hello_msg_) {
+        global_hook_info->offsets.dxgi.present = hook_mgr->hello_msg_->dxgi_present;
+        global_hook_info->offsets.dxgi.present1 = hook_mgr->hello_msg_->dxgi_present1;
+        global_hook_info->offsets.dxgi.resize = hook_mgr->hello_msg_->dxgi_resize;
+        global_hook_info->offsets.dxgi2.release = hook_mgr->hello_msg_->dxgi_release;
+        LOGI("Attempt hook: {} {} {} {}", hook_mgr->hello_msg_->dxgi_present, hook_mgr->hello_msg_->dxgi_present1,
+             hook_mgr->hello_msg_->dxgi_resize, hook_mgr->hello_msg_->dxgi_release);
+    }
+
 #ifdef COMPILE_VULKAN_HOOK
 	static bool vulkan_hooked = false;
 	if (!vulkan_hooked) {
@@ -367,7 +366,9 @@ static inline bool attempt_hook(void)
 	if (!dxgi_hooked) {
 		if (!dxgi_hookable()) {
 			LOGE("[OBS] no DXGI hook address found!");
-			dxgi_hooked = true;
+			// dxgi_hooked = true;
+            // 从app ipc过来数据，这里必须等待数据过来，hook成功
+            return false;
 		} else {
             LOGI("Hook dxgi...");
 			dxgi_hooked = hook_dxgi();
@@ -901,6 +902,7 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID unused1)
         g_hook_manager->Init();
 
         std::string dll_path = GetDllPath(hinst);
+        g_hook_manager->dll_path_ = dll_path;
         auto log_path = std::format("{}/tc_graphics_{}.log", dll_path, 0);
         tc::Logger::InitLog(log_path, true);
 

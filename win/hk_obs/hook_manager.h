@@ -5,13 +5,15 @@
 #ifndef TC_APPLICATION_HOOK_MANAGER_H
 #define TC_APPLICATION_HOOK_MANAGER_H
 
+#include <string>
 #include <memory>
 #include <functional>
+#include "capture_message.h"
 
 namespace tc
 {
 
-    class HookIpc;
+    class ClientIpcManager;
     class Data;
 
     class HookManager {
@@ -23,13 +25,14 @@ namespace tc
         }
 
         void Init();
+        void Send(std::shared_ptr<Data>&& data);
+        std::shared_ptr<ClientIpcManager> GetIpcManager();
 
-        std::shared_ptr<HookIpc> GetIpcChannel();
-
-    private:
-
-        std::shared_ptr<HookIpc> hook_ipc_ = nullptr;
-
+    public:
+        uint32_t current_pid_{};
+        std::string dll_path_;
+        std::shared_ptr<ClientIpcManager> client_ipc_mgr_ = nullptr;
+        std::shared_ptr<CaptureHelloMessage> hello_msg_ = nullptr;
     };
 
 }

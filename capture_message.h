@@ -13,6 +13,7 @@ namespace tc
     constexpr auto kCaptureVideoFrame = 0x0001;
     constexpr auto kCaptureAudioFrame = 0x0002;
     constexpr auto kCaptureDebugInfo = 0x0003;
+    constexpr auto kCaptureHelloMessage = 0x0004;
 
     // capture_type_
     constexpr auto kCaptureVideoByHandle = 0x1000;
@@ -51,6 +52,42 @@ namespace tc
     class CaptureDebugInfo : public CaptureBaseMessage {
     public:
 
+    };
+
+    // app 会在刚注入dll时，通过IPC发送这个消息到dll中
+    class CaptureHelloMessage : public CaptureBaseMessage {
+    public:
+        CaptureHelloMessage() : CaptureBaseMessage() {
+            type = kCaptureHelloMessage;
+        }
+    public:
+#ifdef WIN32
+        // [d3d8]
+        // present=0x0
+        // [d3d9]
+        // present=0xb73f0
+        // present_ex=0xb7490
+        // present_swap=0xc470
+        // d3d9_clsoff=0x4030
+        // is_d3d9ex_clsoff=0x55a0
+        // [dxgi]
+        // present=0x15e0
+        // present1=0x68dc0
+        // resize=0x22f40
+        // release=0x3240
+
+        uint64_t d3d9_present = 0;
+        uint64_t d3d9_present_ex = 0;
+        uint64_t d3d9_present_swap = 0;
+        uint64_t d3d9_d3d9_clsoff = 0;
+        uint64_t d3d9_is_d3d9ex_clsoff = 0;
+
+        uint64_t dxgi_present = 0;
+        uint64_t dxgi_present1 = 0;
+        uint64_t dxgi_resize = 0;
+        uint64_t dxgi_release = 0;
+
+#endif
     };
 
 }

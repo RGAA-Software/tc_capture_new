@@ -16,7 +16,7 @@ namespace tc
         current_pid_ = pid;
         client_ipc_mgr_ = ClientIpcManager::Make();
         client_ipc_mgr_->Init(pid, kHostToClientShmSize);
-        client_ipc_mgr_->Wait();
+        client_ipc_mgr_->WaitForMessage();
         //client_ipc_mgr_->MockSend();
     }
 

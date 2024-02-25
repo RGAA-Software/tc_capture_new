@@ -381,7 +381,6 @@ void d3d11_capture(void *swap_ptr, void *backbuffer_ptr)
             D3D11_TEXTURE2D_DESC desc;
             data.texture->GetDesc(&desc);
             auto hook_mgr = HookManager::Instance();
-            auto ipc_channel = hook_mgr->GetIpcChannel();
             auto adapter_uid = tc::GetAdapterUid(data.device);
             CaptureVideoFrame capture_video_frame_msg{};
             capture_video_frame_msg.type = kCaptureVideoFrame;
@@ -401,7 +400,7 @@ void d3d11_capture(void *swap_ptr, void *backbuffer_ptr)
             //capture_video_frame_msg.adapter_uid_ = 78007;
             auto msg_data = Data::Make(nullptr, sizeof(CaptureVideoFrame));
             memcpy(msg_data->DataAddr(), &capture_video_frame_msg, sizeof(CaptureVideoFrame));
-            ipc_channel->Send(std::move(msg_data));
+            hook_mgr->Send(std::move(msg_data));
         }
 		else {
             d3d11_shmem_capture(backbuffer);

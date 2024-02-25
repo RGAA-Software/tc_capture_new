@@ -9,10 +9,12 @@
 #include <string>
 #include <thread>
 #include <mutex>
+#include <functional>
 
 #include <Poco/NamedEvent.h>
 #include <Poco/SharedMemory.h>
 #include <Poco/NamedMutex.h>
+#include "tc_capture/capture_message.h"
 
 namespace tc
 {
@@ -27,6 +29,8 @@ namespace tc
     };
 
     class Data;
+
+    using IpcHelloMessageCallback = std::function<void(std::shared_ptr<CaptureHelloMessage>&&)>;
 
     class ClientIpcManager {
     public:
@@ -47,12 +51,15 @@ namespace tc
         void Send(const std::shared_ptr<Data>& data);
         void Send(std::shared_ptr<Data>&& data);
         void Send(const char* data, int size);
-        void Wait();
+        void WaitForMessage();
         void Exit();
+
+        void RegisterHelloMessageCallback(IpcHelloMessageCallback&& cbk);
 
         void MockSend();
 
     private:
+        static std::tuple<std::shared_ptr<CaptureBaseMessage>, std::shared_ptr<Data>> ParseMessage(std::shared_ptr<Data>&& data);
 
     private:
         uint32_t pid_;
@@ -70,6 +77,8 @@ namespace tc
         std::shared_ptr<Poco::NamedMutex> host_to_client_mtx_ = nullptr;
 
         std::mutex shm_send_mtx_;
+
+        IpcHelloMessageCallback ipc_hello_msg_callback_ = nullptr;
 
     };
 

@@ -38,7 +38,7 @@ extern "C" CAPTURETEX_API void __stdcall NativeInjectionEntryPoint(REMOTE_ENTRY_
     LOGI("Inject send video by shm: {}", params->send_video_frame_by_shm);
 
     ipc_manager->Init(params->listening_port, params->shm_client_to_host_buffer_size);
-    ipc_manager->Wait();
+    ipc_manager->WaitForMessage();
     ipc_manager->MockSend();
 
 //    for (int i = 0; i < 100; i++) {

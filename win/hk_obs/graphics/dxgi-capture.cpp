@@ -281,7 +281,7 @@ hook_present1(IDXGISwapChain1 *swap, UINT sync_interval, UINT flags,
 	}
 
 	if (!data.swap && !capture_active()) {
-        LOGI("Present1 setup_dxig....");
+        LOGI("Present1 setup_dxgi....");
 		setup_dxgi(swap);
 	}
 

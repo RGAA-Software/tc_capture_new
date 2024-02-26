@@ -187,13 +187,13 @@ namespace tc {
         if (SUCCEEDED(hr))
         {
             int64_t  temp_uid = adapterDesc.AdapterLuid.LowPart;
-            printf("---------------------temp_uid = %llu\n", temp_uid);
+            LOGI("---------------------temp_uid = {}\n", temp_uid);
             return {temp_uid};
         }
         else
         {
             // 获取适配器描述信息失败，处理错误
-            printf("can not get temp_uid\n");
+            LOGE("can not get temp_uid\n");
             return {};
         }
     }

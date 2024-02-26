@@ -13,8 +13,9 @@
 namespace tc
 {
 
-    class ClientIpcManager;
     class Data;
+    class ClientIpcManager;
+    class SharedTexture;
 
     class HookManager {
     public:
@@ -26,13 +27,15 @@ namespace tc
 
         void Init();
         void Send(std::shared_ptr<Data>&& data);
-        std::shared_ptr<ClientIpcManager> GetIpcManager();
+        inline uint64_t AppendFrameIndex() { return frame_index_++; }
 
     public:
         uint32_t current_pid_{};
         std::string dll_path_;
         std::shared_ptr<ClientIpcManager> client_ipc_mgr_ = nullptr;
         std::shared_ptr<CaptureHelloMessage> hello_msg_ = nullptr;
+        std::shared_ptr<SharedTexture> shared_texture_ = nullptr;
+        uint64_t frame_index_ = 0;
     };
 
 }

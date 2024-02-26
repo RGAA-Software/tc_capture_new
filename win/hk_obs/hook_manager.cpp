@@ -7,6 +7,7 @@
 #include "tc_common/data.h"
 #include "client_ipc_manager.h"
 #include "tc_common/log.h"
+#include "hk_video/shared_texture.h"
 #include <Windows.h>
 
 namespace tc
@@ -23,14 +24,12 @@ namespace tc
             LOGI("Hello msg : present:{}, present1: {}, resize: {}, release: {}", msg->dxgi_present, msg->dxgi_present1, msg->dxgi_resize, msg->dxgi_release);
             this->hello_msg_ = std::move(msg);
         });
+
+        shared_texture_ = std::make_shared<SharedTexture>();
     }
 
     void HookManager::Send(std::shared_ptr<Data>&& data) {
         client_ipc_mgr_->Send(std::move(data));
-    }
-
-    std::shared_ptr<ClientIpcManager> HookManager::GetIpcManager() {
-        return client_ipc_mgr_;
     }
 
 }

@@ -53,7 +53,7 @@ namespace tc
 			desc11.ArraySize = 1;
 			desc11.SampleDesc.Count = 1;
 			desc11.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-			//desc11.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+//			desc11.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
             desc11.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
             // JUST TEST...
@@ -70,6 +70,7 @@ namespace tc
 			}
 
 			this->curr_desc_ = in_desc;
+            LOGI("Create D3DTexture2D success...");
 		}
 
 		//
@@ -82,13 +83,16 @@ namespace tc
 
 	uint64_t SharedTexture::GetSharedHandle() {
 		if (!texture_) {
+            LOGE("texture is null");
 			return 0;
 		}
 		HANDLE tex_handle = nullptr;
 		CComPtr<IDXGIResource> resource = nullptr;
 		auto hr = texture_->QueryInterface(__uuidof(IDXGIResource), reinterpret_cast<void**>(&resource));
 		if (SUCCEEDED(hr)) {
+            LOGI("will get shared texture...");
 			hr = resource->GetSharedHandle(&tex_handle);
+            LOGI("GetSharedHandle result: {}", hr);
 			if (FAILED(hr)) {
 				LOGE("GetSharedHandle Failed !!!");
 				return 0;
@@ -98,6 +102,7 @@ namespace tc
 			LOGE("Query resource error : {0:x}", hr);
 		}
 		if (!tex_handle) {
+            LOGE("texture handle is null: {}", (void*)tex_handle);
 			return 0;
 		}
 		return (uint64_t)tex_handle;

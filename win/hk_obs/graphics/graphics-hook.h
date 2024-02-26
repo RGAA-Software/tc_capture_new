@@ -232,15 +232,16 @@ static inline bool capture_should_init(void)
 
 	if (!capture_active()) {
 		//if (capture_restarted()) {
-			if (capture_alive()) {
+//			if (capture_alive()) {
 				if (!ipc_pipe_client_valid(&pipe)) {
 					init_pipe();
 				}
 
 				should_init = true;
-			} else {
-				hlog("capture_should_init: inactive, restarted, not alive");
-			}
+                hlog("capture_should_init ....");
+//			} else {
+//				hlog("capture_should_init: inactive, restarted, not alive");
+//			}
 //		} else {
 //			hlog("capture_should_init: inactive, not restarted");
 //		}

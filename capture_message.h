@@ -28,6 +28,10 @@ namespace tc
 
     class CaptureVideoFrame : public CaptureBaseMessage {
     public:
+        CaptureVideoFrame() : CaptureBaseMessage() {
+            type = kCaptureVideoFrame;
+        }
+    public:
         // constexpr auto kCaptureVideoByHandle = 0x1000;
         // constexpr auto kCaptureVideoBySharedMemory = 0x1001;
         uint32_t capture_type_ = 0;

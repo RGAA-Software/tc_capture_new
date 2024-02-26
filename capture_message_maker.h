@@ -7,15 +7,21 @@
 
 #include <memory>
 #include "capture_message.h"
+#include "tc_common/data.h"
 
 namespace tc
 {
 
-    class Data;
-
     // 生成通过IPC传递的消息
     class CaptureMessageMaker {
     public:
+
+        template<typename T>
+        static std::shared_ptr<Data> ConvertMessageToData(const T& frame) {
+            auto msg_data = Data::Make(nullptr, sizeof(T));
+            memcpy(msg_data->DataAddr(), &frame, sizeof(T));
+            return msg_data;
+        }
 
         static std::shared_ptr<Data> MakeAudioFrame(std::shared_ptr<Data>&& data);
         static std::shared_ptr<Data> MakeCaptureHelloMessage(const CaptureHelloMessage& msg);

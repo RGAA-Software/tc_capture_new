@@ -10,6 +10,11 @@
 namespace tc
 {
 
+//    template<typename T>
+//    std::shared_ptr<Data> CaptureMessageMaker::ConvertMessageToData(const T& frame) {
+//
+//    }
+
     std::shared_ptr<Data> CaptureMessageMaker::MakeAudioFrame(std::shared_ptr<Data>&& audio_data) {
         CaptureAudioFrame capture_audio_frame_msg{};
         capture_audio_frame_msg.frame_index_ = 0;

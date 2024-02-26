@@ -20,9 +20,7 @@ using namespace tc;
 
 #define MAX_BACKBUFFERS 8
 
-typedef HRESULT(STDMETHODCALLTYPE *PFN_ExecuteCommandLists)(
-        ID3D12CommandQueue *, UINT, ID3D12CommandList *const *);
-
+typedef HRESULT(STDMETHODCALLTYPE *PFN_ExecuteCommandLists)(ID3D12CommandQueue *, UINT, ID3D12CommandList *const *);
 static PFN_ExecuteCommandLists RealExecuteCommandLists = nullptr;
 
 struct d3d12_data {
@@ -93,27 +91,23 @@ static bool create_d3d12_tex(UINT count) {
 
     hr = data.device11->CreateTexture2D(&desc11, nullptr, &data.copy_tex);
     if (FAILED(hr)) {
-        hlog_hr("create_d3d12_tex: creation of d3d11 copy tex failed",
-                hr);
+        LOGE("create_d3d12_tex: creation of d3d11 copy tex failed: {}", hr);
         return false;
     }
 
     IDXGIResource *dxgi_res;
     hr = data.copy_tex->QueryInterface(&dxgi_res);
     if (FAILED(hr)) {
-        hlog_hr("create_d3d12_tex: failed to query "
-                "IDXGIResource interface from texture",
-                hr);
+        LOGE("create_d3d12_tex: failed to query IDXGIResource interface from texture: {}", hr);
         return false;
     }
 
     hr = dxgi_res->GetSharedHandle(&data.handle);
     dxgi_res->Release();
     if (FAILED(hr)) {
-        hlog_hr("create_d3d12_tex: failed to get shared handle", hr);
+        LOGE("create_d3d12_tex: failed to get shared handle: {}", hr);
         return false;
     }
-
     return true;
 }
 
@@ -139,10 +133,8 @@ static bool d3d12_init_11on12(ID3D12Device *device) {
         create_11_on_12 = (PFN_D3D11ON12_CREATE_DEVICE) GetProcAddress(
                 d3d11, "D3D11On12CreateDevice");
         if (!create_11_on_12) {
-            hlog("d3d12_init_11on12: Failed to get "
-                 "D3D11On12CreateDevice address");
+            hlog("d3d12_init_11on12: Failed to get D3D11On12CreateDevice address");
         }
-
         initialized_func = true;
     }
 
@@ -151,7 +143,6 @@ static bool d3d12_init_11on12(ID3D12Device *device) {
     }
 
     bool created = false;
-
     for (size_t i = 0; i < dxgi_possible_swap_queue_count; ++i) {
         hlog("d3d12_init_11on12: creating 11 device: queue=0x%" PRIX64,
              (uint64_t) (uintptr_t) dxgi_possible_swap_queues[i]);
@@ -301,7 +292,6 @@ static inline void d3d12_shtex_capture(IDXGISwapChain *swap) {
                                                        1);
             d3d12_copy_texture(data.copy_tex, backbuffer);
 
-            LOGI("d3d12 copy texture....");
             auto hook_mgr = tc::HookManager::Instance();
             auto shared_texture = hook_mgr->shared_texture_;
             shared_texture->CopyCapturedTexture(data.device11, data.context11, data.copy_tex);
@@ -320,45 +310,35 @@ static inline void d3d12_shtex_capture(IDXGISwapChain *swap) {
             if (adapter_uid.has_value()) {
                 capture_video_frame_msg.adapter_uid_ = adapter_uid.value();
             }
-            LOGI("adapter uid: {}, handle: {}", capture_video_frame_msg.adapter_uid_, capture_video_frame_msg.handle_);
+
             auto msg_data = CaptureMessageMaker::ConvertMessageToData<CaptureVideoFrame>(capture_video_frame_msg);
             hook_mgr->Send(std::move(msg_data));
 
-//            auto msg_data = Data::Make(nullptr, sizeof(CaptureVideoFrame));
-//            memcpy(msg_data->DataAddr(), &capture_video_frame_msg, sizeof(CaptureVideoFrame));
-//            hook_mgr->Send(std::move(msg_data));
-
-            data.device11on12->ReleaseWrappedResources(&backbuffer,
-                                                       1);
+            data.device11on12->ReleaseWrappedResources(&backbuffer, 1);
             data.context11->Flush();
 
             if (!dxgi_1_4) {
-                if (++data.cur_backbuffer >=
-                    data.backbuffer_count)
+                if (++data.cur_backbuffer >= data.backbuffer_count)
                     data.cur_backbuffer = 0;
             }
-
             backbuffer->Release();
         }
-
         backbuffer12->Release();
     }
 }
 
 void d3d12_capture(void *swap_ptr, void *) {
-    IDXGISwapChain *swap = (IDXGISwapChain *) swap_ptr;
+    auto swap = (IDXGISwapChain*)swap_ptr;
 
-    if (capture_should_stop()) {
-        LOGI("capture_should_stop()...");
-        d3d12_free();
-    }
     if (capture_should_init()) {
         LOGI("capture_should_init()...");
         d3d12_init(swap);
     }
     if (capture_ready()) {
-        LOGI("d3d12 capture...");
         d3d12_shtex_capture(swap);
+    }
+    else {
+        LOGE("d3d12 capture not ready.");
     }
 }
 

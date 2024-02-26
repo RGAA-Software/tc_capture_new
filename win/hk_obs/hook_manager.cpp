@@ -3,7 +3,6 @@
 //
 
 #include "hook_manager.h"
-#include "hook_ipc.h"
 #include "tc_common/data.h"
 #include "client_ipc_manager.h"
 #include "tc_common/log.h"
@@ -28,7 +27,7 @@ namespace tc
         shared_texture_ = std::make_shared<SharedTexture>();
     }
 
-    void HookManager::Send(std::shared_ptr<Data>&& data) {
+    void HookManager::Send(std::shared_ptr<Data>&& data) const {
         client_ipc_mgr_->Send(std::move(data));
     }
 

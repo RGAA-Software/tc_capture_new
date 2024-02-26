@@ -187,7 +187,6 @@ namespace tc {
         if (SUCCEEDED(hr))
         {
             int64_t  temp_uid = adapterDesc.AdapterLuid.LowPart;
-            LOGI("---------------------temp_uid = {}\n", temp_uid);
             return {temp_uid};
         }
         else

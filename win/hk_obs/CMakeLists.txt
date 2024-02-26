@@ -12,6 +12,7 @@ cmake_minimum_required(VERSION 3.26)
 project(tc_graphics)
 
 set(CMAKE_CXX_STANDARD 20)
+add_definitions(-DCOMPILE_VULKAN_HOOK)
 add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
@@ -38,7 +39,6 @@ add_library(${PROJECT_NAME} SHARED
         graphics/vulkan-capture.c
         obfuscate.c
         hook_manager.cpp
-        hook_ipc.cpp
         ../client_ipc_manager.cpp
         ../hk_video/d3d_utils.cpp
         ../hk_video/shared_texture.cpp

@@ -8,8 +8,11 @@
 #ifdef OBS_LEGACY
 #include "../graphics-hook-info.h"
 #else
+
 #include <graphics-hook-info.h>
+
 #endif
+
 #include "ipc_util/pipe.h"
 #include <psapi.h>
 
@@ -72,33 +75,31 @@ extern void d3d12_free(void);
 extern bool rehook_gl(void);
 
 extern bool capture_init_shtex(struct shtex_data **data, HWND window,
-			       uint32_t cx, uint32_t cy, uint32_t format,
-			       bool flip, uintptr_t handle);
+                               uint32_t cx, uint32_t cy, uint32_t format,
+                               bool flip, uintptr_t handle);
 extern bool capture_init_shmem(struct shmem_data **data, HWND window,
-			       uint32_t cx, uint32_t cy, uint32_t pitch,
-			       uint32_t format, bool flip);
+                               uint32_t cx, uint32_t cy, uint32_t pitch,
+                               uint32_t format, bool flip);
 extern void capture_free(void);
 
 extern struct hook_info *global_hook_info;
 
 struct vertex {
-	struct {
-		float x, y, z, w;
-	} pos;
-	struct {
-		float u, v;
-	} tex;
+    struct {
+        float x, y, z, w;
+    } pos;
+    struct {
+        float u, v;
+    } tex;
 };
 
-static inline bool duplicate_handle(HANDLE *dst, HANDLE src)
-{
-	return !!DuplicateHandle(GetCurrentProcess(), src, GetCurrentProcess(),
-				 dst, 0, false, DUPLICATE_SAME_ACCESS);
+static inline bool duplicate_handle(HANDLE *dst, HANDLE src) {
+    return !!DuplicateHandle(GetCurrentProcess(), src, GetCurrentProcess(),
+                             dst, 0, false, DUPLICATE_SAME_ACCESS);
 }
 
-static inline void *get_offset_addr(HMODULE module, uint32_t offset)
-{
-	return (void *)((uintptr_t)module + (uintptr_t)offset);
+static inline void *get_offset_addr(HMODULE module, uint32_t offset) {
+    return (void *) ((uintptr_t) module + (uintptr_t) offset);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -115,151 +116,138 @@ extern wchar_t keepalive_name[64];
 extern HWND dummy_window;
 extern volatile bool active;
 
-static inline const char *get_process_name(void)
-{
-	return process_name;
+static inline const char *get_process_name(void) {
+    return process_name;
 }
 
-static inline HMODULE get_system_module(const char *module)
-{
-	char base_path[MAX_PATH];
+static inline HMODULE get_system_module(const char *module) {
+    char base_path[MAX_PATH];
 
-	strcpy(base_path, system_path);
-	strcat(base_path, "\\");
-	strcat(base_path, module);
-	return GetModuleHandleA(base_path);
+    strcpy(base_path, system_path);
+    strcat(base_path, "\\");
+    strcat(base_path, module);
+    return GetModuleHandleA(base_path);
 }
 
-static inline uint32_t module_size(HMODULE module)
-{
-	MODULEINFO info;
-	bool success = !!GetModuleInformation(GetCurrentProcess(), module,
-					      &info, sizeof(info));
-	return success ? info.SizeOfImage : 0;
+static inline uint32_t module_size(HMODULE module) {
+    MODULEINFO info;
+    bool success = !!GetModuleInformation(GetCurrentProcess(), module,
+                                          &info, sizeof(info));
+    return success ? info.SizeOfImage : 0;
 }
 
-static inline HMODULE load_system_library(const char *name)
-{
-	char base_path[MAX_PATH];
-	HMODULE module;
+static inline HMODULE load_system_library(const char *name) {
+    char base_path[MAX_PATH];
+    HMODULE module;
 
-	strcpy(base_path, system_path);
-	strcat(base_path, "\\");
-	strcat(base_path, name);
+    strcpy(base_path, system_path);
+    strcat(base_path, "\\");
+    strcat(base_path, name);
 
-	module = GetModuleHandleA(base_path);
-	if (module)
-		return module;
+    module = GetModuleHandleA(base_path);
+    if (module)
+        return module;
 
-	return LoadLibraryA(base_path);
+    return LoadLibraryA(base_path);
 }
 
-static inline bool capture_alive(void)
-{
-	HANDLE handle = OpenMutexW(SYNCHRONIZE, false, keepalive_name);
-	const bool success = handle != NULL;
-	if (success)
-		CloseHandle(handle);
-	return success;
+static inline bool capture_alive(void) {
+    HANDLE handle = OpenMutexW(SYNCHRONIZE, false, keepalive_name);
+    const bool success = handle != NULL;
+    if (success)
+        CloseHandle(handle);
+    return success;
 }
 
-static inline bool capture_active(void)
-{
-	return active;
+static inline bool capture_active(void) {
+    return active;
 }
 
-static inline bool frame_ready(uint64_t interval)
-{
-	static uint64_t last_time = 0;
-	uint64_t elapsed;
-	uint64_t t;
+static inline bool frame_ready(uint64_t interval) {
+    static uint64_t last_time = 0;
+    uint64_t elapsed;
+    uint64_t t;
 
-	if (!interval) {
-		return true;
-	}
+    if (!interval) {
+        return true;
+    }
 
-	t = os_gettime_ns();
-	elapsed = t - last_time;
+    t = os_gettime_ns();
+    elapsed = t - last_time;
 
-	if (elapsed < interval) {
-		return false;
-	}
+    if (elapsed < interval) {
+        return false;
+    }
 
-	last_time = (elapsed > interval * 2) ? t : last_time + interval;
-	return true;
+    last_time = (elapsed > interval * 2) ? t : last_time + interval;
+    return true;
 }
 
-static inline bool capture_ready(void)
-{
-	return capture_active() && frame_ready(global_hook_info->frame_interval);
+static inline bool capture_ready(void) {
+    return capture_active() && frame_ready(global_hook_info->frame_interval);
 }
 
-static inline bool capture_stopped(void)
-{
-	return WaitForSingleObject(signal_stop, 0) == WAIT_OBJECT_0;
+static inline bool capture_stopped(void) {
+    return WaitForSingleObject(signal_stop, 0) == WAIT_OBJECT_0;
 }
 
-static inline bool capture_restarted(void)
-{
-	return WaitForSingleObject(signal_restart, 0) == WAIT_OBJECT_0;
+static inline bool capture_restarted(void) {
+    return WaitForSingleObject(signal_restart, 0) == WAIT_OBJECT_0;
 }
 
-static inline bool capture_should_stop(void)
-{
-	bool stop_requested = false;
+static inline bool capture_should_stop(void) {
+    bool stop_requested = false;
 
-	if (capture_active()) {
-		static uint64_t last_keepalive_check = 0;
-		uint64_t cur_time = os_gettime_ns();
-		bool alive = true;
+    if (capture_active()) {
+        static uint64_t last_keepalive_check = 0;
+        uint64_t cur_time = os_gettime_ns();
+        bool alive = true;
 
-		if (cur_time - last_keepalive_check > 5000000000) {
-			alive = capture_alive();
-			last_keepalive_check = cur_time;
-		}
+        if (cur_time - last_keepalive_check > 5000000000) {
+            alive = capture_alive();
+            last_keepalive_check = cur_time;
+        }
 
-		stop_requested = capture_stopped() || !alive;
-	}
+        stop_requested = capture_stopped() || !alive;
+    }
 
-	return stop_requested;
+    return stop_requested;
 }
 
 extern bool init_pipe(void);
 
-static inline bool capture_should_init(void)
-{
-	bool should_init = false;
+static inline bool capture_should_init(void) {
+    bool should_init = false;
 
-	if (!capture_active()) {
-		//if (capture_restarted()) {
+    if (!capture_active()) {
+        //if (capture_restarted()) {
 //			if (capture_alive()) {
-				if (!ipc_pipe_client_valid(&pipe)) {
-					init_pipe();
-				}
+//        if (!ipc_pipe_client_valid(&pipe)) {
+//            init_pipe();
+//        }
 
-				should_init = true;
-                hlog("capture_should_init ....");
+        should_init = true;
+        hlog("capture_should_init ....");
 //			} else {
 //				hlog("capture_should_init: inactive, restarted, not alive");
 //			}
 //		} else {
 //			hlog("capture_should_init: inactive, not restarted");
 //		}
-	}
+    }
 
-	return should_init;
+    return should_init;
 }
 
 #if COMPILE_VULKAN_HOOK
 extern __declspec(thread) int vk_presenting;
 #endif
 
-static inline bool should_passthrough()
-{
+static inline bool should_passthrough() {
 #if COMPILE_VULKAN_HOOK
-	return vk_presenting > 0;
+    return vk_presenting > 0;
 #else
-	return false;
+    return false;
 #endif
 }
 

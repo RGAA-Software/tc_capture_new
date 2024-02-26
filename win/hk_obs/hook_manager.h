@@ -26,7 +26,7 @@ namespace tc
         }
 
         void Init();
-        void Send(std::shared_ptr<Data>&& data);
+        void Send(std::shared_ptr<Data>&& data) const;
         inline uint64_t AppendFrameIndex() { return frame_index_++; }
 
     public:

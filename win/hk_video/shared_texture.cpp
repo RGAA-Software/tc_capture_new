@@ -90,9 +90,7 @@ namespace tc
 		CComPtr<IDXGIResource> resource = nullptr;
 		auto hr = texture_->QueryInterface(__uuidof(IDXGIResource), reinterpret_cast<void**>(&resource));
 		if (SUCCEEDED(hr)) {
-            LOGI("will get shared texture...");
 			hr = resource->GetSharedHandle(&tex_handle);
-            LOGI("GetSharedHandle result: {}", hr);
 			if (FAILED(hr)) {
 				LOGE("GetSharedHandle Failed !!!");
 				return 0;

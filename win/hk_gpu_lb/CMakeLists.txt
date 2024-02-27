@@ -4,7 +4,8 @@ project(tc_graphics_lb)
 set(CMAKE_CXX_STANDARD 20)
 
 set(SRCS
-    dllmain.cpp
+    dll_main.cpp
+    ../client_manager.cpp
 )
 add_library(${PROJECT_NAME} SHARED ${SRCS})
 target_link_libraries(${PROJECT_NAME} tc_common EasyHook64)

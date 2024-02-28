@@ -9,8 +9,8 @@
 #include "tc_common/data.h"
 #include "tc_common/file.h"
 #include "tc_common/log.h"
-#include "../audio/audio_capture.h"
-#include "../audio/audio_capture_factory.h"
+#include "tc_capture/audio_capture.h"
+#include "tc_capture/audio_capture_factory.h"
 #include "../audio/audio_file_saver.h"
 
 using namespace tc;

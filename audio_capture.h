@@ -1,7 +1,7 @@
 #pragma once
 
 #include "tc_common/data.h"
-#include "audio_file_saver.h"
+#include "tc_capture/win/audio/audio_file_saver.h"
 
 #include <memory>
 #include <functional>

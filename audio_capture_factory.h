@@ -7,15 +7,24 @@
 
 #include <memory>
 
+#include "audio_capture.h"
+
+#ifdef WIN32
+#include "win/audio/wasapi_audio_capture.h"
+#endif
+
 namespace tc
 {
-
-    class IAudioCapture;
 
     class AudioCaptureFactory {
     public:
 
-        static std::shared_ptr<IAudioCapture> Make();
+        static std::shared_ptr<IAudioCapture> Make() {
+#ifdef WIN32
+            return WASAPIAudioCapture::Make();
+#endif
+            return nullptr;
+        }
 
     };
 

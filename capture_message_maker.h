@@ -25,6 +25,7 @@ namespace tc
 
         static std::shared_ptr<Data> MakeAudioFrame(std::shared_ptr<Data>&& data);
         static std::shared_ptr<Data> MakeCaptureHelloMessage(const CaptureHelloMessage& msg);
+        static std::shared_ptr<Data> MakeMouseEventMessage(uint32_t x_radio, uint32_t y_radio, int32_t btn, int32_t data, int32_t dx, int32_t dy);
 
     };
 

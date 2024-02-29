@@ -56,10 +56,17 @@ namespace tc
 
         void RegisterHelloMessageCallback(IpcHelloMessageCallback&& cbk);
 
+        template<typename T>
+        std::shared_ptr<T> AsMessage(CaptureBaseMessage* msg) {
+            auto cpy_msg = std::make_shared<T>();
+            memcpy(cpy_msg.get(), msg, sizeof(T));
+            return cpy_msg;
+        }
+
         void MockSend();
 
     private:
-        static std::tuple<std::shared_ptr<CaptureBaseMessage>, std::shared_ptr<Data>> ParseMessage(std::shared_ptr<Data>&& data);
+        std::tuple<std::shared_ptr<CaptureBaseMessage>, std::shared_ptr<Data>> ParseMessage(std::shared_ptr<Data>&& data);
 
     private:
         uint32_t pid_;

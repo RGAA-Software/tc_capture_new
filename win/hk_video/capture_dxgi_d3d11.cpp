@@ -160,7 +160,7 @@ namespace tc_capture_d3d11
             // 暂时在这里获取 adapter_uid， 不过获取的太频繁了
             auto adapter_uid = tc::GetAdapterUid(device_);
             CaptureVideoFrame capture_video_frame_msg{};
-            capture_video_frame_msg.type = kCaptureVideoFrame;
+            capture_video_frame_msg.type_ = kCaptureVideoFrame;
             capture_video_frame_msg.capture_type_ = kCaptureVideoByHandle;
             capture_video_frame_msg.data_length = 0;
             capture_video_frame_msg.frame_width_ = desc.Width;
@@ -232,7 +232,7 @@ namespace tc_capture_d3d11
 //            yuv_file.close();
 
             CaptureVideoFrame capture_video_frame_msg{};
-            capture_video_frame_msg.type = kCaptureVideoFrame;
+            capture_video_frame_msg.type_ = kCaptureVideoFrame;
             capture_video_frame_msg.data_length = yuv_frame_data_.size();
             capture_video_frame_msg.capture_type_ = kCaptureVideoBySharedMemory;
             capture_video_frame_msg.frame_width_ = width;

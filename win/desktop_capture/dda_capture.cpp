@@ -382,7 +382,7 @@ namespace tc {
 
         if(msg_notifier_) {
             CaptureVideoFrame capture_video_frame_msg{};
-            capture_video_frame_msg.type = kCaptureVideoFrame;
+            capture_video_frame_msg.type_ = kCaptureVideoFrame;
             capture_video_frame_msg.capture_type_ = kCaptureVideoByHandle;
             capture_video_frame_msg.data_length = 0;
             capture_video_frame_msg.frame_width_ = width;

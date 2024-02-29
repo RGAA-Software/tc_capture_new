@@ -128,7 +128,7 @@ namespace tc
                     return;
                 }
 
-                if (in_msg->type == kCaptureHelloMessage && ipc_hello_msg_callback_) {
+                if (in_msg->type_ == kCaptureHelloMessage && ipc_hello_msg_callback_) {
                     ipc_hello_msg_callback_(std::move(std::static_pointer_cast<CaptureHelloMessage>(in_msg)));
                 }
             }
@@ -147,16 +147,20 @@ namespace tc
 
         std::shared_ptr<CaptureBaseMessage> cpy_msg = nullptr;
         std::shared_ptr<Data> cpy_data = nullptr;
-        if (msg->type == kCaptureHelloMessage) {
-            cpy_msg = std::make_shared<CaptureHelloMessage>();
-            memcpy(cpy_msg.get(), msg, sizeof(CaptureHelloMessage));
-            LOGI("====> CaptureHelloMessage in : {}, data length: {} ", std::static_pointer_cast<CaptureHelloMessage>(cpy_msg)->type, cpy_msg->data_length);
+        if (msg->type_ == kCaptureHelloMessage) {
+            auto in_msg = AsMessage<CaptureHelloMessage>(msg);
+            cpy_msg = std::dynamic_pointer_cast<CaptureBaseMessage>(in_msg);
+            LOGI("====> CaptureHelloMessage in : {}, data length: {} ", std::static_pointer_cast<CaptureHelloMessage>(cpy_msg)->type_, cpy_msg->data_length);
+        }
+        else if (msg->type_ == kMouseEventMessage) {
+            auto in_msg = AsMessage<MouseEventMessage>(msg);
+            cpy_msg = std::dynamic_pointer_cast<CaptureBaseMessage>(in_msg);
+            LOGI("====> MouseEventMessage: radio:{}, {}", in_msg->x_ratio_, in_msg->y_ratio_);
         }
 
 //        if (cpy_msg->data_length > 0 && cpy_msg->data_length < data->Size()) {
 //            cpy_data = Data::Make(data + sizeof(CaptureVideoFrame), (int) cpy_msg->data_length);
 //        }
-
         return {cpy_msg, cpy_data};
     }
 

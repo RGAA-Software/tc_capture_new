@@ -9,11 +9,19 @@
 
 namespace tc
 {
-    // type
+    // type_
+    // dll -> app
     constexpr auto kCaptureVideoFrame = 0x0001;
+    // dll -> app
     constexpr auto kCaptureAudioFrame = 0x0002;
+    // dll -> app
     constexpr auto kCaptureDebugInfo = 0x0003;
+    // app -> dll
     constexpr auto kCaptureHelloMessage = 0x0004;
+    // app -> dll
+    constexpr auto kMouseEventMessage = 0x0005;
+    // app -> dll
+    constexpr auto kKeyboardEventMessage = 0x0006;
 
     // capture_type_
     constexpr auto kCaptureVideoByHandle = 0x1000;
@@ -21,7 +29,7 @@ namespace tc
 
     class CaptureBaseMessage {
     public:
-        uint32_t type = 0;
+        uint32_t type_ = 0;
         // shm 中的数据大小
         uint32_t data_length = 0;
     };
@@ -29,7 +37,7 @@ namespace tc
     class CaptureVideoFrame : public CaptureBaseMessage {
     public:
         CaptureVideoFrame() : CaptureBaseMessage() {
-            type = kCaptureVideoFrame;
+            type_ = kCaptureVideoFrame;
         }
     public:
         // constexpr auto kCaptureVideoByHandle = 0x1000;
@@ -47,7 +55,7 @@ namespace tc
     class CaptureAudioFrame: public CaptureBaseMessage {
     public:
         CaptureAudioFrame() : CaptureBaseMessage() {
-            type = kCaptureAudioFrame;
+            type_ = kCaptureAudioFrame;
         }
     public:
         uint64_t frame_index_{};
@@ -62,7 +70,7 @@ namespace tc
     class CaptureHelloMessage : public CaptureBaseMessage {
     public:
         CaptureHelloMessage() : CaptureBaseMessage() {
-            type = kCaptureHelloMessage;
+            type_ = kCaptureHelloMessage;
         }
     public:
 #ifdef WIN32
@@ -92,6 +100,28 @@ namespace tc
         uint64_t dxgi_release = 0;
 
 #endif
+    };
+
+    class MouseEventMessage : public CaptureBaseMessage {
+    public:
+        MouseEventMessage() : CaptureBaseMessage() {
+            type_ = kMouseEventMessage;
+        }
+    public:
+        //to do 当服务端采集方式为采集屏幕的时候，当前鼠标事件对应的屏幕索引
+        //uint32_t monitor_index_ = 1;
+        // 当前鼠标x值，占窗口宽度的比值, 百分比，100为最大
+        uint32_t x_ratio_ = 2;
+        // 当前鼠标y值，占窗口高度度的比值
+        uint32_t y_ratio_ = 3;
+        // 按键掩码, 用来表示摁下了什么按键、抬起了什么按键 ref: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-mouse_event
+        int32_t button_ = 4;
+        // 鼠标data，滚轮等数据
+        int32_t data_ = 5;
+        // 当前毫秒值时间戳
+        //uint64_t timestamp_ = 6;
+        int32_t delta_x_;
+        int32_t delta_y_;
     };
 
 }

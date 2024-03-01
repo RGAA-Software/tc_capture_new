@@ -108,20 +108,24 @@ namespace tc
             type_ = kMouseEventMessage;
         }
     public:
+        uint64_t hwnd_{};
         //to do 当服务端采集方式为采集屏幕的时候，当前鼠标事件对应的屏幕索引
-        //uint32_t monitor_index_ = 1;
-        // 当前鼠标x值，占窗口宽度的比值, 百分比，100为最大
-        uint32_t x_ratio_ = 2;
-        // 当前鼠标y值，占窗口高度度的比值
-        uint32_t y_ratio_ = 3;
+        //uint32_t monitor_index_ = 0;
+        // 当前鼠标x值，相对于窗口
+        uint32_t x_ = 0;
+        // 当前鼠标y值，
+        uint32_t y_ = 0;
         // 按键掩码, 用来表示摁下了什么按键、抬起了什么按键 ref: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-mouse_event
-        int32_t button_ = 4;
+        int32_t button_ = 0;
+        int32_t pressed_ = 0;
+        int32_t released_ = 0;
         // 鼠标data，滚轮等数据
-        int32_t data_ = 5;
+        int32_t data_ = 0;
         // 当前毫秒值时间戳
-        //uint64_t timestamp_ = 6;
-        int32_t delta_x_;
-        int32_t delta_y_;
+        //uint64_t timestamp_ = 0;
+        int32_t delta_x_ = 0;
+        int32_t delta_y_ = 0;
+        int32_t middle_scroll_ = 0;
     };
 
 }

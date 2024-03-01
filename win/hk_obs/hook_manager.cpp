@@ -8,6 +8,8 @@
 #include "tc_common/log.h"
 #include "hk_video/shared_texture.h"
 #include <Windows.h>
+#include <detours/detours.h>
+#include "tc_message.pb.h"
 
 namespace tc
 {
@@ -23,6 +25,10 @@ namespace tc
             LOGI("Hello msg : present:{}, present1: {}, resize: {}, release: {}", msg->dxgi_present, msg->dxgi_present1, msg->dxgi_resize, msg->dxgi_release);
             this->hello_msg_ = std::move(msg);
         });
+        client_ipc_mgr_->RegisterIpcMessageCallback([=, this](const std::shared_ptr<CaptureBaseMessage>& msg, const std::shared_ptr<Data>& data) {
+            this->PushIpcMessage(msg);
+            this->GenerateMouseEvent(msg);
+        });
 
         shared_texture_ = std::make_shared<SharedTexture>();
     }
@@ -31,4 +37,213 @@ namespace tc
         client_ipc_mgr_->Send(std::move(data));
     }
 
+    void HookManager::PushIpcMessage(const std::shared_ptr<CaptureBaseMessage>& msg) {
+        messages_.Push(msg);
+    }
+
+    UINT WINAPI HookedGetRawInputData(
+            HRAWINPUT hRawInput,
+            UINT uiCommand,
+            LPVOID pData,
+            PUINT pcbSize,
+            UINT cbSizeHeader) {
+        return HookManager::Instance()->ProcessHookedGetRawInputData(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
+    }
+
+    UINT WINAPI HookedGetRawInputBuffer(
+            PRAWINPUT pData,
+            PUINT pcbSize,
+            UINT cbSizeHeader) {
+        return origin_GetRawInputBuffer_(pData, pcbSize, cbSizeHeader);
+    }
+
+    BOOL WINAPI HookedGetCursorPos(LPPOINT lpPoint) {
+        return HookManager::Instance()->ProcessHookedGetCursorPos(lpPoint);
+    }
+
+    void HookManager::HookMethods() {
+        DetourRestoreAfterWith();
+        DetourTransactionBegin();
+        DetourUpdateThread(GetCurrentThread());
+
+        // GetRawInputBuffer
+        {
+            origin_GetRawInputBuffer_ = (GetRawInputBuffer_t) GetProcAddress(GetModuleHandle(TEXT("User32")), "GetRawInputBuffer");
+            auto r = DetourAttach(&(PVOID &)origin_GetRawInputBuffer_, &(PVOID &)HookedGetRawInputBuffer);
+            LOGI("Hook GetRawInputBuffer result: {}", r);
+        }
+        // GetRawInputData
+        {
+            origin_GetRawInputData_ = GetProcAddressByName<GetRawInputData_t>(L"User32", "GetRawInputData");
+            auto r = DetourAttach(&(PVOID &)origin_GetRawInputData_, &(PVOID &)HookedGetRawInputData);
+            LOGI("Hook GetRawInputData result: {}", r);
+        }
+        // GetCursorPos
+        {
+            origin_GetCursorPos_ = GetProcAddressByName<GetCursorPos_t>(L"User32", "GetCursorPos");
+            auto r = DetourAttach(&(PVOID &)origin_GetCursorPos_, &(PVOID &)HookedGetCursorPos);
+            LOGI("Hook GetCursorPos result: {}", r);
+        }
+        DetourTransactionCommit();
+    }
+
+    UINT HookManager::ProcessHookedGetRawInputData(
+            HRAWINPUT hRawInput,
+            UINT uiCommand,
+            LPVOID pData,
+            PUINT pcbSize,
+            UINT cbSizeHeader) {
+
+        if (uiCommand != RID_INPUT || hRawInput || !pData) {
+            LOGI("uiCommand : {}, hRawInput : {}, pData: {}", uiCommand, (void*)hRawInput, (void*)pData);
+            return origin_GetRawInputData_(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
+        }
+
+        if (messages_.Empty()) {
+            LOGI("No message for RawInput.");
+            return origin_GetRawInputData_(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);;
+        }
+
+        std::shared_ptr<CaptureBaseMessage> msg = messages_.Front();
+        messages_.Pop();
+
+        //LOGI("HookedGetRawInputData, pData : %p, uiCommand %p, pcbSize : %d, cbSizeHeader : %d", pData, uiCommand, *pcbSize, cbSizeHeader);
+
+        if (msg->type_ == kMouseEventMessage) {
+            auto mouse_msg = std::static_pointer_cast<MouseEventMessage>(msg);
+            auto raw_input = (RAWINPUT*)pData;
+            memset(raw_input, 0, sizeof(RAWINPUT));
+
+            raw_input->header.dwType = RIM_TYPEMOUSE;
+            if (false) {
+//                raw_input->data.mouse.lLastX = mouse_msg->mouse_x;
+//                raw_input->data.mouse.lLastY = mouse_msg->mouse_y;
+//                raw_input->data.mouse.usFlags = MOUSE_MOVE_ABSOLUTE;
+            }
+            else {
+                raw_input->data.mouse.lLastX = mouse_msg->delta_x_;
+                raw_input->data.mouse.lLastY = mouse_msg->delta_y_;
+                raw_input->data.mouse.usFlags = MOUSE_MOVE_RELATIVE;
+            }
+
+//            cursor_position.x = mouse_msg->mouse_x;//
+//            cursor_position.y = mouse_msg->mouse_y;//
+
+            //cursor_position.x += mouse_msg->mouse_dx;
+            //cursor_position.y += mouse_msg->mouse_dy;
+
+            if (mouse_msg->middle_scroll_) {
+                raw_input->data.mouse.ulButtons |= RI_MOUSE_WHEEL;
+                raw_input->data.mouse.usButtonData = mouse_msg->middle_scroll_;
+            }
+
+            if (mouse_msg->pressed_) {
+                if (mouse_msg->button_ == EButtonFlag::kLeftMouseButton) {
+                    raw_input->data.mouse.ulButtons |= RI_MOUSE_LEFT_BUTTON_DOWN;
+                    LOGI("replay left mouse pressed.");
+                }
+                else if (mouse_msg->button_ == EButtonFlag::kMiddleMouseButton) {
+                    raw_input->data.mouse.ulButtons |= RI_MOUSE_MIDDLE_BUTTON_DOWN;
+                }
+                else if (mouse_msg->button_ == EButtonFlag::kRightMouseButton) {
+                    raw_input->data.mouse.ulButtons |= RI_MOUSE_RIGHT_BUTTON_DOWN;
+                }
+            }
+            else if (mouse_msg->released_) {
+                if (mouse_msg->button_ == EButtonFlag::kLeftMouseButton) {
+                    raw_input->data.mouse.ulButtons |= RI_MOUSE_LEFT_BUTTON_UP;
+                    LOGI("replay left mouse released.");
+                }
+                else if (mouse_msg->button_ == EButtonFlag::kMiddleMouseButton) {
+                    raw_input->data.mouse.ulButtons |= RI_MOUSE_MIDDLE_BUTTON_UP;
+                }
+                else if (mouse_msg->button_ == EButtonFlag::kRightMouseButton) {
+                    raw_input->data.mouse.ulButtons |= RI_MOUSE_RIGHT_BUTTON_UP;
+                }
+            }
+
+            LOGI("------------------------Replay-----------------------------");
+            LOGI("button: {}, pressed: {}, released: {}", mouse_msg->button_, mouse_msg->pressed_, mouse_msg->released_);
+            LOGI("uiCommand: {}, dwType: {}", uiCommand, raw_input->header.dwType);
+            LOGI("usFlags: {}", raw_input->data.mouse.usFlags);
+            LOGI("lLastX: {}, lLastY: {}", raw_input->data.mouse.lLastX, raw_input->data.mouse.lLastY);
+            LOGI("ulButtons: {}, usButtonData: {}", raw_input->data.mouse.ulButtons, raw_input->data.mouse.usButtonData);
+            //LOGI("cursor pos.x : {}, pos.y : {}", cursor_position.x, cursor_position.y);
+            LOGI("........................Replay.............................");
+
+            return sizeof(RAWINPUT);
+        }
+        return origin_GetRawInputData_(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
+    }
+
+    BOOL HookManager::ProcessHookedGetCursorPos(LPPOINT lpPoint) {
+        if (!lpPoint) {
+            return false;
+        }
+        BOOL ret = false;
+        //auto ret = origin_GetCursorPos(lpPoint);
+        if (lpPoint) {
+            lpPoint->x = cursor_position_.x;
+            lpPoint->y = cursor_position_.y;
+            ret = true;
+        }
+        //LOGI("GetCursorPos : %d, %d", lpPoint->x, lpPoint->y);
+        return ret;
+    }
+
+    void HookManager::GenerateMouseEvent(const std::shared_ptr<CaptureBaseMessage>& msg) {
+        auto message = std::static_pointer_cast<MouseEventMessage>(msg);
+        cursor_position_.x = message->x_;
+        cursor_position_.y = message->y_;
+
+        LOGI("handle: {}, Cursor pos : {} {} ", message->hwnd_, cursor_position_.x, cursor_position_.y);
+
+        auto hwnd = (HWND)message->hwnd_;
+        static bool active = false;
+        if (!active) {
+            PostMessage(hwnd, WM_ACTIVATE, WA_ACTIVE, 0);
+            active = true;
+        }
+        PostMessage(hwnd, WM_ACTIVATE, WA_ACTIVE, 0);
+        BOOL bRet = PostMessage(hwnd, WM_SETFOCUS, 0, 0);
+
+        /*
+         * Key State Masks for Mouse Messages
+         */
+        DWORD mouse_key_state_flags = 0;
+        UINT event = WM_MOUSEMOVE;
+        if (message->pressed_) {
+            if (message->button_ == EButtonFlag::kLeftMouseButton) {
+                event = WM_LBUTTONDOWN;
+                mouse_key_state_flags = MK_LBUTTON;
+                LOGI("Left mouse button pressed.");
+            }
+            else if (message->button_ == EButtonFlag::kRightMouseButton) {
+                event = WM_RBUTTONDOWN;
+                mouse_key_state_flags = MK_RBUTTON;
+            }
+            else if (message->button_ == EButtonFlag::kMiddleMouseButton) {
+                event = WM_MBUTTONDOWN;
+                mouse_key_state_flags = MK_MBUTTON;
+            }
+        }
+        else if (message->released_) {
+            if (message->button_ == EButtonFlag::kLeftMouseButton) {
+                event = WM_LBUTTONUP;
+                mouse_key_state_flags = MK_LBUTTON;
+                LOGI("Left mouse button released.");
+            }
+            else if (message->button_ == EButtonFlag::kRightMouseButton) {
+                event = WM_RBUTTONUP;
+                mouse_key_state_flags = MK_RBUTTON;
+            }
+            else if (message->button_ == EButtonFlag::kMiddleMouseButton) {
+                event = WM_MBUTTONUP;
+                mouse_key_state_flags = MK_MBUTTON;
+            }
+        }
+
+        PostMessage(hwnd, event, mouse_key_state_flags, MAKELPARAM(cursor_position_.x, cursor_position_.y));
+        PostMessage(hwnd, WM_INPUT, 0, (LPARAM)NULL);
+    }
 }

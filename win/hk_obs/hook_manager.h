@@ -8,7 +8,11 @@
 #include <string>
 #include <memory>
 #include <functional>
+#include <queue>
 #include "capture_message.h"
+#include "tc_common/concurrent_queue.h"
+#include "hook_api.h"
+#include <Windows.h>
 
 namespace tc
 {
@@ -28,6 +32,25 @@ namespace tc
         void Init();
         void Send(std::shared_ptr<Data>&& data) const;
         inline uint64_t AppendFrameIndex() { return frame_index_++; }
+        void PushIpcMessage(const std::shared_ptr<CaptureBaseMessage>& msg);
+
+        template<typename T>
+        T GetProcAddressByName(const std::wstring& dll_name, const std::string& method_name) {
+            auto m = (T) GetProcAddress(GetModuleHandleW(dll_name.c_str()), method_name.c_str());
+            return m;
+        }
+        void HookMethods();
+
+        UINT ProcessHookedGetRawInputData(
+                HRAWINPUT hRawInput,
+                UINT uiCommand,
+                LPVOID pData,
+                PUINT pcbSize,
+                UINT cbSizeHeader);
+        BOOL ProcessHookedGetCursorPos(LPPOINT lpPoint);
+
+    private:
+        void GenerateMouseEvent(const std::shared_ptr<CaptureBaseMessage>& msg);
 
     public:
         uint32_t current_pid_{};
@@ -36,7 +59,20 @@ namespace tc
         std::shared_ptr<CaptureHelloMessage> hello_msg_ = nullptr;
         std::shared_ptr<SharedTexture> shared_texture_ = nullptr;
         uint64_t frame_index_ = 0;
+
+        tc::ConcurrentQueue<std::shared_ptr<CaptureBaseMessage>> messages_;
+        POINT cursor_position_;
+
     };
+
+    static GetRawInputBuffer_t origin_GetRawInputBuffer_;
+    static GetRawInputData_t origin_GetRawInputData_;
+    static PostMessageA_t origin_PostMessageA_;
+    static PostMessageW_t origin_PostMessageW_;
+    static SendMessageA_t origin_SendMessageA_;
+    static SendMessageW_t origin_SendMessageW_;
+    static GetCursorPos_t origin_GetCursorPos_;
+    static SetCursorPos_t origin_SetCursorPos_;
 
 }
 

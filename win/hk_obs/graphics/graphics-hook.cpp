@@ -842,6 +842,8 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID unused1) {
 
         LOGI("Dll path: {}", dll_path);
 
+        g_hook_manager->HookMethods();
+
         if (!init_dll()) {
             LOGE("[OBS] Duplicate hook library");
             return false;

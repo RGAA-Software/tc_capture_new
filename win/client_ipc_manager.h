@@ -31,6 +31,7 @@ namespace tc
     class Data;
 
     using IpcHelloMessageCallback = std::function<void(std::shared_ptr<CaptureHelloMessage>&&)>;
+    using IpcMessageCallback = std::function<void(const std::shared_ptr<CaptureBaseMessage>&, std::shared_ptr<Data>&)>;
 
     class ClientIpcManager {
     public:
@@ -55,6 +56,7 @@ namespace tc
         void Exit();
 
         void RegisterHelloMessageCallback(IpcHelloMessageCallback&& cbk);
+        void RegisterIpcMessageCallback(IpcMessageCallback&& cbk);
 
         template<typename T>
         std::shared_ptr<T> AsMessage(CaptureBaseMessage* msg) {
@@ -86,6 +88,7 @@ namespace tc
         std::mutex shm_send_mtx_;
 
         IpcHelloMessageCallback ipc_hello_msg_callback_ = nullptr;
+        IpcMessageCallback ipc_msg_callback_ = nullptr;
 
     };
 

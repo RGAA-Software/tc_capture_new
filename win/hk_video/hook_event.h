@@ -21,45 +21,45 @@ namespace tc
     class IPCMouseMessage;
     class IPCKeyboardMessage;
 
-    typedef UINT (WINAPI *FUNC_GetRawInputData)(
+    typedef UINT (WINAPI *GetRawInputData_t)(
             HRAWINPUT hRawInput,
             UINT uiCommand,
             LPVOID pData,
             PUINT pcbSize,
             UINT cbSizeHeader);
 
-    typedef UINT (WINAPI *FUNC_GetRawInputBuffer)(
+    typedef UINT (WINAPI *GetRawInputBuffer_t)(
             PRAWINPUT pData,
             PUINT pcbSize,
             UINT cbSizeHeader);
 
-    typedef BOOL(WINAPI *FUNC_PostMessageA)(
+    typedef BOOL(WINAPI *PostMessageA_t)(
             HWND hWnd,
             UINT Msg,
             WPARAM wParam,
             LPARAM lParam);
 
-    typedef BOOL(WINAPI *FUNC_PostMessageW)(
+    typedef BOOL(WINAPI *PostMessageW_t)(
             HWND hWnd,
             UINT Msg,
             WPARAM wParam,
             LPARAM lParam);
 
-    typedef LRESULT(WINAPI *FUNC_SendMessageA)(
+    typedef LRESULT(WINAPI *SendMessageA_t)(
             HWND hWnd,
             UINT Msg,
             WPARAM wParam,
             LPARAM lParam);
 
-    typedef LRESULT(WINAPI *FUNC_SendMessageW)(
+    typedef LRESULT(WINAPI *SendMessageW_t)(
             HWND hWnd,
             UINT Msg,
             WPARAM wParam,
             LPARAM lParam);
 
-    typedef BOOL (WINAPI *FUNC_GetCursorPos)(LPPOINT lpPoint);
+    typedef BOOL (WINAPI *GetCursorPos_t)(LPPOINT lpPoint);
 
-    typedef BOOL (WINAPI *FUNC_SetCursorPos)(int X, int Y);
+    typedef BOOL (WINAPI *SetCursorPos_t)(int X, int Y);
 
     class HookEvent {
     public:
@@ -109,12 +109,12 @@ namespace tc
         POINT cursor_position{kInvalidCursorPos, kInvalidCursorPos};
     };
 
-    static FUNC_GetRawInputBuffer origin_GetRawInputBuffer;
-    static FUNC_GetRawInputData origin_GetRawInputData;
-    static FUNC_PostMessageA origin_PostMessageA;
-    static FUNC_PostMessageW origin_PostMessageW;
-    static FUNC_SendMessageA origin_SendMessageA;
-    static FUNC_SendMessageW origin_SendMessageW;
-    static FUNC_GetCursorPos origin_GetCursorPos;
-    static FUNC_SetCursorPos origin_SetCursorPos;
+    static GetRawInputBuffer_t origin_GetRawInputBuffer;
+    static GetRawInputData_t origin_GetRawInputData;
+    static PostMessageA_t origin_PostMessageA;
+    static PostMessageW_t origin_PostMessageW;
+    static SendMessageA_t origin_SendMessageA;
+    static SendMessageW_t origin_SendMessageW;
+    static GetCursorPos_t origin_GetCursorPos;
+    static SetCursorPos_t origin_SetCursorPos;
 }

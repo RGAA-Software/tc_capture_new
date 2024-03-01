@@ -30,14 +30,19 @@ namespace tc
         return data;
     }
 
-    std::shared_ptr<Data> CaptureMessageMaker::MakeMouseEventMessage(uint32_t x_radio, uint32_t y_radio, int32_t btn, int32_t data, int32_t dx, int32_t dy) {
+    std::shared_ptr<Data> CaptureMessageMaker::MakeMouseEventMessage(uint64_t hwnd, uint32_t x, uint32_t y,
+                                                                     int32_t btn, int32_t data, int32_t dx, int32_t dy,
+                                                                     bool pressed, bool released) {
         MouseEventMessage msg{};
-        msg.x_ratio_ = x_radio;
-        msg.y_ratio_ = y_radio;
+        msg.hwnd_ = hwnd;
+        msg.x_ = x;
+        msg.y_ = y;
         msg.button_ = btn;
         msg.data_ = data;
         msg.delta_x_ = dx;
         msg.delta_y_ = dy;
+        msg.pressed_ = pressed;
+        msg.released_ = released;
         auto msg_data = Data::Make(nullptr, sizeof(MouseEventMessage));
         memcpy(msg_data->DataAddr(), &msg, sizeof(MouseEventMessage));
         return msg_data;

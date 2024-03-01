@@ -131,6 +131,9 @@ namespace tc
                 if (in_msg->type_ == kCaptureHelloMessage && ipc_hello_msg_callback_) {
                     ipc_hello_msg_callback_(std::move(std::static_pointer_cast<CaptureHelloMessage>(in_msg)));
                 }
+                else if (in_msg && ipc_msg_callback_) {
+                    ipc_msg_callback_(in_msg, in_data);
+                }
             }
         });
     }
@@ -155,7 +158,6 @@ namespace tc
         else if (msg->type_ == kMouseEventMessage) {
             auto in_msg = AsMessage<MouseEventMessage>(msg);
             cpy_msg = std::dynamic_pointer_cast<CaptureBaseMessage>(in_msg);
-            LOGI("====> MouseEventMessage: radio:{}, {}", in_msg->x_ratio_, in_msg->y_ratio_);
         }
 
 //        if (cpy_msg->data_length > 0 && cpy_msg->data_length < data->Size()) {
@@ -166,5 +168,9 @@ namespace tc
 
     void ClientIpcManager::RegisterHelloMessageCallback(IpcHelloMessageCallback&& cbk) {
         ipc_hello_msg_callback_ = cbk;
+    }
+
+    void ClientIpcManager::RegisterIpcMessageCallback(IpcMessageCallback&& cbk) {
+        ipc_msg_callback_ = cbk;
     }
 }

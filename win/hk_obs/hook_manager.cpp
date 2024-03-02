@@ -27,7 +27,12 @@ namespace tc
         });
         client_ipc_mgr_->RegisterIpcMessageCallback([=, this](const std::shared_ptr<CaptureBaseMessage>& msg, const std::shared_ptr<Data>& data) {
             this->PushIpcMessage(msg);
-            this->GenerateMouseEvent(msg);
+            if (msg->type_ == kMouseEventMessage) {
+                this->GenerateMouseEvent(msg);
+            }
+            else if (msg->type_ == kKeyboardEventMessage) {
+                this->GenerateKeyboardEvent(msg);
+            }
         });
 
         shared_texture_ = std::make_shared<SharedTexture>();
@@ -95,42 +100,43 @@ namespace tc
             UINT cbSizeHeader) {
 
         if (uiCommand != RID_INPUT || hRawInput || !pData) {
-            LOGI("uiCommand : {}, hRawInput : {}, pData: {}", uiCommand, (void*)hRawInput, (void*)pData);
             return origin_GetRawInputData_(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
         }
 
         if (messages_.Empty()) {
-            LOGI("No message for RawInput.");
             return origin_GetRawInputData_(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);;
         }
 
         std::shared_ptr<CaptureBaseMessage> msg = messages_.Front();
         messages_.Pop();
 
-        //LOGI("HookedGetRawInputData, pData : %p, uiCommand %p, pcbSize : %d, cbSizeHeader : %d", pData, uiCommand, *pcbSize, cbSizeHeader);
+        auto raw_input = (RAWINPUT*)pData;
+        memset(raw_input, 0, sizeof(RAWINPUT));
+        if (msg->type_ == kKeyboardEventMessage) {
+            auto keyboard_msg = std::static_pointer_cast<KeyboardEventMessage>(msg);
+            bool down = keyboard_msg->down_;
+            int k = keyboard_msg->key_;
+            raw_input->header.dwType = RIM_TYPEKEYBOARD;
+            raw_input->data.keyboard.VKey = k;
+            raw_input->data.keyboard.MakeCode = MapVirtualKey(k, MAPVK_VK_TO_VSC);
+            raw_input->data.keyboard.Flags = down ? RI_KEY_MAKE  : RI_KEY_BREAK;
+            raw_input->data.keyboard.Message = down ? WM_KEYDOWN : WM_KEYUP;
+            LOGI("vkey: {}, down: {}, makecode:{}", k, down, raw_input->data.keyboard.MakeCode);
 
-        if (msg->type_ == kMouseEventMessage) {
+        } else if (msg->type_ == kMouseEventMessage) {
             auto mouse_msg = std::static_pointer_cast<MouseEventMessage>(msg);
-            auto raw_input = (RAWINPUT*)pData;
-            memset(raw_input, 0, sizeof(RAWINPUT));
 
             raw_input->header.dwType = RIM_TYPEMOUSE;
-            if (false) {
-//                raw_input->data.mouse.lLastX = mouse_msg->mouse_x;
-//                raw_input->data.mouse.lLastY = mouse_msg->mouse_y;
-//                raw_input->data.mouse.usFlags = MOUSE_MOVE_ABSOLUTE;
+            if (mouse_msg->absolute_) {
+                raw_input->data.mouse.lLastX = mouse_msg->x_;
+                raw_input->data.mouse.lLastY = mouse_msg->y_;
+                raw_input->data.mouse.usFlags = MOUSE_MOVE_ABSOLUTE;
             }
             else {
                 raw_input->data.mouse.lLastX = mouse_msg->delta_x_;
                 raw_input->data.mouse.lLastY = mouse_msg->delta_y_;
                 raw_input->data.mouse.usFlags = MOUSE_MOVE_RELATIVE;
             }
-
-//            cursor_position.x = mouse_msg->mouse_x;//
-//            cursor_position.y = mouse_msg->mouse_y;//
-
-            //cursor_position.x += mouse_msg->mouse_dx;
-            //cursor_position.y += mouse_msg->mouse_dy;
 
             if (mouse_msg->middle_scroll_) {
                 raw_input->data.mouse.ulButtons |= RI_MOUSE_WHEEL;
@@ -140,7 +146,6 @@ namespace tc
             if (mouse_msg->pressed_) {
                 if (mouse_msg->button_ == EButtonFlag::kLeftMouseButton) {
                     raw_input->data.mouse.ulButtons |= RI_MOUSE_LEFT_BUTTON_DOWN;
-                    LOGI("replay left mouse pressed.");
                 }
                 else if (mouse_msg->button_ == EButtonFlag::kMiddleMouseButton) {
                     raw_input->data.mouse.ulButtons |= RI_MOUSE_MIDDLE_BUTTON_DOWN;
@@ -152,7 +157,6 @@ namespace tc
             else if (mouse_msg->released_) {
                 if (mouse_msg->button_ == EButtonFlag::kLeftMouseButton) {
                     raw_input->data.mouse.ulButtons |= RI_MOUSE_LEFT_BUTTON_UP;
-                    LOGI("replay left mouse released.");
                 }
                 else if (mouse_msg->button_ == EButtonFlag::kMiddleMouseButton) {
                     raw_input->data.mouse.ulButtons |= RI_MOUSE_MIDDLE_BUTTON_UP;
@@ -245,5 +249,27 @@ namespace tc
 
         PostMessage(hwnd, event, mouse_key_state_flags, MAKELPARAM(cursor_position_.x, cursor_position_.y));
         PostMessage(hwnd, WM_INPUT, 0, (LPARAM)NULL);
+    }
+
+    void HookManager::GenerateKeyboardEvent(const std::shared_ptr<CaptureBaseMessage>& m) {
+        auto key_msg = std::static_pointer_cast<KeyboardEventMessage>(m);
+
+        int msg;
+        LPARAM lp = 0;
+        if (key_msg->down_) {
+            msg = WM_KEYDOWN;
+        } else {
+            // repeat count for the current message.
+            lp = 1;
+            // previous key state
+            lp |= 1 << 30;
+            // transition state
+            lp |= 1 << 31;
+            msg = WM_KEYUP;
+        }
+
+        PostMessage((HWND)key_msg->hwnd_, msg, key_msg->key_, lp);
+
+        PostMessage((HWND)key_msg->hwnd_, WM_INPUT, 0, (LPARAM)NULL);
     }
 }

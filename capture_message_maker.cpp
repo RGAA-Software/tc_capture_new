@@ -48,4 +48,17 @@ namespace tc
         return msg_data;
     }
 
+    std::shared_ptr<Data> CaptureMessageMaker::MakeKeyboardEventMessage(uint64_t hwnd_, uint32_t key, uint32_t down,
+                                                          uint32_t num_lock_state, uint32_t caps_lock_state) {
+        KeyboardEventMessage msg{};
+        msg.hwnd_ = hwnd_;
+        msg.key_ = key;
+        msg.down_ = down;
+        msg.num_lock_state_ = num_lock_state;
+        msg.caps_lock_state_ = caps_lock_state;
+        auto msg_data = Data::Make(nullptr, sizeof(KeyboardEventMessage));
+        memcpy(msg_data->DataAddr(), &msg, sizeof(KeyboardEventMessage));
+        return msg_data;
+    }
+
 }

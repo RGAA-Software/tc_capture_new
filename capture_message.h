@@ -126,6 +126,20 @@ namespace tc
         int32_t delta_x_ = 0;
         int32_t delta_y_ = 0;
         int32_t middle_scroll_ = 0;
+        int32_t absolute_ = 0;
+    };
+
+    class KeyboardEventMessage : public CaptureBaseMessage {
+    public:
+        KeyboardEventMessage() : CaptureBaseMessage() {
+            type_ = kKeyboardEventMessage;
+        }
+    public:
+        uint64_t hwnd_{};
+        uint32_t key_{};
+        uint32_t down_{};
+        uint32_t num_lock_state_{};
+        uint32_t caps_lock_state_{};
     };
 
 }

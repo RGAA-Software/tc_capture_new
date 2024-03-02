@@ -125,7 +125,8 @@ namespace tc
                 auto in_msg = std::get<0>(parsed_message);
                 auto in_data = std::get<1>(parsed_message);
                 if (!in_msg) {
-                    return;
+                    LOGE("Error message in .");
+                    continue;
                 }
 
                 if (in_msg->type_ == kCaptureHelloMessage && ipc_hello_msg_callback_) {
@@ -159,7 +160,10 @@ namespace tc
             auto in_msg = AsMessage<MouseEventMessage>(msg);
             cpy_msg = std::dynamic_pointer_cast<CaptureBaseMessage>(in_msg);
         }
-
+        else if (msg->type_ == kKeyboardEventMessage) {
+            auto in_msg = AsMessage<KeyboardEventMessage>(msg);
+            cpy_msg = std::dynamic_pointer_cast<KeyboardEventMessage>(in_msg);
+        }
 //        if (cpy_msg->data_length > 0 && cpy_msg->data_length < data->Size()) {
 //            cpy_data = Data::Make(data + sizeof(CaptureVideoFrame), (int) cpy_msg->data_length);
 //        }

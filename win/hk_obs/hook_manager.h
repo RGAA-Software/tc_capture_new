@@ -51,6 +51,7 @@ namespace tc
 
     private:
         void GenerateMouseEvent(const std::shared_ptr<CaptureBaseMessage>& msg);
+        void GenerateKeyboardEvent(const std::shared_ptr<CaptureBaseMessage>& msg);
 
     public:
         uint32_t current_pid_{};

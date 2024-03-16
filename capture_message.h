@@ -11,6 +11,8 @@ namespace tc
 {
     // type_
     // dll -> app
+    class Data;
+
     constexpr auto kCaptureVideoFrame = 0x0001;
     // dll -> app
     constexpr auto kCaptureAudioFrame = 0x0002;
@@ -66,6 +68,7 @@ namespace tc
 
     };
 
+<<<<<<< Updated upstream
     // app 会在刚注入dll时，通过IPC发送这个消息到dll中
     class CaptureHelloMessage : public CaptureBaseMessage {
     public:
@@ -142,6 +145,20 @@ namespace tc
         uint32_t caps_lock_state_{};
     };
 
+=======
+    // 桌面模式下采集鼠标的信息
+    class CaptureCursorBitmap : public CaptureBaseMessage {
+    public:
+        uint32_t width_ = 0;
+        uint32_t height_ = 0;
+        uint32_t hotspot_x_ = 0;
+        uint32_t hotspot_y_ = 0;
+        uint32_t x_ = 0;
+        uint32_t y_ = 0;
+        bool visable_ = true;
+        std::shared_ptr<Data> data_ = nullptr;  //存放图片
+    };
+>>>>>>> Stashed changes
 }
 
 #endif //TC_APPLICATION_CAPTURE_MESSAGE_H

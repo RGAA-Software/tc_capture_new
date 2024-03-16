@@ -34,6 +34,7 @@ if (WIN32)
         win/desktop_capture/dda_capture.cpp
         win/desktop_capture/win_desktop_capture.cpp
         capture_message_maker.cpp
+        win/desktop_capture/cursor_capture.cpp
     )
     add_library(tc_capture ${CAPTURE_SRCS})
     target_link_libraries(tc_capture Winmm)

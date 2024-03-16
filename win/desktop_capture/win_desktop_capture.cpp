@@ -9,8 +9,7 @@
 namespace tc {
     WinDesktopCapture::WinDesktopCapture(const std::shared_ptr<MessageNotifier>& msg_notifier) : DesktopCapture(msg_notifier)
     {
-        dda_capture_ = std::make_shared<DDACapture>();
-        dda_capture_->msg_notifier_ = msg_notifier;
+        dda_capture_ = std::make_shared<DDACapture>(msg_notifier);
         dda_capture_->Init();
     }
 

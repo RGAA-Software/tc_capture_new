@@ -15,6 +15,7 @@
 using namespace Microsoft::WRL;
 namespace tc {
     class MessageNotifier;
+    class CursorCapture;
     class DDACapture
     {
         // to do 考虑屏幕分辨率变化的问题
@@ -40,7 +41,7 @@ namespace tc {
             HANDLE shared_haneld_ = 0;
             ComPtr<ID3D11Texture2D> texture2d_;
         };
-        DDACapture();
+        DDACapture(std::shared_ptr<MessageNotifier> msg_notifier);
         virtual ~DDACapture();
         bool Init();
         bool UnInit();
@@ -63,7 +64,8 @@ namespace tc {
 
         CComPtr<ID3D11Texture2D> shared_texture_;
 
-        std::shared_ptr<MessageNotifier> msg_notifier_ = nullptr;
+        std::shared_ptr<MessageNotifier> msg_notifier_;
+        std::shared_ptr<CursorCapture> cursor_capturer_;
     private:
         bool muti_screen_mode_ = false;
         std::atomic<bool> stop_flag_ = false;

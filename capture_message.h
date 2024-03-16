@@ -67,8 +67,6 @@ namespace tc
     public:
 
     };
-
-<<<<<<< Updated upstream
     // app 会在刚注入dll时，通过IPC发送这个消息到dll中
     class CaptureHelloMessage : public CaptureBaseMessage {
     public:
@@ -145,7 +143,6 @@ namespace tc
         uint32_t caps_lock_state_{};
     };
 
-=======
     // 桌面模式下采集鼠标的信息
     class CaptureCursorBitmap : public CaptureBaseMessage {
     public:
@@ -158,7 +155,6 @@ namespace tc
         bool visable_ = true;
         std::shared_ptr<Data> data_ = nullptr;  //存放图片
     };
->>>>>>> Stashed changes
 }
 
 #endif //TC_APPLICATION_CAPTURE_MESSAGE_H

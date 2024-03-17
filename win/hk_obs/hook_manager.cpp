@@ -10,20 +10,25 @@
 #include <Windows.h>
 #include <detours/detours.h>
 #include "tc_message.pb.h"
+#include "app_shared_info_reader.h"
 
 namespace tc
 {
 
     void HookManager::Init() {
         auto pid = GetCurrentProcessId();
-        hello_msg_ = std::make_shared<CaptureHelloMessage>();
+        //hello_msg_ = std::make_shared<CaptureHelloMessage>();
         current_pid_ = pid;
+        auto shm_name = std::format("application_shm_{}", pid);
+        shared_info_reader_ = AppSharedInfoReader::Make(shm_name);
+        app_shared_msg_ = shared_info_reader_->ReadData();
+
         client_ipc_mgr_ = ClientIpcManager::Make();
         client_ipc_mgr_->Init(pid, kHostToClientShmSize);
         client_ipc_mgr_->WaitForMessage();
         client_ipc_mgr_->RegisterHelloMessageCallback([=, this](std::shared_ptr<CaptureHelloMessage>&& msg) {
             LOGI("Hello msg : present:{}, present1: {}, resize: {}, release: {}", msg->dxgi_present, msg->dxgi_present1, msg->dxgi_resize, msg->dxgi_release);
-            this->hello_msg_ = std::move(msg);
+            //this->hello_msg_ = std::move(msg);
         });
         client_ipc_mgr_->RegisterIpcMessageCallback([=, this](const std::shared_ptr<CaptureBaseMessage>& msg, const std::shared_ptr<Data>& data) {
             this->PushIpcMessage(msg);
@@ -271,5 +276,14 @@ namespace tc
         PostMessage((HWND)key_msg->hwnd_, msg, key_msg->key_, lp);
 
         PostMessage((HWND)key_msg->hwnd_, WM_INPUT, 0, (LPARAM)NULL);
+    }
+
+    void HookManager::DumpSharedMessage() {
+        LOGI("----Begin AppSharedMessage----");
+        LOGI("ipc port: {}", app_shared_msg_->ipc_port_);
+        LOGI("msg size: {}", app_shared_msg_->self_size_);
+        LOGI("Hello msg : present:{:x}, present1: {:x}, resize: {:x}, release: {:x}",
+             app_shared_msg_->dxgi_present, app_shared_msg_->dxgi_present1, app_shared_msg_->dxgi_resize, app_shared_msg_->dxgi_release);
+        LOGI("----End AppSharedMessage----");
     }
 }

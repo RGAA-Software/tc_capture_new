@@ -20,6 +20,8 @@ namespace tc
     class Data;
     class ClientIpcManager;
     class SharedTexture;
+    class AppSharedInfoReader;
+    class AppSharedMessage;
 
     class HookManager {
     public:
@@ -49,6 +51,8 @@ namespace tc
                 UINT cbSizeHeader);
         BOOL ProcessHookedGetCursorPos(LPPOINT lpPoint);
 
+        void DumpSharedMessage();
+
     private:
         void GenerateMouseEvent(const std::shared_ptr<CaptureBaseMessage>& msg);
         void GenerateKeyboardEvent(const std::shared_ptr<CaptureBaseMessage>& msg);
@@ -57,13 +61,15 @@ namespace tc
         uint32_t current_pid_{};
         std::string dll_path_;
         std::shared_ptr<ClientIpcManager> client_ipc_mgr_ = nullptr;
-        std::shared_ptr<CaptureHelloMessage> hello_msg_ = nullptr;
+        //std::shared_ptr<CaptureHelloMessage> hello_msg_ = nullptr;
         std::shared_ptr<SharedTexture> shared_texture_ = nullptr;
         uint64_t frame_index_ = 0;
 
         tc::ConcurrentQueue<std::shared_ptr<CaptureBaseMessage>> messages_;
         POINT cursor_position_;
 
+        std::shared_ptr<AppSharedInfoReader> shared_info_reader_ = nullptr;
+        std::shared_ptr<AppSharedMessage> app_shared_msg_ = nullptr;
     };
 
     static GetRawInputBuffer_t origin_GetRawInputBuffer_;

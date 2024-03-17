@@ -307,14 +307,14 @@ static inline bool attempt_hook(void) {
     static bool dxgi_hooked = false;
     static bool gl_hooked = false;
     auto hook_mgr = HookManager::Instance();
-    if (hook_mgr->hello_msg_) {
-        global_hook_info->offsets.dxgi.present = hook_mgr->hello_msg_->dxgi_present;
-        global_hook_info->offsets.dxgi.present1 = hook_mgr->hello_msg_->dxgi_present1;
-        global_hook_info->offsets.dxgi.resize = hook_mgr->hello_msg_->dxgi_resize;
-        global_hook_info->offsets.dxgi2.release = hook_mgr->hello_msg_->dxgi_release;
+    if (hook_mgr->app_shared_msg_) {
+        global_hook_info->offsets.dxgi.present = hook_mgr->app_shared_msg_->dxgi_present;
+        global_hook_info->offsets.dxgi.present1 = hook_mgr->app_shared_msg_->dxgi_present1;
+        global_hook_info->offsets.dxgi.resize = hook_mgr->app_shared_msg_->dxgi_resize;
+        global_hook_info->offsets.dxgi2.release = hook_mgr->app_shared_msg_->dxgi_release;
         LOGI("Attempt hook: present:{:x}, present1:{:x}, resize:{:x}, release:{:x}",
-             hook_mgr->hello_msg_->dxgi_present, hook_mgr->hello_msg_->dxgi_present1,
-             hook_mgr->hello_msg_->dxgi_resize, hook_mgr->hello_msg_->dxgi_release);
+             hook_mgr->app_shared_msg_->dxgi_present, hook_mgr->app_shared_msg_->dxgi_present1,
+             hook_mgr->app_shared_msg_->dxgi_resize, hook_mgr->app_shared_msg_->dxgi_release);
     }
 
 #ifdef COMPILE_VULKAN_HOOK
@@ -837,8 +837,9 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID unused1) {
 
         std::string dll_path = GetDllPath(hinst);
         g_hook_manager->dll_path_ = dll_path;
-        auto log_path = std::format("{}/tc_graphics_{}.log", dll_path, 0);
+        auto log_path = std::format("{}/tc_graphics_{}.log", dll_path, g_hook_manager->app_shared_msg_->ipc_port_);
         tc::Logger::InitLog(log_path, true);
+        g_hook_manager->DumpSharedMessage();
 
         LOGI("Dll path: {}", dll_path);
 

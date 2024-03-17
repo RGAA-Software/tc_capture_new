@@ -39,6 +39,7 @@ add_library(${PROJECT_NAME} SHARED
         graphics/vulkan-capture.c
         obfuscate.c
         hook_manager.cpp
+        app_shared_info_reader.cpp
         ../client_ipc_manager.cpp
         ../hk_video/d3d_utils.cpp
         ../hk_video/shared_texture.cpp

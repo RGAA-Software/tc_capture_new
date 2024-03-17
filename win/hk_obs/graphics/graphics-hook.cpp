@@ -839,6 +839,7 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID unused1) {
         g_hook_manager->dll_path_ = dll_path;
         auto log_path = std::format("{}/tc_graphics_{}.log", dll_path, g_hook_manager->app_shared_msg_->ipc_port_);
         tc::Logger::InitLog(log_path, true);
+        g_hook_manager->StartIpcClient();
         g_hook_manager->DumpSharedMessage();
 
         LOGI("Dll path: {}", dll_path);

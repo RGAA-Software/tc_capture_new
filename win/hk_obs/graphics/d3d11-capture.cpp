@@ -229,5 +229,7 @@ void d3d11_capture(void *swap_ptr, void *back_buffer_ptr) {
     }
     auto msg_data = CaptureMessageMaker::ConvertMessageToData(capture_video_frame_msg);
     hook_mgr->Send(std::move(msg_data));
+    hook_mgr->PostIpcMessage("TTTTJJJ");
+
     back_buffer->Release();
 }

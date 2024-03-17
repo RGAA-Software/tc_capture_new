@@ -22,6 +22,7 @@ namespace tc
     class SharedTexture;
     class AppSharedInfoReader;
     class AppSharedMessage;
+    class WsIpcClient;
 
     class HookManager {
     public:
@@ -53,6 +54,9 @@ namespace tc
 
         void DumpSharedMessage();
 
+        void StartIpcClient();
+        void PostIpcMessage(const std::string& msg);
+
     private:
         void GenerateMouseEvent(const std::shared_ptr<CaptureBaseMessage>& msg);
         void GenerateKeyboardEvent(const std::shared_ptr<CaptureBaseMessage>& msg);
@@ -70,6 +74,8 @@ namespace tc
 
         std::shared_ptr<AppSharedInfoReader> shared_info_reader_ = nullptr;
         std::shared_ptr<AppSharedMessage> app_shared_msg_ = nullptr;
+
+        std::shared_ptr<WsIpcClient> ws_ipc_client_ = nullptr;
     };
 
     static GetRawInputBuffer_t origin_GetRawInputBuffer_;

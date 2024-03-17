@@ -40,6 +40,7 @@ add_library(${PROJECT_NAME} SHARED
         obfuscate.c
         hook_manager.cpp
         app_shared_info_reader.cpp
+        ws_ipc_client.cpp
         ../client_ipc_manager.cpp
         ../hk_video/d3d_utils.cpp
         ../hk_video/shared_texture.cpp

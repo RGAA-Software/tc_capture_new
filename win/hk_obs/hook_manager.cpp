@@ -11,6 +11,7 @@
 #include <detours/detours.h>
 #include "tc_message.pb.h"
 #include "app_shared_info_reader.h"
+#include "ws_ipc_client.h"
 
 namespace tc
 {
@@ -285,5 +286,14 @@ namespace tc
         LOGI("Hello msg : present:{:x}, present1: {:x}, resize: {:x}, release: {:x}",
              app_shared_msg_->dxgi_present, app_shared_msg_->dxgi_present1, app_shared_msg_->dxgi_resize, app_shared_msg_->dxgi_release);
         LOGI("----End AppSharedMessage----");
+    }
+
+    void HookManager::StartIpcClient() {
+        ws_ipc_client_ = WsIpcClient::Make(app_shared_msg_->ipc_port_);
+        ws_ipc_client_->Start();
+    }
+
+    void HookManager::PostIpcMessage(const std::string& msg) {
+        ws_ipc_client_->PostIpcMessage(msg);
     }
 }

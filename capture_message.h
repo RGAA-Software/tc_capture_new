@@ -155,6 +155,14 @@ namespace tc
         bool visable_ = true;
         std::shared_ptr<Data> data_ = nullptr;  //存放图片
     };
+
+    //
+    class AppSharedMessage : public CaptureHelloMessage {
+    public:
+        //
+        uint32_t ipc_port_{0};
+        uint32_t self_size_{0};
+    };
 }
 
 #endif //TC_APPLICATION_CAPTURE_MESSAGE_H

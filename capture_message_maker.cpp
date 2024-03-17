@@ -30,7 +30,7 @@ namespace tc
         return data;
     }
 
-    std::shared_ptr<Data> CaptureMessageMaker::MakeMouseEventMessage(uint64_t hwnd, uint32_t x, uint32_t y,
+    MouseEventMessage CaptureMessageMaker::MakeMouseEventMessage(uint64_t hwnd, uint32_t x, uint32_t y,
                                                                      int32_t btn, int32_t data, int32_t dx, int32_t dy,
                                                                      bool pressed, bool released) {
         MouseEventMessage msg{};
@@ -43,12 +43,19 @@ namespace tc
         msg.delta_y_ = dy;
         msg.pressed_ = pressed;
         msg.released_ = released;
+        return msg;
+    }
+
+    std::shared_ptr<Data> CaptureMessageMaker::MakeMouseEventMessageAsData(uint64_t hwnd, uint32_t x, uint32_t y,
+                                                             int32_t btn, int32_t data, int32_t dx, int32_t dy,
+                                                             bool pressed, bool released) {
+        auto msg = MakeMouseEventMessage(hwnd, x, y, btn, data, dx, dy, pressed, released);
         auto msg_data = Data::Make(nullptr, sizeof(MouseEventMessage));
         memcpy(msg_data->DataAddr(), &msg, sizeof(MouseEventMessage));
         return msg_data;
     }
 
-    std::shared_ptr<Data> CaptureMessageMaker::MakeKeyboardEventMessage(uint64_t hwnd_, uint32_t key, uint32_t down,
+    KeyboardEventMessage CaptureMessageMaker::MakeKeyboardEventMessage(uint64_t hwnd_, uint32_t key, uint32_t down,
                                                           uint32_t num_lock_state, uint32_t caps_lock_state) {
         KeyboardEventMessage msg{};
         msg.hwnd_ = hwnd_;
@@ -56,6 +63,12 @@ namespace tc
         msg.down_ = down;
         msg.num_lock_state_ = num_lock_state;
         msg.caps_lock_state_ = caps_lock_state;
+        return msg;
+    }
+
+    std::shared_ptr<Data> CaptureMessageMaker::MakeKeyboardEventMessageAsData(uint64_t hwnd_, uint32_t key_, uint32_t down_,
+                                                                uint32_t num_lock_state, uint32_t caps_lock_state) {
+        auto msg = MakeKeyboardEventMessage(hwnd_, key_, down_, num_lock_state, caps_lock_state);
         auto msg_data = Data::Make(nullptr, sizeof(KeyboardEventMessage));
         memcpy(msg_data->DataAddr(), &msg, sizeof(KeyboardEventMessage));
         return msg_data;

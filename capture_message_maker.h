@@ -25,11 +25,16 @@ namespace tc
 
         static std::shared_ptr<Data> MakeAudioFrame(std::shared_ptr<Data>&& data);
         static std::shared_ptr<Data> MakeCaptureHelloMessage(const CaptureHelloMessage& msg);
-        static std::shared_ptr<Data> MakeMouseEventMessage(uint64_t hwnd, uint32_t x, uint32_t y,
+        static MouseEventMessage MakeMouseEventMessage(uint64_t hwnd, uint32_t x, uint32_t y,
+                                                                 int32_t btn, int32_t data, int32_t dx, int32_t dy,
+                                                                 bool pressed, bool released);
+        static std::shared_ptr<Data> MakeMouseEventMessageAsData(uint64_t hwnd, uint32_t x, uint32_t y,
                                                            int32_t btn, int32_t data, int32_t dx, int32_t dy,
                                                            bool pressed, bool released);
-        static std::shared_ptr<Data> MakeKeyboardEventMessage(uint64_t hwnd_, uint32_t key_, uint32_t down_,
+        static KeyboardEventMessage MakeKeyboardEventMessage(uint64_t hwnd_, uint32_t key_, uint32_t down_,
                                                             uint32_t num_lock_state, uint32_t caps_lock_state);
+        static std::shared_ptr<Data> MakeKeyboardEventMessageAsData(uint64_t hwnd_, uint32_t key_, uint32_t down_,
+                                                              uint32_t num_lock_state, uint32_t caps_lock_state);
 
     };
 

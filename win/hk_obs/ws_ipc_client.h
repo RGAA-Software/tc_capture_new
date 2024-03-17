@@ -13,6 +13,11 @@
 namespace tc
 {
 
+    class Message;
+    class CaptureBaseMessage;
+
+    using WsIpcMessageCallback = std::function<void(const std::shared_ptr<CaptureBaseMessage>&)>;
+
     class WsIpcClient {
     public:
 
@@ -23,12 +28,17 @@ namespace tc
         void Exit();
 
         void PostIpcMessage(const std::string& msg);
+        void RegisterIpcMessageCallback(WsIpcMessageCallback&& cbk) { ipc_cbk_ = std::move(cbk); }
+
+    private:
+        void DispatchIpcMessage(std::shared_ptr<tc::Message>&& msg);
 
     private:
 
         int port_{0};
         std::shared_ptr<asio2::ws_client> ws_client_ = nullptr;
         std::thread ws_thread_;
+        WsIpcMessageCallback ipc_cbk_;
     };
 
 }

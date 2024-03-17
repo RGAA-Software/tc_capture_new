@@ -4,6 +4,8 @@
 
 #include "ws_ipc_client.h"
 #include "tc_common/log.h"
+#include "tc_message.pb.h"
+#include "capture_message.h"
 
 namespace tc
 {
@@ -42,8 +44,13 @@ namespace tc
                     LOGI("update success...");
                 }
             }).bind_recv([&](std::string_view data) {
-                printf("recv : %zu %.*s\n", data.size(), (int) data.size(), data.data());
-
+                auto msg = std::make_shared<tc::Message>();
+                auto ok = msg->ParseFromArray(data.data(), data.size());
+                if (!ok) {
+                    LOGI("Parse to ipc message failed. recv data size: {}", (int) data.size());
+                    return;
+                }
+                this->DispatchIpcMessage(std::move(msg));
             });
 
             LOGI("will start at :{}, {}", port_, "/ipc");
@@ -70,6 +77,44 @@ namespace tc
             return;
         }
         ws_client_->async_send(msg);
+    }
+
+    void WsIpcClient::DispatchIpcMessage(std::shared_ptr<tc::Message>&& msg) {
+        if (msg->type() == tc::MessageType::kIpcMouseEvent) {
+            auto& ipc_msg = msg->ipc_mouse_event();
+            auto mem = std::make_shared<MouseEventMessage>();
+//            uint64_t hwnd_{};
+            mem->hwnd_ = ipc_msg.hwnd();
+//            //to do 当服务端采集方式为采集屏幕的时候，当前鼠标事件对应的屏幕索引
+//            //uint32_t monitor_index_ = 0;
+//            // 当前鼠标x值，相对于窗口
+//            uint32_t x_ = 0;
+            mem->x_ = ipc_msg.x();
+//            // 当前鼠标y值，
+//            uint32_t y_ = 0;
+            mem->y_ = ipc_msg.y();
+//            // 按键掩码, 用来表示摁下了什么按键、抬起了什么按键 ref: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-mouse_event
+//            int32_t button_ = 0;
+            mem->button_ = ipc_msg.button();
+//            int32_t pressed_ = 0;
+            mem->pressed_ = ipc_msg.pressed();
+//            int32_t released_ = 0;
+            mem->released_ = ipc_msg.released();
+//            // 鼠标data，滚轮等数据
+//            int32_t data_ = 0;
+            mem->data_ = ipc_msg.data();
+//            // 当前毫秒值时间戳
+//            //uint64_t timestamp_ = 0;
+//            int32_t delta_x_ = 0;
+            mem->delta_x_ = ipc_msg.dx();
+//            int32_t delta_y_ = 0;
+            mem->delta_y_ = ipc_msg.dy();
+//            int32_t middle_scroll_ = 0;
+            mem->middle_scroll_ = ipc_msg.middle_scroll();
+//            int32_t absolute_ = 0;
+            mem->absolute_ = ipc_msg.absolute();
+            ipc_cbk_(mem);
+        }
     }
 
 }

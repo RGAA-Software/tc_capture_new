@@ -295,5 +295,14 @@ namespace tc
     void HookManager::StartIpcClient() {
         ws_ipc_client_ = WsIpcClient::Make(app_shared_msg_->ipc_port_);
         ws_ipc_client_->Start();
+        ws_ipc_client_->RegisterIpcMessageCallback([=, this](const std::shared_ptr<CaptureBaseMessage>& msg) {
+            this->PushIpcMessage(msg);
+            if (msg->type_ == kMouseEventMessage) {
+                this->GenerateMouseEvent(msg);
+            }
+            else if (msg->type_ == kKeyboardEventMessage) {
+                this->GenerateKeyboardEvent(msg);
+            }
+        });
     }
 }

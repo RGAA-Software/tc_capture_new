@@ -6,6 +6,7 @@
 #define TC_APPLICATION_CAPTURE_MESSAGE_H
 
 #include <cstdint>
+#include <memory>
 
 namespace tc
 {

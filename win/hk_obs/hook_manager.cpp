@@ -18,18 +18,16 @@ namespace tc
 
     void HookManager::Init() {
         auto pid = GetCurrentProcessId();
-        //hello_msg_ = std::make_shared<CaptureHelloMessage>();
         current_pid_ = pid;
         auto shm_name = std::format("application_shm_{}", pid);
         shared_info_reader_ = AppSharedInfoReader::Make(shm_name);
         app_shared_msg_ = shared_info_reader_->ReadData();
-
+#if ENABLE_SHM
         client_ipc_mgr_ = ClientIpcManager::Make();
         client_ipc_mgr_->Init(pid, kHostToClientShmSize);
         client_ipc_mgr_->WaitForMessage();
         client_ipc_mgr_->RegisterHelloMessageCallback([=, this](std::shared_ptr<CaptureHelloMessage>&& msg) {
             LOGI("Hello msg : present:{}, present1: {}, resize: {}, release: {}", msg->dxgi_present, msg->dxgi_present1, msg->dxgi_resize, msg->dxgi_release);
-            //this->hello_msg_ = std::move(msg);
         });
         client_ipc_mgr_->RegisterIpcMessageCallback([=, this](const std::shared_ptr<CaptureBaseMessage>& msg, const std::shared_ptr<Data>& data) {
             this->PushIpcMessage(msg);
@@ -40,12 +38,18 @@ namespace tc
                 this->GenerateKeyboardEvent(msg);
             }
         });
-
+#endif
         shared_texture_ = std::make_shared<SharedTexture>();
     }
 
-    void HookManager::Send(std::shared_ptr<Data>&& data) const {
+    void HookManager::Send(std::shared_ptr<Data>&& data) {
+#if ENABLE_SHM
         client_ipc_mgr_->Send(std::move(data));
+#endif
+    }
+
+    void HookManager::Send(const std::string& msg) {
+        ws_ipc_client_->PostIpcMessage(msg);
     }
 
     void HookManager::PushIpcMessage(const std::shared_ptr<CaptureBaseMessage>& msg) {
@@ -291,9 +295,5 @@ namespace tc
     void HookManager::StartIpcClient() {
         ws_ipc_client_ = WsIpcClient::Make(app_shared_msg_->ipc_port_);
         ws_ipc_client_->Start();
-    }
-
-    void HookManager::PostIpcMessage(const std::string& msg) {
-        ws_ipc_client_->PostIpcMessage(msg);
     }
 }

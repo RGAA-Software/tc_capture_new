@@ -41,6 +41,7 @@ add_library(${PROJECT_NAME} SHARED
         hook_manager.cpp
         app_shared_info_reader.cpp
         ws_ipc_client.cpp
+        ipc_msg_maker.cpp
         ../client_ipc_manager.cpp
         ../hk_video/d3d_utils.cpp
         ../hk_video/shared_texture.cpp

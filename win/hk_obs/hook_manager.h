@@ -33,7 +33,8 @@ namespace tc
         }
 
         void Init();
-        void Send(std::shared_ptr<Data>&& data) const;
+        void Send(std::shared_ptr<Data>&& data);
+        void Send(const std::string& msg);
         inline uint64_t AppendFrameIndex() { return frame_index_++; }
         void PushIpcMessage(const std::shared_ptr<CaptureBaseMessage>& msg);
 
@@ -55,7 +56,6 @@ namespace tc
         void DumpSharedMessage();
 
         void StartIpcClient();
-        void PostIpcMessage(const std::string& msg);
 
     private:
         void GenerateMouseEvent(const std::shared_ptr<CaptureBaseMessage>& msg);
@@ -64,8 +64,9 @@ namespace tc
     public:
         uint32_t current_pid_{};
         std::string dll_path_;
+#if ENABLE_SHM
         std::shared_ptr<ClientIpcManager> client_ipc_mgr_ = nullptr;
-        //std::shared_ptr<CaptureHelloMessage> hello_msg_ = nullptr;
+#endif
         std::shared_ptr<SharedTexture> shared_texture_ = nullptr;
         uint64_t frame_index_ = 0;
 

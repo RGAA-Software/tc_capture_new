@@ -10,6 +10,7 @@
 #include "capture_message.h"
 #include "../hk_video/d3d_utils.h"
 #include "capture_message_maker.h"
+#include "ipc_msg_maker.h"
 
 using namespace tc;
 
@@ -227,9 +228,12 @@ void d3d11_capture(void *swap_ptr, void *back_buffer_ptr) {
     if (adapter_uid.has_value()) {
         capture_video_frame_msg.adapter_uid_ = adapter_uid.value();
     }
+#if ENABLE_SHM
     auto msg_data = CaptureMessageMaker::ConvertMessageToData(capture_video_frame_msg);
     hook_mgr->Send(std::move(msg_data));
-    hook_mgr->PostIpcMessage("TTTTJJJ");
-
+#else
+    auto ipc_msg = IpcMsgMaker::MakeVideoIpcMessage(capture_video_frame_msg);
+    hook_mgr->Send(ipc_msg);
+#endif
     back_buffer->Release();
 }

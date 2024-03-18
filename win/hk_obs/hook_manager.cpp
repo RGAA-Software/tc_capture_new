@@ -154,24 +154,24 @@ namespace tc
             }
 
             if (mouse_msg->pressed_) {
-                if (mouse_msg->button_ == EButtonFlag::kLeftMouseButton) {
+                if (mouse_msg->button_ == EButtonFlag::kLeftMouseButtonDown) {
                     raw_input->data.mouse.ulButtons |= RI_MOUSE_LEFT_BUTTON_DOWN;
                 }
-                else if (mouse_msg->button_ == EButtonFlag::kMiddleMouseButton) {
+                else if (mouse_msg->button_ == EButtonFlag::kMiddleMouseButtonDown) {
                     raw_input->data.mouse.ulButtons |= RI_MOUSE_MIDDLE_BUTTON_DOWN;
                 }
-                else if (mouse_msg->button_ == EButtonFlag::kRightMouseButton) {
+                else if (mouse_msg->button_ == EButtonFlag::kRightMouseButtonDown) {
                     raw_input->data.mouse.ulButtons |= RI_MOUSE_RIGHT_BUTTON_DOWN;
                 }
             }
             else if (mouse_msg->released_) {
-                if (mouse_msg->button_ == EButtonFlag::kLeftMouseButton) {
+                if (mouse_msg->button_ == EButtonFlag::kLeftMouseButtonUp) {
                     raw_input->data.mouse.ulButtons |= RI_MOUSE_LEFT_BUTTON_UP;
                 }
-                else if (mouse_msg->button_ == EButtonFlag::kMiddleMouseButton) {
+                else if (mouse_msg->button_ == EButtonFlag::kMiddleMouseButtonUp) {
                     raw_input->data.mouse.ulButtons |= RI_MOUSE_MIDDLE_BUTTON_UP;
                 }
-                else if (mouse_msg->button_ == EButtonFlag::kRightMouseButton) {
+                else if (mouse_msg->button_ == EButtonFlag::kRightMouseButtonUp) {
                     raw_input->data.mouse.ulButtons |= RI_MOUSE_RIGHT_BUTTON_UP;
                 }
             }
@@ -227,31 +227,31 @@ namespace tc
         DWORD mouse_key_state_flags = 0;
         UINT event = WM_MOUSEMOVE;
         if (message->pressed_) {
-            if (message->button_ == EButtonFlag::kLeftMouseButton) {
+            if (message->button_ == EButtonFlag::kLeftMouseButtonDown) {
                 event = WM_LBUTTONDOWN;
                 mouse_key_state_flags = MK_LBUTTON;
                 LOGI("Left mouse button pressed.");
             }
-            else if (message->button_ == EButtonFlag::kRightMouseButton) {
+            else if (message->button_ == EButtonFlag::kRightMouseButtonDown) {
                 event = WM_RBUTTONDOWN;
                 mouse_key_state_flags = MK_RBUTTON;
             }
-            else if (message->button_ == EButtonFlag::kMiddleMouseButton) {
+            else if (message->button_ == EButtonFlag::kMiddleMouseButtonDown) {
                 event = WM_MBUTTONDOWN;
                 mouse_key_state_flags = MK_MBUTTON;
             }
         }
         else if (message->released_) {
-            if (message->button_ == EButtonFlag::kLeftMouseButton) {
+            if (message->button_ == EButtonFlag::kLeftMouseButtonUp) {
                 event = WM_LBUTTONUP;
                 mouse_key_state_flags = MK_LBUTTON;
                 LOGI("Left mouse button released.");
             }
-            else if (message->button_ == EButtonFlag::kRightMouseButton) {
+            else if (message->button_ == EButtonFlag::kRightMouseButtonUp) {
                 event = WM_RBUTTONUP;
                 mouse_key_state_flags = MK_RBUTTON;
             }
-            else if (message->button_ == EButtonFlag::kMiddleMouseButton) {
+            else if (message->button_ == EButtonFlag::kMiddleMouseButtonUp) {
                 event = WM_MBUTTONUP;
                 mouse_key_state_flags = MK_MBUTTON;
             }

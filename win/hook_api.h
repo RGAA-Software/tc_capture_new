@@ -5,7 +5,8 @@
 #ifndef TC_APPLICATION_HOOK_API_H
 #define TC_APPLICATION_HOOK_API_H
 
-#include <Windows.h>
+#include <windows.h>
+#include <unknwnbase.h>
 
 // hook api
 
@@ -47,6 +48,17 @@ typedef LRESULT(WINAPI* SendMessageW_t)(
 
 typedef BOOL (WINAPI* GetCursorPos_t)(LPPOINT lpPoint);
 typedef BOOL (WINAPI* SetCursorPos_t)(int X, int Y);
+
+typedef SHORT (*GetAsyncKeyState_t)(int vKey);
+typedef SHORT (*GetKeyState_t)(int nVirtKey);
+
+typedef HRESULT (*DirectInput8Create_t)(
+        HINSTANCE hinst,
+        DWORD dwVersion,
+        REFIID riidltf,
+        LPVOID * ppvOut,
+        LPUNKNOWN punkOuter
+);
 
 // hook api
 

@@ -87,6 +87,9 @@ namespace tc
     static SendMessageW_t origin_SendMessageW_;
     static GetCursorPos_t origin_GetCursorPos_;
     static SetCursorPos_t origin_SetCursorPos_;
+    static GetAsyncKeyState_t origin_GetAsyncKeyState_;
+    static GetKeyState_t origin_GetKeyState_;
+    static DirectInput8Create_t origin_DirectInput8Create_;
 
 }
 

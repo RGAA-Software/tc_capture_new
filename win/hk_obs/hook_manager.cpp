@@ -76,6 +76,26 @@ namespace tc
         return HookManager::Instance()->ProcessHookedGetCursorPos(lpPoint);
     }
 
+    SHORT HookedGetAsyncKeyState(int vKey) {
+        //LOGI("HookedGetAsyncKeyState: {}", vKey);
+        return origin_GetAsyncKeyState_(vKey);
+    }
+
+    SHORT HookedGetKeyState(int vKey) {
+        LOGI("HookedGetKeyState: {}", vKey);
+        return origin_GetAsyncKeyState_(vKey);
+    }
+
+    HRESULT HookedDirectInput8Create(
+            HINSTANCE hinst,
+            DWORD dwVersion,
+            REFIID riidltf,
+            LPVOID * ppvOut,
+            LPUNKNOWN punkOuter) {
+        LOGI("HookedDirectInput8Create");
+        return origin_DirectInput8Create_(hinst, dwVersion, riidltf, ppvOut, punkOuter);
+    }
+
     void HookManager::HookMethods() {
         DetourRestoreAfterWith();
         DetourTransactionBegin();
@@ -98,6 +118,24 @@ namespace tc
             origin_GetCursorPos_ = GetProcAddressByName<GetCursorPos_t>(L"User32", "GetCursorPos");
             auto r = DetourAttach(&(PVOID &)origin_GetCursorPos_, &(PVOID &)HookedGetCursorPos);
             LOGI("Hook GetCursorPos result: {}", r);
+        }
+        // GetAsyncKeyState
+        {
+            origin_GetAsyncKeyState_ = GetProcAddressByName<GetAsyncKeyState_t>(L"User32", "GetAsyncKeyState");
+            auto r = DetourAttach(&(PVOID &)origin_GetAsyncKeyState_, &(PVOID &)HookedGetAsyncKeyState);
+            LOGI("Hook GetAsyncKeyState result: {}", r);
+        }
+        // GetKeyState
+        {
+            origin_GetKeyState_ = GetProcAddressByName<GetKeyState_t>(L"User32", "GetKeyState");
+            auto r = DetourAttach(&(PVOID &)origin_GetKeyState_, &(PVOID &) HookedGetKeyState);
+            LOGI("Hook GetKeyState result: {}", r);
+        }
+        //DirectInput8Create
+        {
+            origin_DirectInput8Create_ = GetProcAddressByName<DirectInput8Create_t>(L"Dinput8", "DirectInput8Create");
+            auto r = DetourAttach(&(PVOID &)origin_DirectInput8Create_, &(PVOID &) HookedDirectInput8Create);
+            LOGI("Hook DirectInput8Create result: {}", r);
         }
         DetourTransactionCommit();
     }
@@ -279,7 +317,6 @@ namespace tc
         }
 
         PostMessage((HWND)key_msg->hwnd_, msg, key_msg->key_, lp);
-
         PostMessage((HWND)key_msg->hwnd_, WM_INPUT, 0, (LPARAM)NULL);
     }
 

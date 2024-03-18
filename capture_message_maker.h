@@ -23,6 +23,14 @@ namespace tc
             return msg_data;
         }
 
+        template<typename T>
+        static std::string ConvertMessageToString(const T& msg) {
+            std::string ipc_msg;
+            ipc_msg.resize(sizeof(T));
+            memcpy(ipc_msg.data(), &msg, sizeof(T));
+            return ipc_msg;
+        }
+
         static std::shared_ptr<Data> MakeAudioFrame(std::shared_ptr<Data>&& data);
         static std::shared_ptr<Data> MakeCaptureHelloMessage(const CaptureHelloMessage& msg);
         static MouseEventMessage MakeMouseEventMessage(uint64_t hwnd, uint32_t x, uint32_t y,

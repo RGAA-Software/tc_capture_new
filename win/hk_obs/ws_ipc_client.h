@@ -31,7 +31,7 @@ namespace tc
         void RegisterIpcMessageCallback(WsIpcMessageCallback&& cbk) { ipc_cbk_ = std::move(cbk); }
 
     private:
-        void DispatchIpcMessage(std::shared_ptr<tc::Message>&& msg);
+        void DispatchIpcMessage(std::string_view data);
 
     private:
 

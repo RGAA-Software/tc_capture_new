@@ -10,8 +10,17 @@
 #include "capture_message.h"
 #include "../hk_video/d3d_utils.h"
 #include "capture_message_maker.h"
+#include <libyuv.h>
+#include <fstream>
+
+#include <d3d11.h>
+#include <wrl/client.h>
+#include "tc_common/win32/d3d_render.h"
+#include "tc_common/win32/d3d_debug_helper.h"
 
 using namespace tc;
+
+static std::shared_ptr<D3DRender> g_render;
 
 struct d3d11_data {
     ID3D11Device *device;         /* do not release */
@@ -128,6 +137,7 @@ static inline bool d3d11_init_format(IDXGISwapChain *swap, HWND &window) {
     data.cx = desc.BufferDesc.Width;
     data.cy = desc.BufferDesc.Height;
 
+    LOGI("d3d11 init format: {}, multisampled: {}, w: {}, h: {}", data.format, data.multisampled, data.cx, data.cy);
     return true;
 }
 
@@ -208,6 +218,61 @@ void d3d11_capture(void *swap_ptr, void *back_buffer_ptr) {
     }
 
     d3d11_shtex_capture(back_buffer);
+
+    // debug beg
+    if (false) {
+        D3D11_TEXTURE2D_DESC desc;
+        data.texture->GetDesc(&desc);
+        auto width = desc.Width;
+        auto height = desc.Height;
+        std::string msg = " --> width : " + std::to_string(width) + " height : " + std::to_string(height);
+        LOGI(msg);
+
+        std::vector<uint8_t> yuv_frame_data_;
+        yuv_frame_data_.resize(1.5 * width * height);
+        size_t pixel_size = width * height;
+
+        const int uv_stride = width >> 1;
+        uint8_t *y = yuv_frame_data_.data();
+        uint8_t *u = y + pixel_size;
+        uint8_t *v = u + (pixel_size >> 2);
+
+        CComPtr<IDXGISurface> staging_surface = nullptr;
+        hr =  data.texture->QueryInterface(IID_PPV_ARGS(&staging_surface));
+        if (FAILED(hr)) {
+            LOGE("!QueryInterface(IDXGISurface) err");
+            return;
+        }
+        DXGI_MAPPED_RECT mapped_rect{};
+        hr = staging_surface->Map(&mapped_rect, DXGI_MAP_READ);
+        if (FAILED(hr)) {
+            LOGE("!Map(IDXGISurface)");
+            return;
+        }
+        if (DXGI_FORMAT_B8G8R8A8_UNORM == desc.Format) {
+            libyuv::ARGBToI420(mapped_rect.pBits, mapped_rect.Pitch, y, width, u, uv_stride, v, uv_stride, width,
+                               height);
+        } else if (DXGI_FORMAT_R8G8B8A8_UNORM == desc.Format) {
+            libyuv::ABGRToI420(mapped_rect.pBits, mapped_rect.Pitch, y, width, u, uv_stride, v, uv_stride, width,
+                               height);
+        } else {
+            libyuv::ARGBToI420(mapped_rect.pBits, mapped_rect.Pitch, y, width, u, uv_stride, v, uv_stride, width,
+                               height);
+        }
+        {
+            std::ofstream yuv_file("capture_yuv.yuv", std::ios::binary);
+            yuv_file.write((char*)yuv_frame_data_.data(), yuv_frame_data_.size());
+            yuv_file.close();
+        }
+    }
+    // debug end
+
+    // debug texture begin
+    if (false) {
+        //CopyID3D11Texture2D(data.texture, "captured_image");
+        DebugOutDDS(data.texture, "xxcaptured_image");
+    }
+    // debug texture end
 
     auto hook_mgr = HookManager::Instance();
     auto shared_texture = hook_mgr->shared_texture_;

@@ -96,6 +96,17 @@ namespace tc
         return origin_DirectInput8Create_(hinst, dwVersion, riidltf, ppvOut, punkOuter);
     }
 
+    BOOL WINAPI HookedIsWindowVisible(HWND hWnd) {
+        LOGI("HookedIsWindowVisible");
+        return true;
+    }
+
+    HWND WINAPI HookedGetForegroundWindow(VOID) {
+        auto hwnd = HookManager::Instance()->ProcessHookedGetForegroundWindow();
+        LOGI("HookedGetForegroundWindow: {}", (void*)hwnd);
+        return hwnd;
+    }
+
     void HookManager::HookMethods() {
         DetourRestoreAfterWith();
         DetourTransactionBegin();
@@ -120,13 +131,13 @@ namespace tc
             LOGI("Hook GetCursorPos result: {}", r);
         }
         // GetAsyncKeyState
-        if (false) {
+        if (true) {
             origin_GetAsyncKeyState_ = GetProcAddressByName<GetAsyncKeyState_t>(L"User32", "GetAsyncKeyState");
             auto r = DetourAttach(&(PVOID &)origin_GetAsyncKeyState_, &(PVOID &)HookedGetAsyncKeyState);
             LOGI("Hook GetAsyncKeyState result: {}", r);
         }
         // GetKeyState
-        if (false) {
+        if (true) {
             origin_GetKeyState_ = GetProcAddressByName<GetKeyState_t>(L"User32", "GetKeyState");
             auto r = DetourAttach(&(PVOID &)origin_GetKeyState_, &(PVOID &) HookedGetKeyState);
             LOGI("Hook GetKeyState result: {}", r);
@@ -136,6 +147,18 @@ namespace tc
             origin_DirectInput8Create_ = GetProcAddressByName<DirectInput8Create_t>(L"Dinput8", "DirectInput8Create");
             auto r = DetourAttach(&(PVOID &)origin_DirectInput8Create_, &(PVOID &) HookedDirectInput8Create);
             LOGI("Hook DirectInput8Create result: {}", r);
+        }
+        //IsWindowVisible
+        {
+            origin_IsWindowVisibleHooked_ = GetProcAddressByName<IsWindowVisibleHooked_t>(L"User32", "IsWindowVisible");
+            auto r = DetourAttach(&(PVOID &)origin_IsWindowVisibleHooked_, &(PVOID &) HookedIsWindowVisible);
+            LOGI("Hook IsWindowVisible result: {}", r);
+        }
+        //GetForegroundWindow
+        {
+            origin_GetForegroundWindowHooked_ = GetProcAddressByName<GetForegroundWindowHooked_t>(L"User32", "GetForegroundWindow");
+            auto r = DetourAttach(&(PVOID &)origin_GetForegroundWindowHooked_, &(PVOID &) HookedGetForegroundWindow);
+            LOGI("Hook GetForegroundWindow result: {}", r);
         }
         DetourTransactionCommit();
     }
@@ -165,7 +188,7 @@ namespace tc
         }
 
         if (messages_.Empty()) {
-            return origin_GetRawInputData_(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
+            return 0;//origin_GetRawInputData_(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
         }
 
         std::shared_ptr<CaptureBaseMessage> msg = messages_.Front();
@@ -199,9 +222,9 @@ namespace tc
                 raw_input->data.mouse.usFlags = MOUSE_MOVE_RELATIVE;
             }
 
-            if (mouse_msg->middle_scroll_) {
+            if (mouse_msg->data_) {
                 raw_input->data.mouse.ulButtons |= RI_MOUSE_WHEEL;
-                raw_input->data.mouse.usButtonData = mouse_msg->middle_scroll_;
+                raw_input->data.mouse.usButtonData = mouse_msg->data_;
             }
 
             if (mouse_msg->pressed_) {
@@ -246,6 +269,7 @@ namespace tc
             return false;
         }
         BOOL ret = false;
+        // todo没人连接时，使用原本的坐标获取方法
         //auto ret = origin_GetCursorPos(lpPoint);
         if (lpPoint) {
             lpPoint->x = cursor_position_.x;
@@ -256,8 +280,13 @@ namespace tc
         return ret;
     }
 
+    HWND HookManager::ProcessHookedGetForegroundWindow() const {
+        return hwnd_;
+    }
+
     void HookManager::GenerateMouseEvent(const std::shared_ptr<CaptureBaseMessage>& msg) {
         auto message = std::static_pointer_cast<MouseEventMessage>(msg);
+        hwnd_ = (HWND)message->hwnd_;
         cursor_position_.x = message->x_;
         cursor_position_.y = message->y_;
 
@@ -307,6 +336,13 @@ namespace tc
                 mouse_key_state_flags = MK_MBUTTON;
             }
         }
+
+        // UE4 滚轮消息模拟
+        if (message->data_) {
+            bRet = PostMessage(hwnd, WM_MOUSEWHEEL, MAKEWPARAM(0, message->data_), MAKELPARAM(message->x_, message->y_));
+        }
+
+        //PostMessage(hwnd, WM_MOUSEMOVE, mouse_key_state_flags, MAKELPARAM(cursor_position_.x, cursor_position_.y));
 
         PostMessage(hwnd, event, mouse_key_state_flags, MAKELPARAM(cursor_position_.x, cursor_position_.y));
         PostMessage(hwnd, WM_INPUT, 0, (LPARAM)NULL);

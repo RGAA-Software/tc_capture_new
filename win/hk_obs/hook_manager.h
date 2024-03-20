@@ -53,6 +53,9 @@ namespace tc
                 UINT cbSizeHeader);
         BOOL ProcessHookedGetCursorPos(LPPOINT lpPoint);
 
+        [[nodiscard]]
+        HWND ProcessHookedGetForegroundWindow() const;
+
         void DumpSharedMessage();
 
         void StartIpcClient();
@@ -77,6 +80,8 @@ namespace tc
         std::shared_ptr<AppSharedMessage> app_shared_msg_ = nullptr;
 
         std::shared_ptr<WsIpcClient> ws_ipc_client_ = nullptr;
+
+        HWND hwnd_ = nullptr;
     };
 
     static GetRawInputBuffer_t origin_GetRawInputBuffer_;
@@ -90,7 +95,8 @@ namespace tc
     static GetAsyncKeyState_t origin_GetAsyncKeyState_;
     static GetKeyState_t origin_GetKeyState_;
     static DirectInput8Create_t origin_DirectInput8Create_;
-
+    static IsWindowVisibleHooked_t origin_IsWindowVisibleHooked_;
+    static GetForegroundWindowHooked_t origin_GetForegroundWindowHooked_;
 }
 
 #endif //TC_APPLICATION_HOOK_MANAGER_H

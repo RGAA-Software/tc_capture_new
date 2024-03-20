@@ -127,7 +127,7 @@ namespace tc
         //uint64_t timestamp_ = 0;
         int32_t delta_x_ = 0;
         int32_t delta_y_ = 0;
-        int32_t middle_scroll_ = 0;
+        //int32_t middle_scroll_ = 0;
         int32_t absolute_ = 0;
     };
 

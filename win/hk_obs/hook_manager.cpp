@@ -120,19 +120,19 @@ namespace tc
             LOGI("Hook GetCursorPos result: {}", r);
         }
         // GetAsyncKeyState
-        {
+        if (false) {
             origin_GetAsyncKeyState_ = GetProcAddressByName<GetAsyncKeyState_t>(L"User32", "GetAsyncKeyState");
             auto r = DetourAttach(&(PVOID &)origin_GetAsyncKeyState_, &(PVOID &)HookedGetAsyncKeyState);
             LOGI("Hook GetAsyncKeyState result: {}", r);
         }
         // GetKeyState
-        {
+        if (false) {
             origin_GetKeyState_ = GetProcAddressByName<GetKeyState_t>(L"User32", "GetKeyState");
             auto r = DetourAttach(&(PVOID &)origin_GetKeyState_, &(PVOID &) HookedGetKeyState);
             LOGI("Hook GetKeyState result: {}", r);
         }
         //DirectInput8Create
-        {
+        if (false) {
             origin_DirectInput8Create_ = GetProcAddressByName<DirectInput8Create_t>(L"Dinput8", "DirectInput8Create");
             auto r = DetourAttach(&(PVOID &)origin_DirectInput8Create_, &(PVOID &) HookedDirectInput8Create);
             LOGI("Hook DirectInput8Create result: {}", r);
@@ -147,12 +147,25 @@ namespace tc
             PUINT pcbSize,
             UINT cbSizeHeader) {
 
-        if (uiCommand != RID_INPUT || hRawInput || !pData) {
+        if (uiCommand != RID_INPUT || hRawInput) {
+            LOGI("ignore the message...1");
             return origin_GetRawInputData_(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
+        }
+        if (!pData) {
+            if (!pcbSize) {
+                return 0;
+            }
+            LOGI("Need a PostMessage... message size: {}", messages_.Size());
+            *pcbSize = sizeof(RAWINPUT);
+            return 0;
+        }
+        if (!pcbSize || *pcbSize < sizeof(RAWINPUT)) {
+            LOGI("ignore the message...2");
+            return -1;//origin_GetRawInputData_(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
         }
 
         if (messages_.Empty()) {
-            return origin_GetRawInputData_(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);;
+            return origin_GetRawInputData_(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
         }
 
         std::shared_ptr<CaptureBaseMessage> msg = messages_.Front();

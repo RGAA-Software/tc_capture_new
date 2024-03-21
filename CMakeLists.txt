@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26)
-project(tc_capture)
+project(tc_capture_new)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -36,8 +36,8 @@ if (WIN32)
         capture_message_maker.cpp
         win/desktop_capture/cursor_capture.cpp
     )
-    add_library(tc_capture ${CAPTURE_SRCS})
-    target_link_libraries(tc_capture Winmm)
+    add_library(tc_capture_new ${CAPTURE_SRCS})
+    target_link_libraries(tc_capture_new Winmm)
 
     ## capture dll
     set(DLL_SRCS

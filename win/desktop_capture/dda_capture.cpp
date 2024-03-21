@@ -5,7 +5,7 @@
 #include <functional>
 #include "tc_common/string_ext.h"
 #include "tc_common/message_notifier.h"
-#include "tc_capture/capture_message.h"
+#include "tc_capture_new/capture_message.h"
 #include "cursor_capture.h"
 
 

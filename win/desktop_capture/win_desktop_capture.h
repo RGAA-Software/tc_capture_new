@@ -6,7 +6,7 @@
 #define TC_WIN_APPLICATION_DESKTOP_CAPTURE_H
 
 #include <memory>
-#include "tc_capture/desktop_capture.h"
+#include "tc_capture_new/desktop_capture.h"
 
 namespace tc {
 

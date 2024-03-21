@@ -14,7 +14,7 @@
 #include <Poco/NamedEvent.h>
 #include <Poco/SharedMemory.h>
 #include <Poco/NamedMutex.h>
-#include "tc_capture/capture_message.h"
+#include "tc_capture_new/capture_message.h"
 
 namespace tc
 {

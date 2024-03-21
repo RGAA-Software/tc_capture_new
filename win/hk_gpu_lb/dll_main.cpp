@@ -3,7 +3,7 @@
 //
 
 #include "easyhook/easyhook.h"
-#include "tc_common/log.h"
+#include "tc_common_new/log.h"
 #include "client_manager.h"
 
 #define CAPTURETEX_API __declspec(dllexport)

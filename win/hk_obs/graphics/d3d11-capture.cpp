@@ -4,8 +4,8 @@
 
 #include "dxgi-helpers.hpp"
 #include "graphics-hook.h"
-#include "tc_common/log.h"
-#include "tc_common/data.h"
+#include "tc_common_new/log.h"
+#include "tc_common_new/data.h"
 #include "hook_manager.h"
 #include "capture_message.h"
 #include "../hk_video/d3d_utils.h"
@@ -15,8 +15,8 @@
 
 #include <d3d11.h>
 #include <wrl/client.h>
-#include "tc_common/win32/d3d_render.h"
-#include "tc_common/win32/d3d_debug_helper.h"
+#include "tc_common_new/win32/d3d_render.h"
+#include "tc_common_new/win32/d3d_debug_helper.h"
 
 using namespace tc;
 

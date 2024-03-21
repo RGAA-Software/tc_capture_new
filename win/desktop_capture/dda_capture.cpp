@@ -3,8 +3,8 @@
 #include <iostream>
 #include <timeapi.h>
 #include <functional>
-#include "tc_common/string_ext.h"
-#include "tc_common/message_notifier.h"
+#include "tc_common_new/string_ext.h"
+#include "tc_common_new/message_notifier.h"
 #include "tc_capture_new/capture_message.h"
 #include "cursor_capture.h"
 

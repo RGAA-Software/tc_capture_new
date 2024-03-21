@@ -1,7 +1,7 @@
 ﻿#include "framework.h"
 
 #include "d3d_utils.h"
-#include "tc_common/log.h"
+#include "tc_common_new/log.h"
 
 using namespace tc;
 

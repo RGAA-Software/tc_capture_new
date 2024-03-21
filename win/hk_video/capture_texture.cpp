@@ -6,7 +6,7 @@
 
 #include <d3d11.h>
 #include <format>
-#include "tc_common/log.h"
+#include "tc_common_new/log.h"
 #include "hk_utils/shared_mem_info.h"
 
 using namespace tc;

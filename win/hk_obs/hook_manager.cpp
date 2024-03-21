@@ -3,10 +3,10 @@
 //
 
 #include "hook_manager.h"
-#include "tc_common/data.h"
+#include "tc_common_new/data.h"
 #include "client_ipc_manager.h"
-#include "tc_common/log.h"
-#include "tc_common/file.h"
+#include "tc_common_new/log.h"
+#include "tc_common_new/file.h"
 #include "hk_video/shared_texture.h"
 #include <Windows.h>
 #include <detours/detours.h>

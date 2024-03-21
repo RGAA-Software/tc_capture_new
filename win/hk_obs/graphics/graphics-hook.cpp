@@ -10,10 +10,10 @@
 
 #include "graphics-hook-ver.h"
 #include "obfuscate.h"
-#include "tc_common/log.h"
-#include "tc_common/string_ext.h"
-#include "tc_common/file_ext.h"
-#include "tc_common/process_util.h"
+#include "tc_common_new/log.h"
+#include "tc_common_new/string_ext.h"
+#include "tc_common_new/file_ext.h"
+#include "tc_common_new/process_util.h"
 #include "hook_manager.h"
 #include "offsets/get-graphics-offsets.h"
 #include <string>

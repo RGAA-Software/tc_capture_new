@@ -3,7 +3,7 @@
 //
 
 #include "win_desktop_capture.h"
-#include "tc_common/message_notifier.h"
+#include "tc_common_new/message_notifier.h"
 #include "dda_capture.h"
 
 namespace tc {

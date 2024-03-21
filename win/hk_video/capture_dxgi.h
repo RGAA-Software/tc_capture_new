@@ -1,7 +1,7 @@
 #pragma once
 
 #include <d3d11.h>
-#include "tc_common/log.h"
+#include "tc_common_new/log.h"
 
 class CaptureDxgi {
 public:

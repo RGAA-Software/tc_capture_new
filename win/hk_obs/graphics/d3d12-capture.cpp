@@ -11,7 +11,7 @@
 #include <detours/detours.h>
 
 #include "dxgi-helpers.hpp"
-#include "tc_common/log.h"
+#include "tc_common_new/log.h"
 #include "hook_manager.h"
 #include "hk_video/d3d_utils.h"
 #include "capture_message_maker.h"

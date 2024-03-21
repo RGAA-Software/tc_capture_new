@@ -4,7 +4,7 @@
 
 #include "capture_message_maker.h"
 
-#include "tc_common/data.h"
+#include "tc_common_new/data.h"
 #include "capture_message.h"
 
 namespace tc

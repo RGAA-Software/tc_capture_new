@@ -10,7 +10,7 @@
 #include <functional>
 #include <queue>
 #include "capture_message.h"
-#include "tc_common/concurrent_queue.h"
+#include "tc_common_new/concurrent_queue.h"
 #include "hook_api.h"
 #include <Windows.h>
 

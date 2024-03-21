@@ -1,7 +1,7 @@
 #include "framework.h"
 
 #include "capture_dxgi.h"
-#include "tc_common/log.h"
+#include "tc_common_new/log.h"
 
 #include <d3d12.h>
 #include <d3d11on12.h>

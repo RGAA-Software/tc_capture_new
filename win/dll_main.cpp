@@ -6,7 +6,7 @@
 #include <Windows.h>
 
 #include "easyhook/easyhook.h"
-#include "tc_common/log.h"
+#include "tc_common_new/log.h"
 #include "hk_video/capture_texture.h"
 #include "hk_video/hook_event.h"
 #include "client_ipc_manager.h"

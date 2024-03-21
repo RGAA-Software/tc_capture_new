@@ -4,8 +4,8 @@
 #include "cursor_capture.h"
 #include <Windows.h>
 #include <iostream>
-#include "tc_common/message_notifier.h"
-#include "tc_common/data.h"
+#include "tc_common_new/message_notifier.h"
+#include "tc_common_new/data.h"
 #include "capture_message.h"
 
 namespace tc {

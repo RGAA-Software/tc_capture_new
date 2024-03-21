@@ -1,6 +1,6 @@
 #include "wasapi_audio_capture.h"
-#include "tc_common/log.h"
-#include "tc_common/time_ext.h"
+#include "tc_common_new/log.h"
+#include "tc_common_new/time_ext.h"
 
 #pragma comment(lib, "Winmm.lib")
 

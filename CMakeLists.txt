@@ -64,7 +64,7 @@ if (WIN32)
     )
 
     add_library(tc_capture_library SHARED ${DLL_SRCS})
-    target_link_libraries(tc_capture_library tc_common EasyHook64 yuv Iphlpapi.lib PocoFoundationmt.lib)
+    target_link_libraries(tc_capture_library tc_common_new EasyHook64 yuv Iphlpapi.lib PocoFoundationmt.lib)
 
 elseif (APPLE)
 

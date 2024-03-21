@@ -5,10 +5,10 @@
 #include <gtest/gtest.h>
 #include <fstream>
 
-#include "tc_common/image.h"
-#include "tc_common/data.h"
-#include "tc_common/file.h"
-#include "tc_common/log.h"
+#include "tc_common_new/image.h"
+#include "tc_common_new/data.h"
+#include "tc_common_new/file.h"
+#include "tc_common_new/log.h"
 #include "tc_capture_new/audio_capture.h"
 #include "tc_capture_new/audio_capture_factory.h"
 #include "../audio/audio_file_saver.h"

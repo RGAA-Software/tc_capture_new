@@ -3,7 +3,7 @@
 //
 
 #include "app_shared_info_reader.h"
-#include "tc_common/log.h"
+#include "tc_common_new/log.h"
 
 constexpr auto kAppSharedInfoReaderBuffSize = 1024 * 4;
 

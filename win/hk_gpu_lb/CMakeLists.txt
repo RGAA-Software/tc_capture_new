@@ -8,4 +8,4 @@ set(SRCS
     ../client_manager.cpp
 )
 add_library(${PROJECT_NAME} SHARED ${SRCS})
-target_link_libraries(${PROJECT_NAME} tc_common EasyHook64)
+target_link_libraries(${PROJECT_NAME} tc_common_new EasyHook64)

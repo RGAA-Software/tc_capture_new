@@ -8,7 +8,7 @@
 #include "hk_utils/memory.h"
 #include "hk_utils/time_measure.hpp"
 
-#include "tc_common/log.h"
+#include "tc_common_new/log.h"
 
 using namespace tc;
 using namespace tc;

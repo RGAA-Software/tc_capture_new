@@ -47,4 +47,4 @@ add_library(${PROJECT_NAME} SHARED
         ../../capture_message_maker.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC ${DETOURS_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${DETOURS_LIBRARY} tc_ipc_util tc_common dxgi d3d11 d3d12 dxguid Iphlpapi.lib PocoFoundationmt.lib)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${DETOURS_LIBRARY} tc_ipc_util tc_common_new dxgi d3d11 d3d12 dxguid Iphlpapi.lib PocoFoundationmt.lib)

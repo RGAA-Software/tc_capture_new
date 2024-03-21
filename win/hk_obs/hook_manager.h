@@ -56,6 +56,8 @@ namespace tc
         [[nodiscard]]
         HWND ProcessHookedGetForegroundWindow() const;
 
+        HWND ProcessWindowFromPoint(_In_ POINT Point) const;
+
         void DumpSharedMessage();
 
         void StartIpcClient();
@@ -74,7 +76,7 @@ namespace tc
         uint64_t frame_index_ = 0;
 
         tc::ConcurrentQueue<std::shared_ptr<CaptureBaseMessage>> messages_;
-        POINT cursor_position_;
+        POINT cursor_in_screen_position_;
 
         std::shared_ptr<AppSharedInfoReader> shared_info_reader_ = nullptr;
         std::shared_ptr<AppSharedMessage> app_shared_msg_ = nullptr;
@@ -97,6 +99,8 @@ namespace tc
     static DirectInput8Create_t origin_DirectInput8Create_;
     static IsWindowVisibleHooked_t origin_IsWindowVisibleHooked_;
     static GetForegroundWindowHooked_t origin_GetForegroundWindowHooked_;
+    static WindowFromPoint_t origin_WindowFromPoint_;
+    static ClipCursor_t origin_ClipCursor_;
 }
 
 #endif //TC_APPLICATION_HOOK_MANAGER_H

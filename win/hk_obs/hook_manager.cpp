@@ -6,6 +6,7 @@
 #include "tc_common/data.h"
 #include "client_ipc_manager.h"
 #include "tc_common/log.h"
+#include "tc_common/file.h"
 #include "hk_video/shared_texture.h"
 #include <Windows.h>
 #include <detours/detours.h>
@@ -62,6 +63,10 @@ namespace tc
             LPVOID pData,
             PUINT pcbSize,
             UINT cbSizeHeader) {
+        auto hm = HookManager::Instance();
+        if (hm->app_shared_msg_ && hm->app_shared_msg_->enable_hook_events_ == 0) {
+            return origin_GetRawInputData_(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
+        }
         return HookManager::Instance()->ProcessHookedGetRawInputData(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
     }
 
@@ -73,6 +78,10 @@ namespace tc
     }
 
     BOOL WINAPI HookedGetCursorPos(LPPOINT lpPoint) {
+        auto hm = HookManager::Instance();
+        if (hm->app_shared_msg_ && hm->app_shared_msg_->enable_hook_events_ == 0) {
+            return origin_GetCursorPos_(lpPoint);
+        }
         return HookManager::Instance()->ProcessHookedGetCursorPos(lpPoint);
     }
 
@@ -103,8 +112,18 @@ namespace tc
 
     HWND WINAPI HookedGetForegroundWindow(VOID) {
         auto hwnd = HookManager::Instance()->ProcessHookedGetForegroundWindow();
-        LOGI("HookedGetForegroundWindow: {}", (void*)hwnd);
+        //LOGI("HookedGetForegroundWindow: {}", (void*)hwnd);
         return hwnd;
+    }
+
+    HWND HookedWindowFromPoint(_In_ POINT Point) {
+        //LOGI("HookedWindowFromPoint: {},{}", Point.x, Point.y);
+        return HookManager::Instance()->ProcessWindowFromPoint(Point);
+    }
+
+    BOOL HookedClipCursor(_In_opt_ CONST RECT *lpRect) {
+        LOGI("ClipCursor");
+        return TRUE; //origin_ClipCursor_(lpRect);//
     }
 
     void HookManager::HookMethods() {
@@ -160,6 +179,18 @@ namespace tc
             auto r = DetourAttach(&(PVOID &)origin_GetForegroundWindowHooked_, &(PVOID &) HookedGetForegroundWindow);
             LOGI("Hook GetForegroundWindow result: {}", r);
         }
+        //
+        {
+            origin_WindowFromPoint_ = GetProcAddressByName<WindowFromPoint_t>(L"User32", "WindowFromPoint");
+            auto r = DetourAttach(&(PVOID &)origin_WindowFromPoint_, &(PVOID &) HookedWindowFromPoint);
+            LOGI("Hook WindowFromPoint result: {}", r);
+        }
+        //
+        {
+            origin_ClipCursor_ = GetProcAddressByName<ClipCursor_t>(L"User32", "ClipCursor");
+            auto r = DetourAttach(&(PVOID &)origin_ClipCursor_, &(PVOID &) HookedClipCursor);
+            LOGI("Hook ClipCursor result: {}", r);
+        }
         DetourTransactionCommit();
     }
 
@@ -184,7 +215,7 @@ namespace tc
         }
         if (!pcbSize || *pcbSize < sizeof(RAWINPUT)) {
             LOGI("ignore the message...2");
-            return -1;//origin_GetRawInputData_(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
+            return -1;
         }
 
         if (messages_.Empty()) {
@@ -250,6 +281,7 @@ namespace tc
                 }
             }
 
+#if 0
             LOGI("------------------------Replay-----------------------------");
             LOGI("button: {}, pressed: {}, released: {}", mouse_msg->button_, mouse_msg->pressed_, mouse_msg->released_);
             LOGI("uiCommand: {}, dwType: {}", uiCommand, raw_input->header.dwType);
@@ -258,7 +290,7 @@ namespace tc
             LOGI("ulButtons: {}, usButtonData: {}", raw_input->data.mouse.ulButtons, raw_input->data.mouse.usButtonData);
             //LOGI("cursor pos.x : {}, pos.y : {}", cursor_position.x, cursor_position.y);
             LOGI("........................Replay.............................");
-
+#endif
             return sizeof(RAWINPUT);
         }
         return origin_GetRawInputData_(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
@@ -272,8 +304,8 @@ namespace tc
         // todo没人连接时，使用原本的坐标获取方法
         //auto ret = origin_GetCursorPos(lpPoint);
         if (lpPoint) {
-            lpPoint->x = cursor_position_.x;
-            lpPoint->y = cursor_position_.y;
+            lpPoint->x = cursor_in_screen_position_.x;
+            lpPoint->y = cursor_in_screen_position_.y;
             ret = true;
         }
         //LOGI("GetCursorPos : %d, %d", lpPoint->x, lpPoint->y);
@@ -284,13 +316,35 @@ namespace tc
         return hwnd_;
     }
 
+    HWND HookManager::ProcessWindowFromPoint(_In_ POINT Point) const {
+        if (hwnd_) {
+            RECT rect;
+            if (GetWindowRect(hwnd_, &rect)) {
+                if (Point.x >= rect.left && Point.x <= rect.right && Point.y >= rect.top && Point.y <= rect.bottom) {
+                    return hwnd_;
+                }
+            }
+        }
+        return origin_WindowFromPoint_(Point);
+    }
+
     void HookManager::GenerateMouseEvent(const std::shared_ptr<CaptureBaseMessage>& msg) {
         auto message = std::static_pointer_cast<MouseEventMessage>(msg);
         hwnd_ = (HWND)message->hwnd_;
-        cursor_position_.x = message->x_;
-        cursor_position_.y = message->y_;
+        cursor_in_screen_position_.x = message->x_;
+        cursor_in_screen_position_.y = message->y_;
 
-        LOGI("handle: {}, Cursor pos : {} {} ", message->hwnd_, cursor_position_.x, cursor_position_.y);
+        POINT client_area_point = {
+            .x = (LONG)message->x_,
+            .y = (LONG)message->y_,
+        };
+        ScreenToClient((HWND)hwnd_, &client_area_point);
+
+        bool bVisible = (::GetWindowLong(hwnd_, GWL_STYLE) & WS_VISIBLE) != 0;
+        bool v = IsWindowVisible(hwnd_);
+
+        LOGI("handle: {:x}, Cursor in screen pos : {},{}  cursor in client pos: {},{}",
+             message->hwnd_, cursor_in_screen_position_.x, cursor_in_screen_position_.y, client_area_point.x, client_area_point.y);
 
         auto hwnd = (HWND)message->hwnd_;
         static bool active = false;
@@ -298,7 +352,7 @@ namespace tc
             PostMessage(hwnd, WM_ACTIVATE, WA_ACTIVE, 0);
             active = true;
         }
-        PostMessage(hwnd, WM_ACTIVATE, WA_ACTIVE, 0);
+        //PostMessage(hwnd, WM_ACTIVATE, WA_ACTIVE, 0);
         BOOL bRet = PostMessage(hwnd, WM_SETFOCUS, 0, 0);
 
         /*
@@ -310,7 +364,7 @@ namespace tc
             if (message->button_ == EButtonFlag::kLeftMouseButtonDown) {
                 event = WM_LBUTTONDOWN;
                 mouse_key_state_flags = MK_LBUTTON;
-                LOGI("Left mouse button pressed.");
+                LOGI("Left mouse button pressed.....");
             }
             else if (message->button_ == EButtonFlag::kRightMouseButtonDown) {
                 event = WM_RBUTTONDOWN;
@@ -325,7 +379,7 @@ namespace tc
             if (message->button_ == EButtonFlag::kLeftMouseButtonUp) {
                 event = WM_LBUTTONUP;
                 mouse_key_state_flags = MK_LBUTTON;
-                LOGI("Left mouse button released.");
+                LOGI("Left mouse button Release------");
             }
             else if (message->button_ == EButtonFlag::kRightMouseButtonUp) {
                 event = WM_RBUTTONUP;
@@ -339,12 +393,11 @@ namespace tc
 
         // UE4 滚轮消息模拟
         if (message->data_) {
-            bRet = PostMessage(hwnd, WM_MOUSEWHEEL, MAKEWPARAM(0, message->data_), MAKELPARAM(message->x_, message->y_));
+            bRet = PostMessage(hwnd, WM_MOUSEWHEEL, MAKEWPARAM(0, message->data_), MAKELPARAM(client_area_point.x, client_area_point.y));
         }
 
-        //PostMessage(hwnd, WM_MOUSEMOVE, mouse_key_state_flags, MAKELPARAM(cursor_position_.x, cursor_position_.y));
-
-        PostMessage(hwnd, event, mouse_key_state_flags, MAKELPARAM(cursor_position_.x, cursor_position_.y));
+        PostMessage(hwnd, WM_MOUSEMOVE, mouse_key_state_flags, MAKELPARAM(client_area_point.x, client_area_point.y));
+        PostMessage(hwnd, event, mouse_key_state_flags, MAKELPARAM(client_area_point.x, client_area_point.y));
         PostMessage(hwnd, WM_INPUT, 0, (LPARAM)NULL);
     }
 

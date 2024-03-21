@@ -62,6 +62,9 @@ typedef HRESULT (*DirectInput8Create_t)(
         LPUNKNOWN punkOuter
 );
 
+typedef HWND (WINAPI* WindowFromPoint_t)(_In_ POINT Point);
+typedef BOOL (WINAPI* ClipCursor_t)(_In_opt_ CONST RECT *lpRect);
+
 // hook api
 
 #endif //TC_APPLICATION_HOOK_API_H

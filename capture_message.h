@@ -163,6 +163,7 @@ namespace tc
         //
         uint32_t ipc_port_{0};
         uint32_t self_size_{0};
+        uint32_t enable_hook_events_{0};
     };
 }
 

@@ -106,7 +106,7 @@ namespace tc
     }
 
     BOOL WINAPI HookedIsWindowVisible(HWND hWnd) {
-        LOGI("HookedIsWindowVisible");
+        //LOGI("HookedIsWindowVisible");
         return true;
     }
 

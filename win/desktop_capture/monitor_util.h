@@ -8,7 +8,8 @@
 #include <dxgi.h>
 
 //用来表示屏幕索引顺序
-namespace tc {
+namespace tc
+{
     enum class EMonitorIndex {
         kFirst,
         kSecond,

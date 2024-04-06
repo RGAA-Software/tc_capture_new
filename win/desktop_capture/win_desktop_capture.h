@@ -8,18 +8,20 @@
 #include <memory>
 #include "tc_capture_new/desktop_capture.h"
 
-namespace tc {
+namespace tc
+{
 
     class WGCCapture; // to do
     class DDACapture;
+
     class MessageNotifier;
 
-    class WinDesktopCapture : public DesktopCapture
-    {
+    class WinDesktopCapture : public DesktopCapture {
     public:
-        WinDesktopCapture(const std::shared_ptr<MessageNotifier>& msg_notifier);
-        bool StartCapture();
-        void StopCapture();
+        explicit WinDesktopCapture(const std::shared_ptr<MessageNotifier> &msg_notifier);
+        bool StartCapture() override;
+        void StopCapture() override;
+
     private:
         std::shared_ptr<WGCCapture> wgc_capture_ = nullptr;
         std::shared_ptr<DDACapture> dda_capture_ = nullptr;

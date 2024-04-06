@@ -15,7 +15,7 @@ namespace tc {
     public:
         std::shared_ptr<MessageNotifier> msg_notifier_ = nullptr;
         std::shared_ptr<MessageListener> msg_listener_ = nullptr;
-        DesktopCapture(const std::shared_ptr<MessageNotifier>& msg_notifier);
+        explicit DesktopCapture(const std::shared_ptr<MessageNotifier>& msg_notifier);
         virtual bool StartCapture() = 0;
         virtual void StopCapture() = 0;
     };

@@ -6,22 +6,20 @@
 #include "tc_common_new/message_notifier.h"
 #include "dda_capture.h"
 
-namespace tc {
-    WinDesktopCapture::WinDesktopCapture(const std::shared_ptr<MessageNotifier>& msg_notifier) : DesktopCapture(msg_notifier)
-    {
+namespace tc
+{
+    WinDesktopCapture::WinDesktopCapture(const std::shared_ptr<MessageNotifier> &msg_notifier) : DesktopCapture(msg_notifier) {
         dda_capture_ = std::make_shared<DDACapture>(msg_notifier);
         dda_capture_->Init();
     }
 
-    bool WinDesktopCapture::StartCapture()
-    {
+    bool WinDesktopCapture::StartCapture() {
         //return wgc_capture_->Start();
         dda_capture_->Start();
         return true;
     }
 
-    void WinDesktopCapture::StopCapture()
-    {
+    void WinDesktopCapture::StopCapture() {
         //wgc_capture_->Stop();
         dda_capture_->UnInit();
     }

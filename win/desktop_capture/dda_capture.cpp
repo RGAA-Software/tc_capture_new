@@ -248,7 +248,6 @@ namespace tc
                     LOGE("CaptureNextFrame reinit, index = {}.", index);
                     continue;
                 } else if (res == DDACapture::ECapRes::kTryAgain) {
-                    LOGE("CaptureNextFrame try again, index = {}.", index);
                     continue;
                 }
 
@@ -331,7 +330,6 @@ namespace tc
             keyMutex->ReleaseSync(0);
         }
 
-        LOGI("will send back....1");
         SendTextureHandle(last_list_texture_[monitor_index].shared_handle_, static_cast<EMonitorIndex>(monitor_index), width, height, format);
     }
 

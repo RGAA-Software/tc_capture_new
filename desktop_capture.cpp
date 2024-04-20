@@ -5,9 +5,19 @@
 #include "desktop_capture.h"
 #include "tc_common_new/message_notifier.h"
 
-namespace tc {
+namespace tc
+{
 
     DesktopCapture::DesktopCapture(const std::shared_ptr<MessageNotifier> &msg_notifier) {
         msg_notifier_ = msg_notifier;
     }
+
+    void DesktopCapture::SetCaptureMonitor(std::string& name) {
+        capture_monitor_ = name;
+    }
+
+    void DesktopCapture::SetCaptureFps(int fps) {
+        capture_fps_ = fps;
+    }
+
 }

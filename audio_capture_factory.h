@@ -1,5 +1,5 @@
 //
-// Created by hy on 2023/12/22.
+// Created by RGAA on 2023/12/22.
 //
 
 #ifndef TC_APPLICATION_AUDIO_CAPTURE_FACTORY_H

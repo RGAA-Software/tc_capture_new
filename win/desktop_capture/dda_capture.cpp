@@ -6,6 +6,7 @@
 #include "tc_common_new/string_ext.h"
 #include "tc_common_new/message_notifier.h"
 #include "tc_common_new/log.h"
+#include "tc_common_new/time_ext.h"
 #include "tc_capture_new/capture_message.h"
 #include "cursor_capture.h"
 
@@ -16,7 +17,7 @@
 namespace tc
 {
 
-    DDACapture::DDACapture(const std::shared_ptr<MessageNotifier>& msg_notifier) {
+    DDACapture::DDACapture(const std::shared_ptr<MessageNotifier> &msg_notifier) : DesktopCapture(msg_notifier){
         msg_notifier_ = msg_notifier;
         cursor_capture_ = std::make_shared<CursorCapture>(msg_notifier_);
     }
@@ -38,7 +39,7 @@ namespace tc
             return false;
         }
         D3D_FEATURE_LEVEL featureLevel;
-        DXGI_ADAPTER_DESC desc;
+        DXGI_ADAPTER_DESC desc{};
         adapter1_->GetDesc(&desc);
         LOGI("Adapter Index:{} Name:{}", adapter_index, StringExt::ToUTF8(desc.Description).c_str());
         adapter_uid_ = desc.AdapterLuid.LowPart;
@@ -50,28 +51,27 @@ namespace tc
             return false;
         }
         if (featureLevel < D3D_FEATURE_LEVEL_11_0) {
-            LOGE("D3D11CreateDevice returns an instance without DirectX 11 support, level : {}  Following initialization may fail", (int)featureLevel);
-            // D3D_FEATURE_LEVEL_11_0 is not officially documented on MSDN to be a requirement of Dxgi
-            // duplicator APIs.
+            LOGE("D3D11CreateDevice returns an instance without DirectX 11 support, level : {}  Following initialization may fail",
+                 (int) featureLevel);
         }
         CComPtr<IDXGIDevice> dxgi_device;
         res = d3d11_device_.QueryInterface(&dxgi_device);
         if (res != S_OK || !dxgi_device) {
-            LOGE("ID3D11Device is not an implementation of IDXGIDevice, this usually means the system does not support DirectX 11. Error:{}, code: {}", StringExt::GetErrorStr(res), res);
+            LOGE("ID3D11Device is not an implementation of IDXGIDevice, this usually means the system does not support DirectX 11. Error:{}, code: {}",
+                 StringExt::GetErrorStr(res), res);
             return false;
         }
         int numbers = GetSystemMetrics(SM_CMONITORS);
         monitor_count_ = numbers;
         dxgi_output_duplication_.clear();
         for (int i = 0; i < numbers; ++i) {
-            DXGIOutputDupl dupl{};
+            DXGIOutputDuplication dupl{};
             dxgi_output_duplication_.emplace_back(dupl);
         }
-        muti_screen_mode_ = numbers > 1 ? true : false;
+
         LOGI("Total Monitors : {}", numbers);
         for (int index = 0; index < numbers; ++index) {
             CComPtr<IDXGIOutput> output;
-            // 枚举所有的显示器
             res = adapter1_->EnumOutputs(index, &output);
             if (res == DXGI_ERROR_NOT_FOUND) {
                 LOGE("adapter1_->EnumOutputs return DXGI_ERROR_NOT_FOUND,Please Check RDP connect.");
@@ -83,10 +83,10 @@ namespace tc
             }
             if (res != S_OK || !output) {
                 LOGE("IDXGIAdapter::EnumOutputs returns an unexpected result {} with error code {}",
-                       StringExt::GetErrorStr(res).c_str(), res);
+                     StringExt::GetErrorStr(res).c_str(), res);
                 continue;
             }
-            DXGI_OUTPUT_DESC desc;
+            DXGI_OUTPUT_DESC desc{};
             res = output->GetDesc(&desc);
             if (res == S_OK) {
                 dxgi_output_duplication_[index].output_desc_ = desc;
@@ -113,7 +113,6 @@ namespace tc
                                 // to do
                             }
                             if (error == E_ACCESSDENIED && j < kRetryCount) {
-                                // why 如果是rdp会话，这里应该怎么弄
                                 const ACCESS_MASK desiredAccess = GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE;
                                 HDESK inputDesk = ::OpenInputDesktop(NULL, 0, desiredAccess);
                                 if (inputDesk)
@@ -146,7 +145,7 @@ namespace tc
             return false;
         }
         std::sort(dxgi_output_duplication_.begin(), dxgi_output_duplication_.end(),
-                  [=](DXGIOutputDupl a, DXGIOutputDupl b) {
+                  [=](DXGIOutputDuplication a, DXGIOutputDuplication b) {
                       return a.output_desc_.DesktopCoordinates.left < b.output_desc_.DesktopCoordinates.left;
                   });
 
@@ -159,7 +158,7 @@ namespace tc
         return true;
     }
 
-    bool DDACapture::UnInit() {
+    bool DDACapture::Exit() {
         stop_flag_ = true;
         if (capture_thread_.joinable()) {
             capture_thread_.join();
@@ -192,7 +191,7 @@ namespace tc
             ret = ECapRes::kReInit;
         }
         dxgi_output_duplication_[monIndex].duplication_->ReleaseFrame();
-        // 获取桌面帧。
+
         res = dxgi_output_duplication_[monIndex].duplication_->AcquireNextFrame(waitTime, &info, &resource);
         if (res != S_OK) {
             if (res == DXGI_ERROR_WAIT_TIMEOUT) {
@@ -201,24 +200,22 @@ namespace tc
                 }
                 return ECapRes::kTryAgain;
             } else if (res == DXGI_ERROR_ACCESS_LOST) {
-                UnInit();
+                Exit();
                 LOGE("DXGI_ERROR_ACCESS_LOST");
                 return ECapRes::kReInit;
             } else if (res == DXGI_ERROR_INVALID_CALL) {
-                UnInit();
+                Exit();
                 printf("DXGI_ERROR_INVALID_CALL");
                 return ECapRes::kReInit;
             }
-            LOGE("AcquireNextFrame failed:{} ", res);
             return ECapRes::kTryAgain;
         }
         res = resource->QueryInterface(__uuidof(ID3D11Texture2D), (void **) &source);
         if (res != S_OK) {
-            std::cout << StringExt::GetErrorStr(res) << std::endl;
+            LOGE("QueryInterface failed when capturing: {}", StringExt::GetErrorStr(res));
             return ECapRes::kFailed;
         }
         if (info.AccumulatedFrames == 0) {
-            //printf("AcquireNextFrame AccumulatedFrames 0");
             return ECapRes::kTryAgain;
         }
         OutTexture = source;
@@ -231,39 +228,35 @@ namespace tc
         });
     }
 
+    bool DDACapture::IsTargetMonitor(int index) {
+        return index == 0;
+    }
+
     void DDACapture::Capture() {
-        timeBeginPeriod(1);
         while (!stop_flag_) {
-            uint8_t captured_texture_count = 0;
-            auto time_before_capture = std::chrono::high_resolution_clock::now();
             for (uint8_t index = 0; index < monitor_count_; ++index) {
-                CComPtr<ID3D11Texture2D> texture = nullptr;
-                {
-                    DDACapture::ECapRes res = CaptureNextFrame(0, texture, index);
-                    if (res == DDACapture::ECapRes::kFailed) {
-                        printf("CaptureNextFrame index = %d failed.\n", index);
-                        continue;
-                    }
-
-                    // to do 兼容性处理
-
-                    if (texture) {
-                        ++captured_texture_count;
-                        //printf("OnCaptureFrame index = %d\n", index);
-                        std::string dds_name = "frame_index_" + std::to_string(index);
-                        //DebugOutDDS(texture, dds_name);
-                        OnCaptureFrame(texture, index);
-                    }
+                if (!IsTargetMonitor(index)) {
+                    continue;
                 }
-            }
-            auto time_after_capture = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    time_after_capture - time_before_capture).count();
-            if (captured_texture_count == monitor_count_) {
-                int sleep_ms = 16 - duration;
-                auto beg = std::chrono::high_resolution_clock::now();
-                std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
-                auto end = std::chrono::high_resolution_clock::now();
+
+                CComPtr<ID3D11Texture2D> texture = nullptr;
+                DDACapture::ECapRes res = CaptureNextFrame(1000/capture_fps_, texture, index);
+                if (res == DDACapture::ECapRes::kFailed) {
+                    LOGE("CaptureNextFrame index = {} failed.", index);
+                    continue;
+                } else if (res == DDACapture::ECapRes::kReInit) {
+                    LOGE("CaptureNextFrame reinit, index = {}.", index);
+                    continue;
+                } else if (res == DDACapture::ECapRes::kTryAgain) {
+                    LOGE("CaptureNextFrame try again, index = {}.", index);
+                    continue;
+                }
+
+                if (texture) {
+                    //std::string dds_name = "frame_index_" + std::to_string(index);
+                    //DebugOutDDS(texture, dds_name);
+                    OnCaptureFrame(texture, index);
+                }
             }
         }
     }
@@ -272,9 +265,10 @@ namespace tc
         int width = 0;
         int height = 0;
         DXGI_FORMAT format;
+        HRESULT result;
+
         // to do 考虑分辨率动态变化的情况
         if (!last_list_texture_[monitor_index].texture2d_) {
-            HRESULT hres;
             D3D11_TEXTURE2D_DESC desc;
             texture->GetDesc(&desc);
 
@@ -290,37 +284,36 @@ namespace tc
             create_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
             create_desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
-            hres = d3d11_device_->CreateTexture2D(&create_desc, NULL, &last_list_texture_[monitor_index].texture2d_);
-            if (FAILED(hres)) {
-                printf("desktop capture create texture failed with:%s", StringExt::GetErrorStr(hres).c_str());
+            result = d3d11_device_->CreateTexture2D(&create_desc, NULL, &last_list_texture_[monitor_index].texture2d_);
+            if (FAILED(result)) {
+                printf("desktop capture create texture failed with:%s", StringExt::GetErrorStr(result).c_str());
                 return;
             }
 
             ComPtr<IDXGIResource> dxgiResource;
-            hres = last_list_texture_[monitor_index].texture2d_.As<IDXGIResource>(&dxgiResource);
-            if (FAILED(hres)) {
-                printf("desktop capture as IDXGIResource failed with:%s", StringExt::GetErrorStr(hres).c_str());
+            result = last_list_texture_[monitor_index].texture2d_.As<IDXGIResource>(&dxgiResource);
+            if (FAILED(result)) {
+                printf("desktop capture as IDXGIResource failed with:%s", StringExt::GetErrorStr(result).c_str());
                 return;
             }
             HANDLE handle;
-            hres = dxgiResource->GetSharedHandle(&handle);
-            if (FAILED(hres)) {
-                printf("desktop capture get shared handle failed with:%s", StringExt::GetErrorStr(hres).c_str());
+            result = dxgiResource->GetSharedHandle(&handle);
+            if (FAILED(result)) {
+                printf("desktop capture get shared handle failed with:%s", StringExt::GetErrorStr(result).c_str());
                 return;
             }
             last_list_texture_[monitor_index].shared_handle_ = handle;
         }
 
-        HRESULT hres;
         ComPtr<IDXGIKeyedMutex> keyMutex;
-        hres = last_list_texture_[monitor_index].texture2d_.As<IDXGIKeyedMutex>(&keyMutex);
-        if (FAILED(hres)) {
-            LOGE("desktop frame capture as IDXGIKeyedMutex failed:{}", StringExt::GetErrorStr(hres).c_str());
+        result = last_list_texture_[monitor_index].texture2d_.As<IDXGIKeyedMutex>(&keyMutex);
+        if (FAILED(result)) {
+            LOGE("desktop frame capture as IDXGIKeyedMutex failed:{}", StringExt::GetErrorStr(result).c_str());
             return;
         }
-        hres = keyMutex->AcquireSync(0, INFINITE);
-        if (FAILED(hres)) {
-            LOGE("desktop frame capture texture AcquireSync failed with:{}", StringExt::GetErrorStr(hres).c_str());
+        result = keyMutex->AcquireSync(0, INFINITE);
+        if (FAILED(result)) {
+            LOGE("desktop frame capture texture AcquireSync failed with:{}", StringExt::GetErrorStr(result).c_str());
             return;
         }
 
@@ -338,13 +331,11 @@ namespace tc
             keyMutex->ReleaseSync(0);
         }
 
+        LOGI("will send back....1");
         SendTextureHandle(last_list_texture_[monitor_index].shared_handle_, static_cast<EMonitorIndex>(monitor_index), width, height, format);
     }
 
-    void DDACapture::SendTextureHandle(const HANDLE &shared_handle, EMonitorIndex current_monitor_index, int width,
-                                       int height, DXGI_FORMAT format) {
-        //printf("current_monitor_index_ = %d, shared_handle = %p\n", current_monitor_index, shared_handle);
-        //RecvD3D11Texture2DShareHandle(d3d11_device_, shared_handle, static_cast<int>(current_monitor_index_));
+    void DDACapture::SendTextureHandle(const HANDLE &shared_handle, EMonitorIndex current_monitor_index, int width, int height, DXGI_FORMAT format) {
         if (cursor_capture_) {
             cursor_capture_->Capture();
         }
@@ -361,10 +352,7 @@ namespace tc
             capture_video_frame_msg.frame_format_ = format;
             capture_video_frame_msg.adapter_uid_ = adapter_uid_;
             capture_video_frame_msg.capture_index_ = static_cast<int8_t>(current_monitor_index);
-            // to do  暂时先只发主屏的
-            if (EMonitorIndex::kFirst == current_monitor_index) {
-                msg_notifier_->SendAppMessage(capture_video_frame_msg);
-            }
+            msg_notifier_->SendAppMessage(capture_video_frame_msg);
         }
     }
 
@@ -375,6 +363,15 @@ namespace tc
             monitor_frame_index_[monitor_index] = 0;
         }
         return monitor_frame_index_[monitor_index];
+    }
+
+    bool DDACapture::StartCapture() {
+        this->Start();
+        return true;
+    }
+
+    void DDACapture::StopCapture() {
+        this->Exit();
     }
 
 } // tc

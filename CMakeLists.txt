@@ -32,7 +32,6 @@ if (WIN32)
         win/audio/wasapi_audio_capture.cpp
             ## desktop_capture
         win/desktop_capture/dda_capture.cpp
-        win/desktop_capture/win_desktop_capture.cpp
         capture_message_maker.cpp
         win/desktop_capture/cursor_capture.cpp
     )

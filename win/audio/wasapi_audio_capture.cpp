@@ -117,7 +117,8 @@ namespace tc
             // Sleep for half the buffer duration.
             //Sleep(hnsActualDuration / REFTIMES_PER_MILLISEC / 2);
      
-            Sleep(16);
+            //Sleep(16);
+            Sleep(10);
 
             hr = pCaptureClient->GetNextPacketSize(&packetLength);
             EXIT_ON_ERROR(hr)

@@ -14,6 +14,7 @@
 
 #include "monitor_util.h"
 #include "desktop_capture.h"
+#include "tc_common_new/monitors.h"
 
 using namespace Microsoft::WRL;
 
@@ -43,8 +44,8 @@ namespace tc
 
         class SharedD3d11Texture2D {
         public:
-            HANDLE shared_handle_ = 0;
-            ComPtr <ID3D11Texture2D> texture2d_;
+            HANDLE shared_handle_ = nullptr;
+            ComPtr<ID3D11Texture2D> texture2d_ = nullptr;
         };
 
         explicit DDACapture(const std::shared_ptr<MessageNotifier>& msg_notifier);
@@ -66,7 +67,7 @@ namespace tc
     private:
         void Capture();
         void OnCaptureFrame(ID3D11Texture2D *texture, uint8_t monitor_index);
-        void SendTextureHandle(const HANDLE &shared_handle, EMonitorIndex current_monitor_index_, int width, int height, DXGI_FORMAT format);
+        void SendTextureHandle(const HANDLE &shared_handle, EMonitorIndex current_monitor_index_, uint32_t width, uint32_t height, DXGI_FORMAT format);
         int GetFrameIndex(EMonitorIndex monitor_index);
         bool IsTargetMonitor(int index);
 
@@ -76,6 +77,9 @@ namespace tc
         uint8_t monitor_count_ = 0;
         int64_t adapter_uid_ = -1;
         std::map<EMonitorIndex, int> monitor_frame_index_;
+        std::map<MonitorIndex, DxgiMonitorInfo> monitors_;
+        std::vector<MonitorWinInfo> win_monitors_;
+        std::string selected_monitor_name_;
 
         std::vector<SharedD3d11Texture2D> last_list_texture_;
         CComPtr<IDXGIFactory1> factory1_ = nullptr;

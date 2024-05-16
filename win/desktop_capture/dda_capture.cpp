@@ -26,8 +26,8 @@ namespace tc
     }
 
     bool DDACapture::Init() {
-        HRESULT res = NULL;
-        int adapter_index = 0; //显卡适配器索引
+        HRESULT res = 0;
+        int adapter_index = 0;
         res = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void **) &factory1_);
         if (res != S_OK) {
             LOGE("CreateDXGIFactory1 failed");
@@ -39,20 +39,18 @@ namespace tc
             return false;
         }
         D3D_FEATURE_LEVEL featureLevel;
-        DXGI_ADAPTER_DESC desc{};
-        adapter1_->GetDesc(&desc);
-        LOGI("Adapter Index:{} Name:{}", adapter_index, StringExt::ToUTF8(desc.Description).c_str());
-        adapter_uid_ = desc.AdapterLuid.LowPart;
-        res = D3D11CreateDevice(adapter1_, D3D_DRIVER_TYPE_UNKNOWN, NULL,
-                                D3D11_CREATE_DEVICE_BGRA_SUPPORT /*| D3D11_CREATE_DEVICE_SINGLETHREADED*/,
-                                NULL, 0, D3D11_SDK_VERSION, &d3d11_device_, &featureLevel, &d3d11_device_context_);
+        DXGI_ADAPTER_DESC adapter_desc{};
+        adapter1_->GetDesc(&adapter_desc);
+        LOGI("Adapter Index:{} Name:{}", adapter_index, StringExt::ToUTF8(adapter_desc.Description).c_str());
+        adapter_uid_ = adapter_desc.AdapterLuid.LowPart;
+        res = D3D11CreateDevice(adapter1_, D3D_DRIVER_TYPE_UNKNOWN, nullptr, D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+                                nullptr, 0, D3D11_SDK_VERSION, &d3d11_device_, &featureLevel, &d3d11_device_context_);
         if (res != S_OK || !d3d11_device_) {
             LOGE("D3D11CreateDevice failed: {}", StringExt::GetErrorStr(res).c_str());
             return false;
         }
         if (featureLevel < D3D_FEATURE_LEVEL_11_0) {
-            LOGE("D3D11CreateDevice returns an instance without DirectX 11 support, level : {}  Following initialization may fail",
-                 (int) featureLevel);
+            LOGE("D3D11CreateDevice returns an instance without DirectX 11 support, level : {}  Following initialization may fail", (int) featureLevel);
         }
         CComPtr<IDXGIDevice> dxgi_device;
         res = d3d11_device_.QueryInterface(&dxgi_device);
@@ -65,9 +63,12 @@ namespace tc
         monitor_count_ = numbers;
         dxgi_output_duplication_.clear();
         for (int i = 0; i < numbers; ++i) {
-            DXGIOutputDuplication dupl{};
-            dxgi_output_duplication_.emplace_back(dupl);
+            DXGIOutputDuplication duplication{};
+            dxgi_output_duplication_.push_back(duplication);
         }
+
+        // enumerate all monitors and find primary monitor
+        win_monitors_ = EnumerateAllMonitors();
 
         LOGI("Total Monitors : {}", numbers);
         for (int index = 0; index < numbers; ++index) {
@@ -86,14 +87,21 @@ namespace tc
                      StringExt::GetErrorStr(res).c_str(), res);
                 continue;
             }
-            DXGI_OUTPUT_DESC desc{};
-            res = output->GetDesc(&desc);
+            DXGI_OUTPUT_DESC output_desc{};
+            res = output->GetDesc(&output_desc);
             if (res == S_OK) {
-                dxgi_output_duplication_[index].output_desc_ = desc;
-                printf("index index = %d, desc.DesktopCoordinates.left = %ld\n", index, desc.DesktopCoordinates.left);
-                printf("Output Index:%d Name:%s AttachedToDesktop:%d\n", index,
-                       StringExt::ToUTF8(desc.DeviceName).c_str(), desc.AttachedToDesktop);
-                if (desc.AttachedToDesktop && IsValidRect(desc.DesktopCoordinates)) {
+                dxgi_output_duplication_[index].output_desc_ = output_desc;
+                LOGI("index index = {}, desc.DesktopCoordinates.left = {}", index, output_desc.DesktopCoordinates.left);
+                LOGI("Output Index: {} Name: {} AttachedToDesktop: {}", index,
+                       StringExt::ToUTF8(output_desc.DeviceName).c_str(), output_desc.AttachedToDesktop);
+
+                monitors_.insert({index, DxgiMonitorInfo {
+                    .index_ = (MonitorIndex)index,
+                    .name_ = StringExt::ToUTF8(output_desc.DeviceName),
+                    .attached_desktop_ = (bool)output_desc.AttachedToDesktop,
+                }});
+
+                if (output_desc.AttachedToDesktop && IsValidRect(output_desc.DesktopCoordinates)) {
                     CComPtr<IDXGIOutput1> output1;
                     res = output.QueryInterface(&output1);
                     if (res != S_OK || !output1) {
@@ -102,9 +110,7 @@ namespace tc
                     }
                     static const int kRetryCount = 3;
                     for (int j = 0;; ++j) {
-                        // 执行屏幕复制。
-                        HRESULT error = output1->DuplicateOutput(d3d11_device_,
-                                                                 &(dxgi_output_duplication_[index].duplication_));
+                        HRESULT error = output1->DuplicateOutput(d3d11_device_, &(dxgi_output_duplication_[index].duplication_));
                         if (error != S_OK || !dxgi_output_duplication_[index].duplication_) {
                             // DuplicateOutput may temporarily return E_ACCESSDENIED.
                             if (error == E_UNEXPECTED) {
@@ -114,7 +120,7 @@ namespace tc
                             }
                             if (error == E_ACCESSDENIED && j < kRetryCount) {
                                 const ACCESS_MASK desiredAccess = GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE;
-                                HDESK inputDesk = ::OpenInputDesktop(NULL, 0, desiredAccess);
+                                HDESK inputDesk = ::OpenInputDesktop(0, 0, desiredAccess);
                                 if (inputDesk)
                                     ::SetThreadDesktop(inputDesk);
                                 CloseDesktop(inputDesk);
@@ -130,12 +136,12 @@ namespace tc
                         }
                     }
                 } else {
-                    std::cout << (desc.AttachedToDesktop ? "Attached" : "Detached")
+                    std::cout << (output_desc.AttachedToDesktop ? "Attached" : "Detached")
                               << " output " << index << " ("
-                              << desc.DesktopCoordinates.top << ", "
-                              << desc.DesktopCoordinates.left << ") - ("
-                              << desc.DesktopCoordinates.bottom << ", "
-                              << desc.DesktopCoordinates.right << ") is ignored" << std::endl;
+                              << output_desc.DesktopCoordinates.top << ", "
+                              << output_desc.DesktopCoordinates.left << ") - ("
+                              << output_desc.DesktopCoordinates.bottom << ", "
+                              << output_desc.DesktopCoordinates.right << ") is ignored" << std::endl;
                 }
             } else {
                 std::cout << "Failed to get output description of device " << index << ", ignore" << std::endl;
@@ -144,17 +150,17 @@ namespace tc
         if (!dxgi_output_duplication_[0].duplication_) {
             return false;
         }
-        std::sort(dxgi_output_duplication_.begin(), dxgi_output_duplication_.end(),
-                  [=](DXGIOutputDuplication a, DXGIOutputDuplication b) {
-                      return a.output_desc_.DesktopCoordinates.left < b.output_desc_.DesktopCoordinates.left;
-                  });
+//        std::sort(dxgi_output_duplication_.begin(), dxgi_output_duplication_.end(),
+//                  [=](DXGIOutputDuplication a, DXGIOutputDuplication b) {
+//                      return a.output_desc_.DesktopCoordinates.left < b.output_desc_.DesktopCoordinates.left;
+//                  });
 
         for (auto &dup: dxgi_output_duplication_) {
             SharedD3d11Texture2D shared_texture;
             last_list_texture_.emplace_back(shared_texture);
         }
 
-        printf("Init DDA moudle successfully.\n");
+        LOGI("Init DDA successfully.");
         return true;
     }
 
@@ -229,7 +235,29 @@ namespace tc
     }
 
     bool DDACapture::IsTargetMonitor(int index) {
-        return index == 0;
+        for (const auto& [idx, dxgi_monitor] : monitors_) {
+            if (idx != index) {
+                continue;
+            }
+            if (dxgi_monitor.name_ == selected_monitor_name_) {
+                LOGI("find the same name: {}", selected_monitor_name_);
+                return true;
+            }
+
+            for (const auto& win_monitor : win_monitors_) {
+                // to capture primary monitor when no monitor specified
+                if (selected_monitor_name_.empty()) {
+                    if (win_monitor.is_primary_ && win_monitor.name_ == dxgi_monitor.name_) {
+                        //LOGI("Yes, find primary monitor: {}, index: {}", dxgi_monitor.name_, index);
+                        return true;
+                    } else {
+                        //LOGE("NOT find primary monitor...");
+                        continue;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     void DDACapture::Capture() {
@@ -238,6 +266,7 @@ namespace tc
                 if (!IsTargetMonitor(index)) {
                     continue;
                 }
+                LOGI("Will capture index: {}", index);
 
                 CComPtr<ID3D11Texture2D> texture = nullptr;
                 DDACapture::ECapRes res = CaptureNextFrame(1000/capture_fps_, texture, index);
@@ -261,21 +290,42 @@ namespace tc
     }
 
     void DDACapture::OnCaptureFrame(ID3D11Texture2D *texture, uint8_t monitor_index) {
-        int width = 0;
-        int height = 0;
-        DXGI_FORMAT format;
         HRESULT result;
 
-        // to do 考虑分辨率动态变化的情况
-        if (!last_list_texture_[monitor_index].texture2d_) {
-            D3D11_TEXTURE2D_DESC desc;
-            texture->GetDesc(&desc);
+        // input texture info
+        D3D11_TEXTURE2D_DESC input_desc;
+        texture->GetDesc(&input_desc);
+        UINT input_width = input_desc.Width;
+        UINT input_height = input_desc.Height;
+        DXGI_FORMAT input_format = input_desc.Format;
 
+        // shared texture info if exists
+        UINT shared_width = 0;
+        UINT shared_height = 0;
+        DXGI_FORMAT shared_format = DXGI_FORMAT_UNKNOWN;
+        auto shared_texture = last_list_texture_[monitor_index].texture2d_;
+        if (shared_texture) {
+            D3D11_TEXTURE2D_DESC shared_desc;
+            shared_texture->GetDesc(&shared_desc);
+            shared_width = shared_desc.Width;
+            shared_height = shared_desc.Height;
+            shared_format = shared_desc.Format;
+        }
+
+        bool texture_changed = (input_width != shared_width)
+                || (input_height != shared_height)
+                || (input_format != shared_format);
+
+        if (texture_changed) {
+            if (shared_texture) {
+                shared_texture->Release();
+                last_list_texture_[monitor_index].texture2d_ = nullptr;
+            }
             D3D11_TEXTURE2D_DESC create_desc;
             ZeroMemory(&create_desc, sizeof(create_desc));
-            create_desc.Format = desc.Format;
-            create_desc.Width = desc.Width;
-            create_desc.Height = desc.Height;
+            create_desc.Format = input_format;
+            create_desc.Width = input_width;
+            create_desc.Height = input_height;
             create_desc.MipLevels = 1;
             create_desc.ArraySize = 1;
             create_desc.SampleDesc.Count = 1;
@@ -283,22 +333,22 @@ namespace tc
             create_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
             create_desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
-            result = d3d11_device_->CreateTexture2D(&create_desc, NULL, &last_list_texture_[monitor_index].texture2d_);
+            result = d3d11_device_->CreateTexture2D(&create_desc, nullptr, &last_list_texture_[monitor_index].texture2d_);
             if (FAILED(result)) {
-                printf("desktop capture create texture failed with:%s", StringExt::GetErrorStr(result).c_str());
+                LOGE("desktop capture create texture failed with:{}", StringExt::GetErrorStr(result).c_str());
                 return;
             }
 
             ComPtr<IDXGIResource> dxgiResource;
             result = last_list_texture_[monitor_index].texture2d_.As<IDXGIResource>(&dxgiResource);
             if (FAILED(result)) {
-                printf("desktop capture as IDXGIResource failed with:%s", StringExt::GetErrorStr(result).c_str());
+                LOGE("desktop capture as IDXGIResource failed with:{}", StringExt::GetErrorStr(result).c_str());
                 return;
             }
             HANDLE handle;
             result = dxgiResource->GetSharedHandle(&handle);
             if (FAILED(result)) {
-                printf("desktop capture get shared handle failed with:%s", StringExt::GetErrorStr(result).c_str());
+                LOGI("desktop capture get shared handle failed with:{}", StringExt::GetErrorStr(result).c_str());
                 return;
             }
             last_list_texture_[monitor_index].shared_handle_ = handle;
@@ -318,22 +368,14 @@ namespace tc
 
         d3d11_device_context_->CopyResource(last_list_texture_[monitor_index].texture2d_.Get(), texture);
 
-        {
-            D3D11_TEXTURE2D_DESC desc;
-            texture->GetDesc(&desc);
-            width = desc.Width;
-            height = desc.Height;
-            format = desc.Format;
-        }
-
         if (keyMutex) {
             keyMutex->ReleaseSync(0);
         }
 
-        SendTextureHandle(last_list_texture_[monitor_index].shared_handle_, static_cast<EMonitorIndex>(monitor_index), width, height, format);
+        SendTextureHandle(last_list_texture_[monitor_index].shared_handle_, static_cast<EMonitorIndex>(monitor_index), input_width, input_height, input_format);
     }
 
-    void DDACapture::SendTextureHandle(const HANDLE &shared_handle, EMonitorIndex current_monitor_index, int width, int height, DXGI_FORMAT format) {
+    void DDACapture::SendTextureHandle(const HANDLE &shared_handle, EMonitorIndex current_monitor_index, uint32_t width, uint32_t height, DXGI_FORMAT format) {
         if (cursor_capture_) {
             cursor_capture_->Capture();
         }

@@ -6,10 +6,13 @@
 #define WIN_CAPTURE_MONITOR_UTIL_H
 
 #include <dxgi.h>
+#include <string>
+#include "tc_common_new/string_ext.h"
 
-//用来表示屏幕索引顺序
 namespace tc
 {
+    using MonitorIndex = uint32_t;
+
     enum class EMonitorIndex {
         kFirst,
         kSecond,
@@ -17,13 +20,12 @@ namespace tc
         kFourth,
     };
 
-    class MonitorWinInfo {
+    class DxgiMonitorInfo {
     public:
-        MonitorWinInfo() = default;
-
-        ~MonitorWinInfo() = default;
-
-        DXGI_OUTPUT_DESC dxgi_output_desc_;
+        MonitorIndex index_{};
+        std::string name_;
+        bool attached_desktop_{};
     };
+
 }
 #endif //WIN_CAPTURE_MONITOR_UTIL_H

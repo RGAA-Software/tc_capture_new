@@ -266,7 +266,7 @@ namespace tc
                 if (!IsTargetMonitor(index)) {
                     continue;
                 }
-                LOGI("Will capture index: {}", index);
+                //LOGI("Will capture index: {}", index);
 
                 CComPtr<ID3D11Texture2D> texture = nullptr;
                 DDACapture::ECapRes res = CaptureNextFrame(1000/capture_fps_, texture, index);

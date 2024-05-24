@@ -54,6 +54,9 @@ namespace tc
     }
 
     void HookManager::PushIpcMessage(const std::shared_ptr<CaptureBaseMessage>& msg) {
+        if (messages_.Size() > 512) {
+            messages_.Pop();
+        }
         messages_.Push(msg);
     }
 
@@ -91,7 +94,7 @@ namespace tc
     }
 
     SHORT HookedGetKeyState(int vKey) {
-        LOGI("HookedGetKeyState: {}", vKey);
+       // LOGI("HookedGetKeyState: {}", vKey);
         return origin_GetAsyncKeyState_(vKey);
     }
 
@@ -281,7 +284,7 @@ namespace tc
                 }
             }
 
-#if 0
+#if 1
             LOGI("------------------------Replay-----------------------------");
             LOGI("button: {}, pressed: {}, released: {}", mouse_msg->button_, mouse_msg->pressed_, mouse_msg->released_);
             LOGI("uiCommand: {}, dwType: {}", uiCommand, raw_input->header.dwType);
@@ -432,7 +435,7 @@ namespace tc
     }
 
     void HookManager::StartIpcClient() {
-        ws_ipc_client_ = WsIpcClient::Make(app_shared_msg_->ipc_port_);
+        ws_ipc_client_ = WsIpcClient::Make((int)app_shared_msg_->ipc_port_);
         ws_ipc_client_->Start();
         ws_ipc_client_->RegisterIpcMessageCallback([=, this](const std::shared_ptr<CaptureBaseMessage>& msg) {
             this->PushIpcMessage(msg);

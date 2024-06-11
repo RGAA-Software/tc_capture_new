@@ -25,8 +25,8 @@ namespace tc
 
     class DDACapture : public DesktopCapture  {
     public:
-        enum class ECapRes {
-            kSuccessfully,
+        enum class CaptureResult {
+            kSuccess,
             kFailed,
             kReInit,
             kTryAgain,
@@ -36,6 +36,7 @@ namespace tc
         public:
             CComPtr<IDXGIOutputDuplication> duplication_;
             DXGI_OUTPUT_DESC output_desc_{};
+            DxgiMonitorInfo monitor_win_info_{};
 
             DXGIOutputDuplication() {
                 memset(&output_desc_, 0, sizeof(DXGI_OUTPUT_DESC));
@@ -62,13 +63,13 @@ namespace tc
             return rect.right > rect.left && rect.bottom > rect.top;
         }
 
-        ECapRes CaptureNextFrame(int waitTime, CComPtr<ID3D11Texture2D> &OutTexture, int monIndex = 0);
+        CaptureResult CaptureNextFrame(int wait_time, CComPtr<ID3D11Texture2D>& out_tex, int monitor_index = 0);
 
     private:
         void Capture();
         void OnCaptureFrame(ID3D11Texture2D *texture, uint8_t monitor_index);
-        void SendTextureHandle(const HANDLE &shared_handle, EMonitorIndex current_monitor_index_, uint32_t width, uint32_t height, DXGI_FORMAT format);
-        int GetFrameIndex(EMonitorIndex monitor_index);
+        void SendTextureHandle(const HANDLE &shared_handle, MonitorIndex current_monitor_index_, uint32_t width, uint32_t height, DXGI_FORMAT format);
+        int GetFrameIndex(MonitorIndex monitor_index);
         bool IsTargetMonitor(int index);
 
     private:
@@ -76,7 +77,7 @@ namespace tc
         std::thread capture_thread_;
         uint8_t monitor_count_ = 0;
         int64_t adapter_uid_ = -1;
-        std::map<EMonitorIndex, int> monitor_frame_index_;
+        std::map<MonitorIndex, int> monitor_frame_index_;
         std::map<MonitorIndex, DxgiMonitorInfo> monitors_;
         std::vector<MonitorWinInfo> win_monitors_;
         std::string selected_monitor_name_;

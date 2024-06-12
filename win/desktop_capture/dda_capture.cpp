@@ -91,10 +91,10 @@ namespace tc
                     .index_ = (MonitorIndex)index,
                     .name_ = StringExt::ToUTF8(output_desc.DeviceName),
                     .attached_desktop_ = (bool)output_desc.AttachedToDesktop,
-                    .top_ = (uint32_t)output_desc.DesktopCoordinates.top,
-                    .left_ = (uint32_t)output_desc.DesktopCoordinates.left,
-                    .right_ = (uint32_t)output_desc.DesktopCoordinates.right,
-                    .bottom_ = (uint32_t)output_desc.DesktopCoordinates.bottom,
+                    .top_ = output_desc.DesktopCoordinates.top,
+                    .left_ = output_desc.DesktopCoordinates.left,
+                    .right_ = output_desc.DesktopCoordinates.right,
+                    .bottom_ = output_desc.DesktopCoordinates.bottom,
                 }});
                 dxgi_output_duplication_[index].output_desc_ = output_desc;
                 dxgi_output_duplication_[index].monitor_win_info_ = monitors_[index];
@@ -390,7 +390,7 @@ namespace tc
             cap_video_frame.handle_ = reinterpret_cast<uint64_t>(shared_handle);
             cap_video_frame.frame_format_ = format;
             cap_video_frame.adapter_uid_ = adapter_uid_;
-            cap_video_frame.capture_index_ = static_cast<int8_t>(current_monitor_index);
+            cap_video_frame.monitor_index_ = static_cast<int8_t>(current_monitor_index);
             auto mon_win_info = dxgi_output_duplication_[current_monitor_index].monitor_win_info_;
             if (mon_win_info.Valid()) {
                 memset(cap_video_frame.display_name_, 0, sizeof(cap_video_frame.display_name_));

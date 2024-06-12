@@ -20,10 +20,10 @@ namespace tc
         MonitorIndex index_{};
         std::string name_;
         bool attached_desktop_{};
-        uint32_t top_{};
-        uint32_t left_{};
-        uint32_t right_{};
-        uint32_t bottom_{};
+        long top_{};
+        long left_{};
+        long right_{};
+        long bottom_{};
 
     public:
 

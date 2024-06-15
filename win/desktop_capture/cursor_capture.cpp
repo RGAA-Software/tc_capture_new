@@ -214,7 +214,6 @@ namespace tc
             reshape_image_rgba_order(&cursor_bitmap);
         }
         DestroyIcon(icon);
-        //std::cout << " cursor_bitmap width = " << cursor_bitmap.width_ << " height = " << cursor_bitmap.height_ << " size = " << cursor_bitmap.data_->Size() << std::endl;
         if (msg_notifier_) {
             msg_notifier_->SendAppMessage(cursor_bitmap);
         }

@@ -285,6 +285,10 @@ namespace tc
                     OnCaptureFrame(texture, index);
                 }
             }
+
+            if (cursor_capture_) {
+                cursor_capture_->Capture();
+            }
         }
     }
 
@@ -375,10 +379,6 @@ namespace tc
     }
 
     void DDACapture::SendTextureHandle(const HANDLE &shared_handle, MonitorIndex current_monitor_index, uint32_t width, uint32_t height, DXGI_FORMAT format) {
-        if (cursor_capture_) {
-            cursor_capture_->Capture();
-        }
-
         if (msg_notifier_) {
             CaptureVideoFrame cap_video_frame{};
             cap_video_frame.type_ = kCaptureVideoFrame;

@@ -25,7 +25,7 @@ namespace tc
             return output;
         }
 
-        return NULL;
+        return nullptr;
     }
 
     static inline uint8_t bit_to_alpha(uint8_t *data, long pixel, bool invert) {
@@ -75,15 +75,15 @@ namespace tc
 
         color = get_bitmap_data(ii->hbmColor, &bmp_color, sizeOut);
         if (!color) {
-            return NULL;
+            return nullptr;
         }
 
         if (bmp_color.bmBitsPixel < 32) {
             free(color);
-            return NULL;
+            return nullptr;
         }
 
-        mask = get_bitmap_data(ii->hbmMask, &bmp_mask, NULL);
+        mask = get_bitmap_data(ii->hbmMask, &bmp_mask, nullptr);
         if (mask) {
             long pixels = bmp_color.bmHeight * bmp_color.bmWidth;
 
@@ -109,7 +109,7 @@ namespace tc
 
         mask = get_bitmap_data(ii->hbmMask, &bmp, sizeOut);
         if (!mask) {
-            return NULL;
+            return nullptr;
         }
 
         bmp.bmHeight /= 2;
@@ -199,20 +199,17 @@ namespace tc
         CURSORINFO ci = {0};
         HICON icon;
         ci.cbSize = sizeof(ci);
-        // 获取当前光标的信息
+
         if (!GetCursorInfo(&ci)) {
             cursor_bitmap.visable_ = true;
             return;
         }
         cursor_bitmap.visable_ = (ci.flags & CURSOR_SHOWING) == CURSOR_SHOWING;
-        // 拷贝光标的位置
         cursor_bitmap.x_ = ci.ptScreenPos.x;
         cursor_bitmap.y_ = ci.ptScreenPos.y;
 
-        LOGI("cursor : {}x{}", cursor_bitmap.x_, cursor_bitmap.y_);
-
+        // RGB Data
         icon = CopyIcon(ci.hCursor);
-        // 获取光标的RGB数据。
         if (CursorCaptureIcon(&cursor_bitmap, icon)) {
             reshape_image_rgba_order(&cursor_bitmap);
         }

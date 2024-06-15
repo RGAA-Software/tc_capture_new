@@ -149,11 +149,6 @@ namespace tc
         if (!dxgi_output_duplication_[0].duplication_) {
             return false;
         }
-//        std::sort(dxgi_output_duplication_.begin(), dxgi_output_duplication_.end(),
-//                  [=](DXGIOutputDuplication a, DXGIOutputDuplication b) {
-//                      return a.output_desc_.DesktopCoordinates.left < b.output_desc_.DesktopCoordinates.left;
-//                  });
-
         for (const auto& [idx, _]: dxgi_output_duplication_) {
             SharedD3d11Texture2D shared_texture;
             last_list_texture_[idx] = shared_texture;
@@ -241,9 +236,8 @@ namespace tc
                 continue;
             }
             //test
-            selected_monitor_name_ = R"(\\.\DISPLAY2)";
+            //selected_monitor_name_ = R"(\\.\DISPLAY2)";
             if (dxgi_monitor.name_ == selected_monitor_name_) {
-                //LOGI("find the same name: {}", selected_monitor_name_);
                 return true;
             }
 
@@ -251,10 +245,8 @@ namespace tc
                 // to capture primary monitor when no monitor specified
                 if (selected_monitor_name_.empty()) {
                     if (win_monitor.is_primary_ && win_monitor.name_ == dxgi_monitor.name_) {
-                        //LOGI("Yes, find primary monitor: {}, index: {}", dxgi_monitor.name_, index);
                         return true;
                     } else {
-                        //LOGE("NOT find primary monitor...");
                         continue;
                     }
                 }
@@ -269,8 +261,6 @@ namespace tc
                 if (!IsTargetMonitor(index)) {
                     continue;
                 }
-                //LOGI("Will capture index: {}", index);
-
                 CComPtr<ID3D11Texture2D> texture = nullptr;
                 DDACapture::CaptureResult res = CaptureNextFrame(1000 / capture_fps_, texture, index);
                 if (res == DDACapture::CaptureResult::kFailed) {

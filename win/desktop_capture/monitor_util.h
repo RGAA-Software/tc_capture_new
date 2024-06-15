@@ -15,7 +15,7 @@ namespace tc
 {
     using MonitorIndex = uint32_t;
 
-    class DxgiMonitorInfo {
+    class CaptureMonitorInfo {
     public:
         MonitorIndex index_{};
         std::string name_;
@@ -24,8 +24,21 @@ namespace tc
         long left_{};
         long right_{};
         long bottom_{};
-
+        long virtual_top_{};
+        long virtual_left_{};
+        long virtual_right_{};
+        long virtual_bottom_{};
+        long virtual_width_;
+        long virtual_height_;
     public:
+
+        [[nodiscard]] long Width() const {
+            return right_ - left_;
+        }
+
+        [[nodiscard]] long Height() const {
+            return bottom_ - top_;
+        }
 
         [[nodiscard]] bool Valid() const {
             return !name_.empty() && right_ > left_ && bottom_ > top_;

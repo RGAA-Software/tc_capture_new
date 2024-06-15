@@ -12,7 +12,6 @@
 #include <memory>
 #include <map>
 
-#include "monitor_util.h"
 #include "desktop_capture.h"
 #include "tc_common_new/monitors.h"
 
@@ -36,7 +35,7 @@ namespace tc
         public:
             CComPtr<IDXGIOutputDuplication> duplication_;
             DXGI_OUTPUT_DESC output_desc_{};
-            DxgiMonitorInfo monitor_win_info_{};
+            CaptureMonitorInfo monitor_win_info_{};
 
             DXGIOutputDuplication() {
                 memset(&output_desc_, 0, sizeof(DXGI_OUTPUT_DESC));
@@ -71,6 +70,7 @@ namespace tc
         void SendTextureHandle(const HANDLE &shared_handle, MonitorIndex current_monitor_index_, uint32_t width, uint32_t height, DXGI_FORMAT format);
         int GetFrameIndex(MonitorIndex monitor_index);
         bool IsTargetMonitor(int index);
+        void CalculateVirtualDeskInfo();
 
     private:
         std::atomic<bool> stop_flag_ = false;
@@ -78,19 +78,20 @@ namespace tc
         uint8_t monitor_count_ = 0;
         int64_t adapter_uid_ = -1;
         std::map<MonitorIndex, int> monitor_frame_index_;
-        std::map<MonitorIndex, DxgiMonitorInfo> monitors_;
+        std::map<MonitorIndex, CaptureMonitorInfo> monitors_;
         std::vector<MonitorWinInfo> win_monitors_;
         std::string selected_monitor_name_;
 
-        std::vector<SharedD3d11Texture2D> last_list_texture_;
+        std::map<MonitorIndex, SharedD3d11Texture2D> last_list_texture_;
+        std::map<MonitorIndex, DXGIOutputDuplication> dxgi_output_duplication_;
         CComPtr<IDXGIFactory1> factory1_ = nullptr;
         CComPtr<IDXGIAdapter1> adapter1_ = nullptr;
         CComPtr<IDXGIOutput> dxgi_output_ = nullptr;
         CComPtr<ID3D11Device> d3d11_device_ = nullptr;
         CComPtr<ID3D11DeviceContext> d3d11_device_context_ = nullptr;
-        std::vector<DXGIOutputDuplication> dxgi_output_duplication_;
         CComPtr<ID3D11Texture2D> shared_texture_ = nullptr;
         std::shared_ptr<MessageNotifier> msg_notifier_ = nullptr;
         std::shared_ptr<CursorCapture> cursor_capture_ = nullptr;
+
     };
 }

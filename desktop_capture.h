@@ -7,8 +7,13 @@
 
 #include <memory>
 #include <string>
+#include <vector>
+#if WIN32
+#include "win/desktop_capture/monitor_util.h"
+#endif
 
-namespace tc {
+namespace tc
+{
 
     class MessageNotifier;
     class MessageListener;
@@ -22,10 +27,12 @@ namespace tc {
         virtual void StopCapture() = 0;
         void SetCaptureMonitor(std::string& name);
         void SetCaptureFps(int fps);
+        std::vector<CaptureMonitorInfo> GetCaptureMonitorInfo();
 
     protected:
         std::string capture_monitor_;
         int capture_fps_ = 60;
+        std::vector<CaptureMonitorInfo> sorted_monitors_;
     };
 }
 

@@ -63,7 +63,7 @@ namespace tc
         dxgi_output_duplication_.clear();
         for (int i = 0; i < monitor_count_; ++i) {
             DXGIOutputDuplication duplication{};
-            dxgi_output_duplication_.push_back(duplication);
+            dxgi_output_duplication_[i] = duplication;
         }
 
         win_monitors_ = EnumerateAllMonitors();
@@ -87,7 +87,7 @@ namespace tc
             DXGI_OUTPUT_DESC output_desc{};
             res = output->GetDesc(&output_desc);
             if (res == S_OK) {
-                monitors_.insert({index, DxgiMonitorInfo {
+                monitors_.insert({index, CaptureMonitorInfo {
                     .index_ = (MonitorIndex)index,
                     .name_ = StringExt::ToUTF8(output_desc.DeviceName),
                     .attached_desktop_ = (bool)output_desc.AttachedToDesktop,
@@ -154,10 +154,12 @@ namespace tc
 //                      return a.output_desc_.DesktopCoordinates.left < b.output_desc_.DesktopCoordinates.left;
 //                  });
 
-        for (auto &dup: dxgi_output_duplication_) {
+        for (const auto& [idx, _]: dxgi_output_duplication_) {
             SharedD3d11Texture2D shared_texture;
-            last_list_texture_.emplace_back(shared_texture);
+            last_list_texture_[idx] = shared_texture;
         }
+
+        CalculateVirtualDeskInfo();
 
         LOGI("Init DDA successfully.");
         return true;
@@ -168,7 +170,7 @@ namespace tc
         if (capture_thread_.joinable()) {
             capture_thread_.join();
         }
-        for (auto &dp: dxgi_output_duplication_) {
+        for (auto& [idx, dp]: dxgi_output_duplication_) {
             if (dp.duplication_) {
                 dp.duplication_->ReleaseFrame();
             }
@@ -238,8 +240,10 @@ namespace tc
             if (idx != index) {
                 continue;
             }
+            //test
+            selected_monitor_name_ = R"(\\.\DISPLAY2)";
             if (dxgi_monitor.name_ == selected_monitor_name_) {
-                LOGI("find the same name: {}", selected_monitor_name_);
+                //LOGI("find the same name: {}", selected_monitor_name_);
                 return true;
             }
 
@@ -421,6 +425,47 @@ namespace tc
 
     void DDACapture::StopCapture() {
         this->Exit();
+    }
+
+    void DDACapture::CalculateVirtualDeskInfo() {
+        sorted_monitors_.clear();
+        int total_width = 0;
+        int max_height = 0;
+        int max_virtual_coord = 65535;
+        for (const auto& [idx, info] : monitors_) {
+            sorted_monitors_.push_back(info);
+            total_width += info.Width();
+            if (info.Height() > max_height) {
+                max_height = info.Height();
+            }
+            LOGI("ORIGIN, idx: {}, left: {}", idx, info.left_);
+        }
+
+        std::sort(sorted_monitors_.begin(), sorted_monitors_.end(), [](const CaptureMonitorInfo& lh, const CaptureMonitorInfo& rh) -> bool {
+            return lh.left_ < rh.left_;
+        });
+        int left_monitor_virtual_size = 0;
+        for (auto& info : sorted_monitors_) {
+            info.virtual_width_ = info.Width() * 1.0f / total_width * max_virtual_coord;
+            info.virtual_left_ = left_monitor_virtual_size;
+            info.virtual_right_ = info.virtual_left_ + info.virtual_width_;
+            left_monitor_virtual_size = info.virtual_right_;
+
+            info.virtual_height_ = info.Height() * 1.0f / max_height * max_virtual_coord;
+            info.virtual_top_ = info.top_ * 1.0f / max_height * max_virtual_coord;
+            info.virtual_bottom_ = info.bottom_ * 1.0f / max_height * max_virtual_coord;
+
+            LOGI("SORTED, idx: {}, left: {}, right: {}, top: {}, bottom: {}, \n "
+                 "virtual width: {}, virtual height: {}, virtual left: {}, virtual right: {}, virtual top: {}, virtual bottom: {}, virtual h diff: {}",
+                 info.index_, info.left_, info.right_, info.top_, info.bottom_,
+                 info.virtual_width_, info.virtual_height_, info.virtual_left_, info.virtual_right_, info.virtual_top_, info.virtual_bottom_,
+                 info.virtual_bottom_ - info.virtual_top_);
+        }
+
+        msg_notifier_->SendAppMessage(CaptureMonitorInfoMessage {
+            .monitors_ = sorted_monitors_,
+        });
+
     }
 
 } // tc

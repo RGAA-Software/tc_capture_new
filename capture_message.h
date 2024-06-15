@@ -8,6 +8,8 @@
 #include <cstdint>
 #include <memory>
 
+#include "win/desktop_capture/monitor_util.h"
+
 namespace tc
 {
     // type_
@@ -154,10 +156,10 @@ namespace tc
     public:
         uint32_t width_ = 0;
         uint32_t height_ = 0;
-        uint32_t hotspot_x_ = 0;
-        uint32_t hotspot_y_ = 0;
-        uint32_t x_ = 0;
-        uint32_t y_ = 0;
+        int32_t hotspot_x_ = 0;
+        int32_t hotspot_y_ = 0;
+        int32_t x_ = 0;
+        int32_t y_ = 0;
         bool visable_ = true;
         std::shared_ptr<Data> data_ = nullptr;  //存放图片
     };
@@ -170,6 +172,12 @@ namespace tc
         uint32_t self_size_{0};
         uint32_t enable_hook_events_{0};
     };
+
+    class CaptureMonitorInfoMessage : public CaptureBaseMessage {
+    public:
+        std::vector<CaptureMonitorInfo> monitors_;
+    };
+
 }
 
 #endif //TC_APPLICATION_CAPTURE_MESSAGE_H

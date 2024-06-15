@@ -7,6 +7,7 @@
 #include "tc_common_new/message_notifier.h"
 #include "tc_common_new/data.h"
 #include "capture_message.h"
+#include "tc_common_new/log.h"
 
 namespace tc
 {
@@ -207,6 +208,8 @@ namespace tc
         // 拷贝光标的位置
         cursor_bitmap.x_ = ci.ptScreenPos.x;
         cursor_bitmap.y_ = ci.ptScreenPos.y;
+
+        LOGI("cursor : {}x{}", cursor_bitmap.x_, cursor_bitmap.y_);
 
         icon = CopyIcon(ci.hCursor);
         // 获取光标的RGB数据。

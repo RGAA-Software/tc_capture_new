@@ -20,4 +20,8 @@ namespace tc
         capture_fps_ = fps;
     }
 
+    std::vector<CaptureMonitorInfo> DesktopCapture::GetCaptureMonitorInfo() {
+        return sorted_monitors_;
+    }
+
 }

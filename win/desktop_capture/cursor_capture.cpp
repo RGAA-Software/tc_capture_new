@@ -188,6 +188,8 @@ namespace tc
             data->hotspot_x_ = ii.xHotspot;
             data->hotspot_y_ = ii.yHotspot;
             free(bitmap);
+        } else {
+            return false;
         }
         DeleteObject(ii.hbmColor);
         DeleteObject(ii.hbmMask);
@@ -212,6 +214,8 @@ namespace tc
         icon = CopyIcon(ci.hCursor);
         if (CursorCaptureIcon(&cursor_bitmap, icon)) {
             reshape_image_rgba_order(&cursor_bitmap);
+        } else {
+            return;
         }
         DestroyIcon(icon);
         if (msg_notifier_) {

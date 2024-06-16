@@ -178,6 +178,10 @@ namespace tc
         std::vector<CaptureMonitorInfo> monitors_;
     };
 
+    class RefreshScreenMessage {
+    public:
+    };
+
 }
 
 #endif //TC_APPLICATION_CAPTURE_MESSAGE_H

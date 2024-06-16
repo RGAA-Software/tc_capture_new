@@ -3,6 +3,8 @@
 //
 
 #include "desktop_capture.h"
+#include "capture_message.h"
+#include "tc_common_new/log.h"
 #include "tc_common_new/message_notifier.h"
 
 namespace tc
@@ -10,6 +12,10 @@ namespace tc
 
     DesktopCapture::DesktopCapture(const std::shared_ptr<MessageNotifier> &msg_notifier) {
         msg_notifier_ = msg_notifier;
+        msg_listener_ = msg_notifier->CreateListener();
+        msg_listener_->Listen<RefreshScreenMessage>([this](const RefreshScreenMessage& msg) {
+            this->RefreshScreen();
+        });
     }
 
     void DesktopCapture::SetCaptureMonitor(std::string& name) {
@@ -22,6 +28,10 @@ namespace tc
 
     std::vector<CaptureMonitorInfo> DesktopCapture::GetCaptureMonitorInfo() {
         return sorted_monitors_;
+    }
+
+    void DesktopCapture::RefreshScreen() {
+        // todo
     }
 
 }

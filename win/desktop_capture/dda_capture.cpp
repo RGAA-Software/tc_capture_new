@@ -197,9 +197,6 @@ namespace tc
         res = dxgi_output_duplication_[mon_idx].duplication_->AcquireNextFrame(wait_time, &info, &resource);
         if (res != S_OK) {
             if (res == DXGI_ERROR_WAIT_TIMEOUT) {
-                if (ret == CaptureResult::kReInit) {
-                    return CaptureResult::kReInit;
-                }
                 return CaptureResult::kTryAgain;
             } else if (res == DXGI_ERROR_ACCESS_LOST) {
                 Exit();

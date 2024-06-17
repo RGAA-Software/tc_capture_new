@@ -6,6 +6,7 @@
 #include "capture_message.h"
 #include "tc_common_new/log.h"
 #include "tc_common_new/message_notifier.h"
+#include <Shlobj.h>
 
 namespace tc
 {
@@ -32,6 +33,7 @@ namespace tc
 
     void DesktopCapture::RefreshScreen() {
         SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, nullptr, SPIF_SENDCHANGE);
+        SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
     }
 
 }

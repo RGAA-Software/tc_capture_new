@@ -6,7 +6,7 @@
 #include <mmsystem.h>
 #include <mmdeviceapi.h>
 #include <audioclient.h>
-#include <time.h>
+#include <ctime>
 #include <mmeapi.h>
 #include <iostream>
 #include <mutex>
@@ -17,11 +17,7 @@ namespace tc
 
 	class WASAPIAudioCapture : public IAudioCapture {
 	public:
-
 		static AudioCapturePtr Make();
-
-		WASAPIAudioCapture();
-		~WASAPIAudioCapture();
 
 		int Prepare() override;
 		int StartRecording() override;
@@ -29,8 +25,8 @@ namespace tc
 		int Stop() override;
 	
 	private:
-
 		bool exit_ = false;
+
 	};
 
 }

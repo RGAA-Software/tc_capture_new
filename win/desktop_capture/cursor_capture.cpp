@@ -15,8 +15,7 @@ namespace tc
     static uint8_t *get_bitmap_data(HBITMAP hbmp, BITMAP *bmp, uint32_t *sizeOut) {
         if (GetObject(hbmp, sizeof(*bmp), bmp) != 0) {
             uint8_t *output;
-            unsigned int size =
-                    (bmp->bmHeight * bmp->bmWidth * bmp->bmBitsPixel) / 8;
+            unsigned int size = (bmp->bmHeight * bmp->bmWidth * bmp->bmBitsPixel) / 8;
             if (sizeOut) {
                 *sizeOut = size;
             }
@@ -24,14 +23,12 @@ namespace tc
             GetBitmapBits(hbmp, size, output);
             return output;
         }
-
         return nullptr;
     }
 
     static inline uint8_t bit_to_alpha(uint8_t *data, long pixel, bool invert) {
         uint8_t pix_byte = data[pixel / 8];
         bool alpha = (pix_byte >> (7 - pixel % 8) & 1) != 0;
-
         if (invert) {
             return alpha ? 0xFF : 0;
         } else {
@@ -45,7 +42,6 @@ namespace tc
                 return true;
             }
         }
-
         return false;
     }
 
@@ -56,18 +52,15 @@ namespace tc
 
     static inline void apply_mask(uint8_t *color, uint8_t *mask, BITMAP *bmp_mask) {
         long mask_pix_offs;
-
         for (long y = 0; y < bmp_mask->bmHeight; y++) {
             for (long x = 0; x < bmp_mask->bmWidth; x++) {
                 mask_pix_offs = y * (bmp_mask->bmWidthBytes * 8) + x;
-                color[(y * bmp_mask->bmWidth + x) * 4 + 3] =
-                        bit_to_alpha(mask, mask_pix_offs, false);
+                color[(y * bmp_mask->bmWidth + x) * 4 + 3] = bit_to_alpha(mask, mask_pix_offs, false);
             }
         }
     }
 
-    static inline uint8_t *copy_from_color(ICONINFO *ii, uint32_t *width,
-                                           uint32_t *height, uint32_t *sizeOut) {
+    static inline uint8_t *copy_from_color(ICONINFO *ii, uint32_t *width, uint32_t *height, uint32_t *sizeOut) {
         BITMAP bmp_color;
         BITMAP bmp_mask;
         uint8_t *color;
@@ -89,7 +82,7 @@ namespace tc
 
             if (!bitmap_has_alpha(color, pixels)) {
                 //apply_mask(color, mask, pixels);
-                apply_mask(color, mask, &bmp_mask); //修复编辑框内，鼠标颜色不显示的问题
+                apply_mask(color, mask, &bmp_mask);
             }
             free(mask);
         }
@@ -99,8 +92,7 @@ namespace tc
         return color;
     }
 
-    static inline uint8_t *copy_from_mask(ICONINFO *ii, uint32_t *width,
-                                          uint32_t *height, uint32_t *sizeOut) {
+    static inline uint8_t *copy_from_mask(ICONINFO *ii, uint32_t *width, uint32_t *height, uint32_t *sizeOut) {
         uint8_t *output;
         uint8_t *mask;
         long pixels;
@@ -128,8 +120,7 @@ namespace tc
             if (!alpha) {
                 output[i * 4 + 3] = color;
             } else {
-                *(uint32_t *) &output[i * 4] = !!color ? 0xFFFFFFFF
-                                                       : 0xFF000000;
+                *(uint32_t *) &output[i * 4] = !!color ? 0xFFFFFFFF : 0xFF000000;
             }
         }
 
@@ -140,8 +131,7 @@ namespace tc
         return output;
     }
 
-    static inline uint8_t *cursor_capture_icon_bitmap(ICONINFO *ii, uint32_t *width,
-                                                      uint32_t *height, uint32_t *sizeOut) {
+    static inline uint8_t *cursor_capture_icon_bitmap(ICONINFO *ii, uint32_t *width, uint32_t *height, uint32_t *sizeOut) {
         uint8_t *output;
 
         output = copy_from_color(ii, width, height, sizeOut);
@@ -167,7 +157,7 @@ namespace tc
         msg_notifier_ = msg_notifier;
     }
 
-    bool CursorCapture::CursorCaptureIcon(CaptureCursorBitmap *data, HICON icon) {
+    bool CursorCapture::CaptureCursorIcon(CaptureCursorBitmap *data, HICON icon) {
         uint8_t *bitmap;
         uint32_t height;
         uint32_t width;
@@ -203,16 +193,16 @@ namespace tc
         ci.cbSize = sizeof(ci);
 
         if (!GetCursorInfo(&ci)) {
-            cursor_bitmap.visable_ = true;
+            cursor_bitmap.visible_ = true;
             return;
         }
-        cursor_bitmap.visable_ = (ci.flags & CURSOR_SHOWING) == CURSOR_SHOWING;
+        cursor_bitmap.visible_ = (ci.flags & CURSOR_SHOWING) == CURSOR_SHOWING;
         cursor_bitmap.x_ = ci.ptScreenPos.x;
         cursor_bitmap.y_ = ci.ptScreenPos.y;
 
         // RGB Data
         icon = CopyIcon(ci.hCursor);
-        if (CursorCaptureIcon(&cursor_bitmap, icon)) {
+        if (CaptureCursorIcon(&cursor_bitmap, icon)) {
             reshape_image_rgba_order(&cursor_bitmap);
         } else {
             return;
@@ -221,14 +211,5 @@ namespace tc
         if (msg_notifier_) {
             msg_notifier_->SendAppMessage(cursor_bitmap);
         }
-#if 0   // save rgba to file
-        static int index = 0;
-        if(index > 20) {
-            return;
-        }
-        auto rgba_file_name = std::format("test_cursor_{}X{}_{}_.rgba", cursor_bitmap.width_, cursor_bitmap.height_, ++index);
-        auto file_ptr = File::OpenForWriteB(rgba_file_name);
-        file_ptr->Write(0, cursor_bitmap.data_->DataAddr(), cursor_bitmap.data_->Size());
-#endif
     }
 }

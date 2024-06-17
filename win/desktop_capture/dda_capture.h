@@ -50,24 +50,17 @@ namespace tc
 
         explicit DDACapture(const std::shared_ptr<MessageNotifier>& msg_notifier);
         virtual ~DDACapture();
-
+        bool Init();
         bool StartCapture() override;
         void StopCapture() override;
 
-        bool Init();
+    private:
         void Start();
         bool Exit();
-
-        static bool IsValidRect(const RECT &rect) {
-            return rect.right > rect.left && rect.bottom > rect.top;
-        }
-
-        CaptureResult CaptureNextFrame(int wait_time, CComPtr<ID3D11Texture2D>& out_tex, int monitor_index = 0);
-
-    private:
         void Capture();
+        CaptureResult CaptureNextFrame(int wait_time, CComPtr<ID3D11Texture2D>& out_tex, int monitor_index = 0);
         void OnCaptureFrame(ID3D11Texture2D *texture, uint8_t monitor_index);
-        void SendTextureHandle(const HANDLE &shared_handle, MonitorIndex current_monitor_index_, uint32_t width, uint32_t height, DXGI_FORMAT format);
+        void SendTextureHandle(const HANDLE &shared_handle, MonitorIndex monitor_index, uint32_t width, uint32_t height, DXGI_FORMAT format);
         int GetFrameIndex(MonitorIndex monitor_index);
         bool IsTargetMonitor(int index);
         void CalculateVirtualDeskInfo();

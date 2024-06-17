@@ -1,6 +1,7 @@
 #include "wasapi_audio_capture.h"
 #include "tc_common_new/log.h"
 #include "tc_common_new/time_ext.h"
+#include "tc_common_new/string_ext.h"
 
 #pragma comment(lib, "Winmm.lib")
 
@@ -23,9 +24,6 @@ namespace tc
 		return std::make_shared<WASAPIAudioCapture>();
 	}
 
-	WASAPIAudioCapture::WASAPIAudioCapture() = default;
-	WASAPIAudioCapture::~WASAPIAudioCapture() = default;
-
 	int WASAPIAudioCapture::Prepare() {
 		HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 		return SUCCEEDED(hr) ? 0 : -1;
@@ -43,6 +41,7 @@ namespace tc
         IAudioCaptureClient* pCaptureClient = nullptr;
         WAVEFORMATEX* pwfx = nullptr;
         UINT32 packetLength = 0;
+        LPWSTR pDeviceID = nullptr;
 
         BYTE* pData;
         DWORD flags;
@@ -50,19 +49,15 @@ namespace tc
         MMCKINFO ckRIFF = { 0 };
         MMCKINFO ckData = { 0 };
 
-        hr = CoCreateInstance(
-            CLSID_MMDeviceEnumerator, nullptr,
-            CLSCTX_ALL, IID_IMMDeviceEnumerator,
-            (void**)&pEnumerator);
+        hr = CoCreateInstance(CLSID_MMDeviceEnumerator, nullptr, CLSCTX_ALL, IID_IMMDeviceEnumerator, (void**)&pEnumerator);
         EXIT_ON_ERROR(hr)
 
-        hr = pEnumerator->GetDefaultAudioEndpoint(
-            eRender, eConsole, &pDevice);
+        hr = pEnumerator->GetDefaultAudioEndpoint(eRender, eConsole, &pDevice);
         EXIT_ON_ERROR(hr)
+        pDevice->GetId(&pDeviceID);
+        LOGI("Audio Id: {}", StringExt::ToUTF8(pDeviceID));
 
-        hr = pDevice->Activate(
-            IID_IAudioClient, CLSCTX_ALL,
-            nullptr, (void**)&pAudioClient);
+        hr = pDevice->Activate(IID_IAudioClient, CLSCTX_ALL, nullptr, (void**)&pAudioClient);
         EXIT_ON_ERROR(hr)
 
         WAVEFORMATEX waveFormat;
@@ -77,47 +72,33 @@ namespace tc
         if (format_callback_) {
             format_callback_(waveFormat.nSamplesPerSec, waveFormat.nChannels, waveFormat.wBitsPerSample);
         }
-
         pwfx = &waveFormat;
-
-        hr = pAudioClient->Initialize(
-            AUDCLNT_SHAREMODE_SHARED,
-            AUDCLNT_STREAMFLAGS_LOOPBACK,
-            hnsRequestedDuration,
-            0,
-            pwfx,
-            nullptr);
+        hr = pAudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_LOOPBACK, hnsRequestedDuration, 0, pwfx, nullptr);
         EXIT_ON_ERROR(hr)
 
         // Get the size of the allocated buffer.
         hr = pAudioClient->GetBufferSize(&bufferFrameCount);
         EXIT_ON_ERROR(hr)
 
-        hr = pAudioClient->GetService(
-            IID_IAudioCaptureClient,
-            (void**)&pCaptureClient);
+        hr = pAudioClient->GetService(IID_IAudioCaptureClient, (void**)&pCaptureClient);
         EXIT_ON_ERROR(hr)
         if (file_saver_) {
             hr = std::static_pointer_cast<WAVAudioFileSaver>(file_saver_)->WriteWaveHeader(pwfx, &ckRIFF, &ckData);
-        }
-            
-        if (FAILED(hr)) {
-            // WriteWaveHeader does its own logging
-            return hr;
+            if (FAILED(hr)) {
+                return hr;
+            }
         }
 
         // Calculate the actual duration of the allocated buffer.
         hnsActualDuration = (double)REFTIMES_PER_SEC * bufferFrameCount / pwfx->nSamplesPerSec;
 
-        hr = pAudioClient->Start();  // Start recording.
+        hr = pAudioClient->Start();
         EXIT_ON_ERROR(hr)
 
         // Each loop fills about half of the shared buffer.
         while (!exit_) {
             // Sleep for half the buffer duration.
             //Sleep(hnsActualDuration / REFTIMES_PER_MILLISEC / 2);
-     
-            //Sleep(16);
             Sleep(10);
 
             hr = pCaptureClient->GetNextPacketSize(&packetLength);
@@ -129,10 +110,7 @@ namespace tc
                 }
 
                 // Get the available data in the shared buffer.
-                hr = pCaptureClient->GetBuffer(
-                    &pData,
-                    &numFramesAvailable,
-                    &flags, nullptr, nullptr);
+                hr = pCaptureClient->GetBuffer(&pData, &numFramesAvailable, &flags, nullptr, nullptr);
                 EXIT_ON_ERROR(hr)
 
                 if (flags & AUDCLNT_BUFFERFLAGS_SILENT) {
@@ -181,7 +159,6 @@ namespace tc
         }
 
     Exit:
-        //CoTaskMemFree(pwfx);
         LOGI("WASAPIAudioCapture Release device .");
         SAFE_RELEASE(pCaptureClient)
         SAFE_RELEASE(pAudioClient)

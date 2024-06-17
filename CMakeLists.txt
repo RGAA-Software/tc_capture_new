@@ -13,7 +13,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/win/hk_obs)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/win/hk_obs/d3d8_api)
 
 find_package(libyuv CONFIG REQUIRED)
-#find_package(Poco COMPONENTS Foundation REQUIRED)
 
 link_directories(${VCPKG_ROOT}/installed/x64-windows-static/lib)
 link_directories(${VCPKG_ROOT}/packages/jemalloc_x64-windows-static/lib)
@@ -25,12 +24,10 @@ if (WIN32)
 
     ## capture
     set(CAPTURE_SRCS
-        tc_capture.cpp
         desktop_capture.h
         desktop_capture.cpp
         win/audio/audio_file_saver.cpp
         win/audio/wasapi_audio_capture.cpp
-            ## desktop_capture
         win/desktop_capture/dda_capture.cpp
         capture_message_maker.cpp
         win/desktop_capture/cursor_capture.cpp
@@ -72,7 +69,3 @@ elseif (UNIX)
 endif ()
 
 add_subdirectory(win/tests)
-
-#add_custom_command(TARGET tc_capture_library POST_BUILD
-#
-#)

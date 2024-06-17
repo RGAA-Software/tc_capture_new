@@ -53,8 +53,8 @@ namespace tc
         uint64_t frame_index_ = 0;
         uint64_t frame_format_ = 0;
         uint64_t handle_ = 0;
-        int64_t adapter_uid_ = -1; // -1表示没获取到
-        int8_t monitor_index_ = -1; //采集画面的索引，通常用于桌面采集，比如第一块屏幕的画面，第二块屏幕的画面 ...
+        int64_t adapter_uid_ = -1;
+        int8_t monitor_index_ = -1;
         char display_name_[64] = {0};
         int left_{};
         int top_{};
@@ -75,7 +75,8 @@ namespace tc
     public:
 
     };
-    // app 会在刚注入dll时，通过IPC发送这个消息到dll中
+
+    // Send this message from app to dll when the dll is injected.
     class CaptureHelloMessage : public CaptureBaseMessage {
     public:
         CaptureHelloMessage() : CaptureBaseMessage() {
@@ -96,7 +97,6 @@ namespace tc
         // present1=0x68dc0
         // resize=0x22f40
         // release=0x3240
-
         uint64_t d3d9_present = 0;
         uint64_t d3d9_present_ex = 0;
         uint64_t d3d9_present_swap = 0;
@@ -118,23 +118,18 @@ namespace tc
         }
     public:
         uint64_t hwnd_{};
-        //to do 当服务端采集方式为采集屏幕的时候，当前鼠标事件对应的屏幕索引
-        //uint32_t monitor_index_ = 0;
-        // 当前鼠标x值，相对于窗口
+        // x , from top-left
         uint32_t x_ = 0;
-        // 当前鼠标y值，
+        // y, from top-left
         uint32_t y_ = 0;
-        // 按键掩码, 用来表示摁下了什么按键、抬起了什么按键 ref: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-mouse_event
+        // ref: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-mouse_event
         int32_t button_ = 0;
         int32_t pressed_ = 0;
         int32_t released_ = 0;
-        // 鼠标data，滚轮等数据
+        // wheel data
         int32_t data_ = 0;
-        // 当前毫秒值时间戳
-        //uint64_t timestamp_ = 0;
         int32_t delta_x_ = 0;
         int32_t delta_y_ = 0;
-        //int32_t middle_scroll_ = 0;
         int32_t absolute_ = 0;
     };
 
@@ -160,8 +155,8 @@ namespace tc
         int32_t hotspot_y_ = 0;
         int32_t x_ = 0;
         int32_t y_ = 0;
-        bool visable_ = true;
-        std::shared_ptr<Data> data_ = nullptr;  //存放图片
+        bool visible_ = true;
+        std::shared_ptr<Data> data_ = nullptr;
     };
 
     //

@@ -10,11 +10,11 @@
 namespace tc
 {
 
-    DesktopCapture::DesktopCapture(const std::shared_ptr<MessageNotifier> &msg_notifier) {
+    DesktopCapture::DesktopCapture(const std::shared_ptr<MessageNotifier>& msg_notifier) {
         msg_notifier_ = msg_notifier;
         msg_listener_ = msg_notifier->CreateListener();
-        msg_listener_->Listen<RefreshScreenMessage>([this](const RefreshScreenMessage& msg) {
-            this->RefreshScreen();
+        msg_listener_->Listen<RefreshScreenMessage>([](const RefreshScreenMessage& msg) {
+            tc::DesktopCapture::RefreshScreen();
         });
     }
 
@@ -31,7 +31,7 @@ namespace tc
     }
 
     void DesktopCapture::RefreshScreen() {
-        // todo
+        SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, nullptr, SPIF_SENDCHANGE);
     }
 
 }

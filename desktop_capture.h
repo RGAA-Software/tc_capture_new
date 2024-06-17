@@ -26,7 +26,9 @@ namespace tc
         void SetCaptureMonitor(std::string& name);
         void SetCaptureFps(int fps);
         std::vector<CaptureMonitorInfo> GetCaptureMonitorInfo();
-        void RefreshScreen();
+
+    private:
+        static void RefreshScreen();
 
     protected:
         std::shared_ptr<MessageNotifier> msg_notifier_ = nullptr;

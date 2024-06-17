@@ -100,7 +100,11 @@ namespace tc
                 dxgi_output_duplication_[index].monitor_win_info_ = monitors_[index];
                 LOGI("{}", monitors_[index].Dump());
 
-                if (output_desc.AttachedToDesktop && IsValidRect(output_desc.DesktopCoordinates)) {
+                auto func_valid_rect = [](const RECT &rect) -> bool {
+                    return rect.right > rect.left && rect.bottom > rect.top;
+                };
+
+                if (output_desc.AttachedToDesktop && func_valid_rect(output_desc.DesktopCoordinates)) {
                     CComPtr<IDXGIOutput1> output1;
                     res = output.QueryInterface(&output1);
                     if (res != S_OK || !output1) {
@@ -369,7 +373,7 @@ namespace tc
         SendTextureHandle(last_list_texture_[monitor_index].shared_handle_, static_cast<MonitorIndex>(monitor_index), input_width, input_height, input_format);
     }
 
-    void DDACapture::SendTextureHandle(const HANDLE &shared_handle, MonitorIndex current_monitor_index, uint32_t width, uint32_t height, DXGI_FORMAT format) {
+    void DDACapture::SendTextureHandle(const HANDLE &shared_handle, MonitorIndex monitor_index, uint32_t width, uint32_t height, DXGI_FORMAT format) {
         if (msg_notifier_) {
             CaptureVideoFrame cap_video_frame{};
             cap_video_frame.type_ = kCaptureVideoFrame;
@@ -377,12 +381,12 @@ namespace tc
             cap_video_frame.data_length = 0;
             cap_video_frame.frame_width_ = width;
             cap_video_frame.frame_height_ = height;
-            cap_video_frame.frame_index_ = GetFrameIndex(current_monitor_index);
+            cap_video_frame.frame_index_ = GetFrameIndex(monitor_index);
             cap_video_frame.handle_ = reinterpret_cast<uint64_t>(shared_handle);
             cap_video_frame.frame_format_ = format;
             cap_video_frame.adapter_uid_ = adapter_uid_;
-            cap_video_frame.monitor_index_ = static_cast<int8_t>(current_monitor_index);
-            auto mon_win_info = dxgi_output_duplication_[current_monitor_index].monitor_win_info_;
+            cap_video_frame.monitor_index_ = static_cast<int8_t>(monitor_index);
+            auto mon_win_info = dxgi_output_duplication_[monitor_index].monitor_win_info_;
             if (mon_win_info.Valid()) {
                 memset(cap_video_frame.display_name_, 0, sizeof(cap_video_frame.display_name_));
                 memcpy(cap_video_frame.display_name_, mon_win_info.name_.c_str(), mon_win_info.name_.size());

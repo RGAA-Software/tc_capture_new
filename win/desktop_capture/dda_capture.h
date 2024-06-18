@@ -48,7 +48,7 @@ namespace tc
             ComPtr<ID3D11Texture2D> texture2d_ = nullptr;
         };
 
-        explicit DDACapture(const std::shared_ptr<MessageNotifier>& msg_notifier);
+        explicit DDACapture(const std::shared_ptr<MessageNotifier>& msg_notifier, const std::string& monitor);
         virtual ~DDACapture();
         bool Init();
         bool StartCapture() override;
@@ -73,7 +73,6 @@ namespace tc
         std::map<MonitorIndex, int> monitor_frame_index_;
         std::map<MonitorIndex, CaptureMonitorInfo> monitors_;
         std::vector<MonitorWinInfo> win_monitors_;
-        std::string selected_monitor_name_;
 
         std::map<MonitorIndex, SharedD3d11Texture2D> last_list_texture_;
         std::map<MonitorIndex, DXGIOutputDuplication> dxgi_output_duplication_;
@@ -83,7 +82,6 @@ namespace tc
         CComPtr<ID3D11Device> d3d11_device_ = nullptr;
         CComPtr<ID3D11DeviceContext> d3d11_device_context_ = nullptr;
         CComPtr<ID3D11Texture2D> shared_texture_ = nullptr;
-        std::shared_ptr<MessageNotifier> msg_notifier_ = nullptr;
         std::shared_ptr<CursorCapture> cursor_capture_ = nullptr;
 
     };

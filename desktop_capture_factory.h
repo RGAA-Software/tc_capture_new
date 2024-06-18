@@ -16,9 +16,9 @@ namespace tc
     class DesktopCaptureFactory {
     public:
 
-        static std::shared_ptr<DesktopCapture> Make(const std::shared_ptr<MessageNotifier>& msg_notifier) {
+        static std::shared_ptr<DesktopCapture> Make(const std::shared_ptr<MessageNotifier>& msg_notifier, const std::string& monitor) {
             // windows
-            auto capture =  std::make_shared<DDACapture>(msg_notifier);
+            auto capture =  std::make_shared<DDACapture>(msg_notifier, monitor);
             capture->Init();
             return capture;
 

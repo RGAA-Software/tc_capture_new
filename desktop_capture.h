@@ -20,7 +20,7 @@ namespace tc
 
     class DesktopCapture {
     public:
-        explicit DesktopCapture(const std::shared_ptr<MessageNotifier>& msg_notifier);
+        explicit DesktopCapture(const std::shared_ptr<MessageNotifier>& msg_notifier, const std::string& monitor);
         virtual bool StartCapture() = 0;
         virtual void StopCapture() = 0;
         void SetCaptureMonitor(std::string& name);

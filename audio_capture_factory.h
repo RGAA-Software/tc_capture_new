@@ -19,9 +19,9 @@ namespace tc
     class AudioCaptureFactory {
     public:
 
-        static std::shared_ptr<IAudioCapture> Make() {
+        static std::shared_ptr<IAudioCapture> Make(const std::string& device_id) {
 #ifdef WIN32
-            return WASAPIAudioCapture::Make();
+            return WASAPIAudioCapture::Make(device_id);
 #endif
             return nullptr;
         }

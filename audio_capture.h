@@ -53,7 +53,6 @@ namespace tc
 		}
 
 	protected:
-
 		OnPrepareCallback prepare_callback_{nullptr };
 		OnFormatCallback format_callback_{nullptr };
 		OnDataCallback data_callback_{nullptr };
@@ -62,6 +61,7 @@ namespace tc
 		OnStopCallback stop_callback_{nullptr };
 
 		AudioFileSaverPtr file_saver_{nullptr };
+        std::string device_id_;
 	};
 
 	typedef std::shared_ptr<IAudioCapture> AudioCapturePtr;

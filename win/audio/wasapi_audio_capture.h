@@ -17,7 +17,7 @@ namespace tc
 
 	class WASAPIAudioCapture : public IAudioCapture {
 	public:
-		static AudioCapturePtr Make();
+		static AudioCapturePtr Make(const std::string& device_id);
 
 		int Prepare() override;
 		int StartRecording() override;

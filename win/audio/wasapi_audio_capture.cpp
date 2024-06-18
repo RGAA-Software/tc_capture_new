@@ -20,8 +20,10 @@ const IID IID_IAudioCaptureClient = __uuidof(IAudioCaptureClient);
 namespace tc
 {
 
-	AudioCapturePtr WASAPIAudioCapture::Make() {
-		return std::make_shared<WASAPIAudioCapture>();
+	AudioCapturePtr WASAPIAudioCapture::Make(const std::string& device_id) {
+		auto capture = std::make_shared<WASAPIAudioCapture>();
+        capture->device_id_ = device_id;
+        return capture;
 	}
 
 	int WASAPIAudioCapture::Prepare() {
@@ -52,7 +54,12 @@ namespace tc
         hr = CoCreateInstance(CLSID_MMDeviceEnumerator, nullptr, CLSCTX_ALL, IID_IMMDeviceEnumerator, (void**)&pEnumerator);
         EXIT_ON_ERROR(hr)
 
-        hr = pEnumerator->GetDefaultAudioEndpoint(eRender, eConsole, &pDevice);
+        if (device_id_.empty()) {
+            hr = pEnumerator->GetDefaultAudioEndpoint(eRender, eConsole, &pDevice);
+        } else {
+            hr = pEnumerator->GetDevice(StringExt::ToWString(device_id_).c_str(), &pDevice);
+            LOGI("Use target audio device id: {}", device_id_);
+        }
         EXIT_ON_ERROR(hr)
         pDevice->GetId(&pDeviceID);
         LOGI("Audio Id: {}", StringExt::ToUTF8(pDeviceID));

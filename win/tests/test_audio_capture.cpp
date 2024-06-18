@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
 }
 
 TEST(Test_audio_capture, capture) {
-    auto audio_capture = AudioCaptureFactory::Make();
+    auto audio_capture = AudioCaptureFactory::Make("");
     auto file_saver = std::make_shared<WAVAudioFileSaver>(L"test_record_audio.wav");
     audio_capture->SetAudioFileSaver(file_saver);
 

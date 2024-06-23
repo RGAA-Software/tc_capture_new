@@ -29,6 +29,9 @@ namespace tc
     bool DDACapture::Init() {
         HRESULT res = 0;
         int adapter_index = 0;
+        monitors_.clear();
+        win_monitors_.clear();
+        monitor_frame_index_.clear();
         res = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void **) &factory1_);
         if (res != S_OK) {
             LOGE("CreateDXGIFactory1 failed");
@@ -66,7 +69,6 @@ namespace tc
             DXGIOutputDuplication duplication{};
             dxgi_output_duplication_[i] = duplication;
         }
-
         win_monitors_ = EnumerateAllMonitors();
 
         for (int index = 0; index < monitor_count_; ++index) {
@@ -166,16 +168,19 @@ namespace tc
     }
 
     bool DDACapture::Exit() {
-        stop_flag_ = true;
-        if (capture_thread_.joinable()) {
-            capture_thread_.join();
+        for (auto& [idx, tex] : last_list_texture_) {
+            if (tex.texture2d_) {
+                tex.texture2d_->Release();
+            }
         }
+        last_list_texture_.clear();
         for (auto& [idx, dp]: dxgi_output_duplication_) {
             if (dp.duplication_) {
                 dp.duplication_->ReleaseFrame();
             }
             dp.duplication_.Release();
         }
+        dxgi_output_duplication_.clear();
         d3d11_device_.Release();
         d3d11_device_context_.Release();
         dxgi_output_.Release();
@@ -204,11 +209,9 @@ namespace tc
             if (res == DXGI_ERROR_WAIT_TIMEOUT) {
                 return CaptureResult::kTryAgain;
             } else if (res == DXGI_ERROR_ACCESS_LOST) {
-                Exit();
                 LOGE("DXGI_ERROR_ACCESS_LOST");
                 return CaptureResult::kReInit;
             } else if (res == DXGI_ERROR_INVALID_CALL) {
-                Exit();
                 printf("DXGI_ERROR_INVALID_CALL");
                 return CaptureResult::kReInit;
             }
@@ -269,6 +272,9 @@ namespace tc
                     continue;
                 } else if (res == DDACapture::CaptureResult::kReInit) {
                     LOGE("CaptureNextFrame reinit, index = {}.", index);
+                    Exit();
+                    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                    Init();
                     continue;
                 } else if (res == DDACapture::CaptureResult::kTryAgain) {
                     continue;
@@ -415,6 +421,10 @@ namespace tc
     }
 
     void DDACapture::StopCapture() {
+        stop_flag_ = true;
+        if (capture_thread_.joinable()) {
+            capture_thread_.join();
+        }
         this->Exit();
     }
 

@@ -168,11 +168,11 @@ namespace tc
     }
 
     bool DDACapture::Exit() {
-        for (auto& [idx, tex] : last_list_texture_) {
-            if (tex.texture2d_) {
-                tex.texture2d_->Release();
-            }
-        }
+        //for (auto& [idx, tex] : last_list_texture_) {
+        //    if (tex.texture2d_) {
+        //        tex.texture2d_->Release();
+        //    }
+        //}
         last_list_texture_.clear();
         for (auto& [idx, dp]: dxgi_output_duplication_) {
             if (dp.duplication_) {

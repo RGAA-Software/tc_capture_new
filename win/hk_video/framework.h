@@ -8,5 +8,3 @@
 #include <atlcom.h>
 #include <atlfile.h>
 #include <atlstr.h>
-
-#include <boost/scope_exit.hpp>

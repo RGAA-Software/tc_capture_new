@@ -72,7 +72,7 @@ bool HookD3D11::HookD3D(HMODULE d3d11_module) noexcept {
     if (nullptr == hwnd) {
         return false;
     }
-    BOOST_SCOPE_EXIT_ALL(&hwnd){DestroyWindow(hwnd);};
+    //BOOST_SCOPE_EXIT_ALL(&hwnd){DestroyWindow(hwnd);};
 
     DXGI_SWAP_CHAIN_DESC desc = {};
     desc.BufferCount = 2;

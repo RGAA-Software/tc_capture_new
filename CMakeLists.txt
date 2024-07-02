@@ -19,9 +19,6 @@ link_directories(${VCPKG_ROOT}/packages/jemalloc_x64-windows-static/lib)
 
 if (WIN32)
 
-    add_subdirectory(win/hk_obs)
-    add_subdirectory(win/hk_gpu_lb)
-
     ## capture
     set(CAPTURE_SRCS
         desktop_capture.h
@@ -59,8 +56,13 @@ if (WIN32)
         ## hk_audio
     )
 
-    add_library(tc_capture_library SHARED ${DLL_SRCS})
-    target_link_libraries(tc_capture_library tc_common_new EasyHook64 yuv Iphlpapi.lib PocoFoundationmt.lib)
+    if (ENABLE_HOOK_CAPTURE)
+        add_library(tc_capture_library SHARED ${DLL_SRCS})
+        target_link_libraries(tc_capture_library tc_common_new EasyHook64 yuv Iphlpapi.lib PocoFoundationmt.lib)
+
+        add_subdirectory(win/hk_obs)
+        add_subdirectory(win/hk_gpu_lb)
+    endif ()
 
 elseif (APPLE)
 

@@ -1,5 +1,5 @@
 //
-// Created by Administrator on 2024/1/18.
+// Created by RGAA  on 2024/1/18.
 //
 
 #ifndef TC_APPLICATION_DESKTOP_CAPTURE_H

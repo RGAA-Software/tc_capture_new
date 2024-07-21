@@ -1,5 +1,5 @@
 //
-// Created by Administrator on 2024/1/3.
+// Created by RGAA  on 2024/1/3.
 //
 
 #ifndef WIN_CAPTURE_MONITOR_UTIL_H

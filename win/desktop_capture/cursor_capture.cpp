@@ -8,6 +8,7 @@
 #include "tc_common_new/data.h"
 #include "capture_message.h"
 #include "tc_common_new/log.h"
+#include "tc_message.pb.h"
 
 namespace tc
 {
@@ -199,6 +200,57 @@ namespace tc
         cursor_bitmap.visible_ = (ci.flags & CURSOR_SHOWING) == CURSOR_SHOWING;
         cursor_bitmap.x_ = ci.ptScreenPos.x;
         cursor_bitmap.y_ = ci.ptScreenPos.y;
+
+        static HCURSOR cursor_arrow = LoadCursorW(nullptr, IDC_ARROW);
+        static HCURSOR cursor_ibeam = LoadCursorW(nullptr, IDC_IBEAM);
+        static HCURSOR cursor_wait = LoadCursorW(nullptr, IDC_WAIT);
+        static HCURSOR cursor_cross = LoadCursorW(nullptr, IDC_CROSS);
+        static HCURSOR cursor_uparrow = LoadCursorW(nullptr, IDC_UPARROW);
+        static HCURSOR cursor_size = LoadCursorW(nullptr, IDC_SIZE);
+        static HCURSOR cursor_icon = LoadCursorW(nullptr, IDC_ICON);
+        static HCURSOR cursor_sizenwse = LoadCursorW(nullptr, IDC_SIZENWSE);
+        static HCURSOR cursor_sizenesw = LoadCursorW(nullptr, IDC_SIZENESW);
+        static HCURSOR cursor_sizewe = LoadCursorW(nullptr, IDC_SIZEWE);
+        static HCURSOR cursor_sizens = LoadCursorW(nullptr, IDC_SIZENS);
+        static HCURSOR cursor_sizeall = LoadCursorW(nullptr, IDC_SIZEALL);
+        static HCURSOR cursor_hand = LoadCursorW(nullptr, IDC_HAND);
+        static HCURSOR cursor_help = LoadCursorW(nullptr, IDC_HELP);
+        static HCURSOR cursor_pin = LoadCursorW(nullptr, IDC_PIN);
+        static HCURSOR cursor_person = LoadCursorW(nullptr, IDC_PERSON);
+
+        if (ci.hCursor == cursor_arrow) {
+            cursor_bitmap.type_ = CursorInfoSync::kIdcArrow;
+        } else if (ci.hCursor == cursor_ibeam) {
+            cursor_bitmap.type_ = CursorInfoSync::kIdcIBeam;
+        } else if (ci.hCursor == cursor_wait) {
+            cursor_bitmap.type_ = CursorInfoSync::kIdcWait;
+        } else if (ci.hCursor == cursor_cross) {
+            cursor_bitmap.type_ = CursorInfoSync::kIdcCross;
+        } else if (ci.hCursor == cursor_uparrow) {
+            cursor_bitmap.type_ = CursorInfoSync::kIdcUpArrow;
+        } else if (ci.hCursor == cursor_size) {
+            cursor_bitmap.type_ = CursorInfoSync::kIdcSize;
+        } else if (ci.hCursor == cursor_icon) {
+            cursor_bitmap.type_ = CursorInfoSync::kIdcIcon;
+        } else if (ci.hCursor == cursor_sizenwse) {
+            cursor_bitmap.type_ = CursorInfoSync::kIdcSizeNWSE;
+        } else if (ci.hCursor == cursor_sizenesw) {
+            cursor_bitmap.type_ = CursorInfoSync::kIdcSizeNESW;
+        } else if (ci.hCursor == cursor_sizewe) {
+            cursor_bitmap.type_ = CursorInfoSync::kIdcSizeWE;
+        } else if (ci.hCursor == cursor_sizens) {
+            cursor_bitmap.type_ = CursorInfoSync::kIdcSizeNS;
+        } else if (ci.hCursor == cursor_sizeall) {
+            cursor_bitmap.type_ = CursorInfoSync::kIdcSizeAll;
+        } else if (ci.hCursor == cursor_hand) {
+            cursor_bitmap.type_ = CursorInfoSync::kIdcHand;
+        } else if (ci.hCursor == cursor_help) {
+            cursor_bitmap.type_ = CursorInfoSync::kIdcHelp;
+        } else if (ci.hCursor == cursor_pin) {
+            cursor_bitmap.type_ = CursorInfoSync::kIdcPin;
+        } else if (ci.hCursor == cursor_person) {
+            cursor_bitmap.type_ = CursorInfoSync::kIdcPerson;
+        }
 
         // RGB Data
         icon = CopyIcon(ci.hCursor);

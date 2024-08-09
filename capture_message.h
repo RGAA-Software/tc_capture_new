@@ -157,6 +157,7 @@ namespace tc
         int32_t y_ = 0;
         bool visible_ = true;
         std::shared_ptr<Data> data_ = nullptr;
+        uint32_t type_;
     };
 
     //

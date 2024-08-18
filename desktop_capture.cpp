@@ -13,7 +13,7 @@ namespace tc
 
     DesktopCapture::DesktopCapture(const std::shared_ptr<MessageNotifier>& msg_notifier, const std::string& monitor) {
         msg_notifier_ = msg_notifier;
-        capture_monitor_ = monitor;
+        capturing_monitor_ = monitor;
         msg_listener_ = msg_notifier->CreateListener();
         msg_listener_->Listen<RefreshScreenMessage>([](const RefreshScreenMessage& msg) {
             tc::DesktopCapture::RefreshScreen();
@@ -21,7 +21,7 @@ namespace tc
     }
 
     void DesktopCapture::SetCaptureMonitor(std::string& name) {
-        capture_monitor_ = name;
+        capturing_monitor_ = name;
     }
 
     void DesktopCapture::SetCaptureFps(int fps) {

@@ -33,7 +33,7 @@ namespace tc
     protected:
         std::shared_ptr<MessageNotifier> msg_notifier_ = nullptr;
         std::shared_ptr<MessageListener> msg_listener_ = nullptr;
-        std::string capture_monitor_;
+        std::string capturing_monitor_;
         int capture_fps_ = 60;
         std::vector<CaptureMonitorInfo> sorted_monitors_;
     };

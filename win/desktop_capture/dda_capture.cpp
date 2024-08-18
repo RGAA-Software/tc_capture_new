@@ -241,13 +241,13 @@ namespace tc
                 continue;
             }
 
-            if (dxgi_monitor.name_ == capture_monitor_ && !capture_monitor_.empty()) {
+            if (dxgi_monitor.name_ == capturing_monitor_ && !capturing_monitor_.empty()) {
                 return true;
             }
 
             for (const auto& win_monitor : win_monitors_) {
                 // to capture primary monitor when no monitor specified
-                if (capture_monitor_.empty()) {
+                if (capturing_monitor_.empty()) {
                     if (win_monitor.is_primary_ && win_monitor.name_ == dxgi_monitor.name_) {
                         return true;
                     } else {
@@ -465,6 +465,7 @@ namespace tc
 
         msg_notifier_->SendAppMessage(CaptureMonitorInfoMessage {
             .monitors_ = sorted_monitors_,
+            .capturing_monitor_ = this->capturing_monitor_,
         });
 
     }

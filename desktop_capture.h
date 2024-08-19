@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <mutex>
 #if WIN32
 #include "win/desktop_capture/monitor_util.h"
 #endif
@@ -23,9 +24,10 @@ namespace tc
         explicit DesktopCapture(const std::shared_ptr<MessageNotifier>& msg_notifier, const std::string& monitor);
         virtual bool StartCapture() = 0;
         virtual void StopCapture() = 0;
-        void SetCaptureMonitor(std::string& name);
+        void SetCaptureMonitor(int index, const std::string& name);
         void SetCaptureFps(int fps);
         std::vector<CaptureMonitorInfo> GetCaptureMonitorInfo();
+        void SendCapturingMonitorMessage();
 
     private:
         static void RefreshScreen();
@@ -33,7 +35,9 @@ namespace tc
     protected:
         std::shared_ptr<MessageNotifier> msg_notifier_ = nullptr;
         std::shared_ptr<MessageListener> msg_listener_ = nullptr;
-        std::string capturing_monitor_;
+        std::mutex capturing_monitor_mtx_;
+        std::string capturing_monitor_name_;
+        int capturing_monitor_index_ = 0;
         int capture_fps_ = 60;
         std::vector<CaptureMonitorInfo> sorted_monitors_;
     };

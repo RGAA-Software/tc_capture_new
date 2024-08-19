@@ -172,7 +172,7 @@ namespace tc
     class CaptureMonitorInfoMessage : public CaptureBaseMessage {
     public:
         std::vector<CaptureMonitorInfo> monitors_;
-        std::string capturing_monitor_;
+        std::string capturing_monitor_name_;
     };
 
     class RefreshScreenMessage {

@@ -13,15 +13,17 @@ namespace tc
 
     DesktopCapture::DesktopCapture(const std::shared_ptr<MessageNotifier>& msg_notifier, const std::string& monitor) {
         msg_notifier_ = msg_notifier;
-        capturing_monitor_ = monitor;
+        capturing_monitor_name_ = monitor;
         msg_listener_ = msg_notifier->CreateListener();
         msg_listener_->Listen<RefreshScreenMessage>([](const RefreshScreenMessage& msg) {
             tc::DesktopCapture::RefreshScreen();
         });
     }
 
-    void DesktopCapture::SetCaptureMonitor(std::string& name) {
-        capturing_monitor_ = name;
+    void DesktopCapture::SetCaptureMonitor(int index, const std::string& name) {
+        std::lock_guard<std::mutex> lk(capturing_monitor_mtx_);
+        capturing_monitor_index_ = index;
+        capturing_monitor_name_ = name;
     }
 
     void DesktopCapture::SetCaptureFps(int fps) {
@@ -35,6 +37,13 @@ namespace tc
     void DesktopCapture::RefreshScreen() {
         SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, nullptr, SPIF_SENDCHANGE);
         SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
+    }
+
+    void DesktopCapture::SendCapturingMonitorMessage() {
+        msg_notifier_->SendAppMessage(CaptureMonitorInfoMessage {
+            .monitors_ = sorted_monitors_,
+            .capturing_monitor_name_ = this->capturing_monitor_name_,
+        });
     }
 
 }

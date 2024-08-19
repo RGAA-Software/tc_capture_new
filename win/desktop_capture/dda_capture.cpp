@@ -249,6 +249,8 @@ namespace tc
                 // to capture primary monitor when no monitor specified
                 if (capturing_monitor_name_.empty()) {
                     if (win_monitor.is_primary_ && win_monitor.name_ == dxgi_monitor.name_) {
+                        capturing_monitor_name_ = win_monitor.name_;
+                        capturing_monitor_index_ = idx;
                         return true;
                     } else {
                         continue;

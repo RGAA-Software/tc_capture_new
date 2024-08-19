@@ -28,6 +28,8 @@ namespace tc
         void SetCaptureFps(int fps);
         std::vector<CaptureMonitorInfo> GetCaptureMonitorInfo();
         void SendCapturingMonitorMessage();
+        int GetCapturingMonitorIndex() const;
+        std::string GetCapturingMonitorName();
 
     private:
         static void RefreshScreen();

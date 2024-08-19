@@ -46,4 +46,12 @@ namespace tc
         });
     }
 
+    int DesktopCapture::GetCapturingMonitorIndex() const {
+        return capturing_monitor_index_;
+    }
+
+    std::string DesktopCapture::GetCapturingMonitorName() {
+        return capturing_monitor_name_;
+    }
+
 }

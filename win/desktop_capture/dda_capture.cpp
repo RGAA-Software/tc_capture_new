@@ -263,12 +263,14 @@ namespace tc
 
     void DDACapture::Capture() {
         while (!stop_flag_) {
+            int64_t target_duration = 1000 / capture_fps_;
+            int64_t beg = TimeExt::GetCurrentTimestamp();
             for (uint8_t index = 0; index < monitor_count_; ++index) {
                 if (!IsTargetMonitor(index)) {
                     continue;
                 }
                 CComPtr<ID3D11Texture2D> texture = nullptr;
-                DDACapture::CaptureResult res = CaptureNextFrame(1000 / capture_fps_, texture, index);
+                DDACapture::CaptureResult res = CaptureNextFrame(target_duration, texture, index);
                 if (res == DDACapture::CaptureResult::kFailed) {
                     LOGE("CaptureNextFrame index = {} failed.", index);
                     continue;
@@ -291,6 +293,13 @@ namespace tc
 
             if (cursor_capture_) {
                 cursor_capture_->Capture();
+            }
+            int64_t end = TimeExt::GetCurrentTimestamp();
+            int64_t used_time = end - beg;
+            int64_t diff = target_duration - used_time;
+            // todo : more precise delay function.
+            if (diff > 5) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(diff));
             }
         }
     }

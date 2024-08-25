@@ -90,9 +90,10 @@ namespace tc
             DXGI_OUTPUT_DESC output_desc{};
             res = output->GetDesc(&output_desc);
             if (res == S_OK) {
+                auto dev_name = StringExt::ToUTF8(output_desc.DeviceName);
                 monitors_.insert({index, CaptureMonitorInfo {
                     .index_ = (MonitorIndex)index,
-                    .name_ = StringExt::ToUTF8(output_desc.DeviceName),
+                    .name_ = dev_name,
                     .attached_desktop_ = (bool)output_desc.AttachedToDesktop,
                     .top_ = output_desc.DesktopCoordinates.top,
                     .left_ = output_desc.DesktopCoordinates.left,
@@ -102,6 +103,11 @@ namespace tc
                 dxgi_output_duplication_[index].output_desc_ = output_desc;
                 dxgi_output_duplication_[index].monitor_win_info_ = monitors_[index];
                 LOGI("{}", monitors_[index].Dump());
+
+                if (dev_name == capturing_monitor_name_) {
+                    capturing_monitor_index_ = index;
+                    LOGI("Capture monitor index: {}, name: {}", capturing_monitor_index_, capturing_monitor_name_);
+                }
 
                 auto func_valid_rect = [](const RECT &rect) -> bool {
                     return rect.right > rect.left && rect.bottom > rect.top;
@@ -162,7 +168,7 @@ namespace tc
         }
 
         CalculateVirtualDeskInfo();
-
+        SendCapturingMonitorMessage();
         LOGI("Init DDA successfully.");
         return true;
     }
@@ -242,6 +248,7 @@ namespace tc
             }
 
             if (dxgi_monitor.name_ == capturing_monitor_name_ && !capturing_monitor_name_.empty()) {
+                capturing_monitor_index_ = idx;
                 return true;
             }
 
@@ -263,8 +270,8 @@ namespace tc
 
     void DDACapture::Capture() {
         while (!stop_flag_) {
-            int64_t target_duration = 1000 / capture_fps_;
-            int64_t beg = TimeExt::GetCurrentTimestamp();
+            auto target_duration = 1000 / capture_fps_;
+            auto beg = (int64_t)TimeExt::GetCurrentTimestamp();
             for (uint8_t index = 0; index < monitor_count_; ++index) {
                 if (!IsTargetMonitor(index)) {
                     continue;
@@ -473,7 +480,6 @@ namespace tc
                  info.virtual_width_, info.virtual_height_, info.virtual_left_, info.virtual_right_, info.virtual_top_, info.virtual_bottom_,
                  info.virtual_bottom_ - info.virtual_top_);
         }
-        SendCapturingMonitorMessage();
     }
 
 } // tc

@@ -313,7 +313,6 @@ namespace tc
 
     void DDACapture::OnCaptureFrame(ID3D11Texture2D *texture, uint8_t monitor_index) {
         HRESULT result;
-
         // input texture info
         D3D11_TEXTURE2D_DESC input_desc;
         texture->GetDesc(&input_desc);
@@ -398,30 +397,30 @@ namespace tc
     }
 
     void DDACapture::SendTextureHandle(const HANDLE &shared_handle, MonitorIndex monitor_index, uint32_t width, uint32_t height, DXGI_FORMAT format) {
-        if (msg_notifier_) {
-            CaptureVideoFrame cap_video_frame{};
-            cap_video_frame.type_ = kCaptureVideoFrame;
-            cap_video_frame.capture_type_ = kCaptureVideoByHandle;
-            cap_video_frame.data_length = 0;
-            cap_video_frame.frame_width_ = width;
-            cap_video_frame.frame_height_ = height;
-            cap_video_frame.frame_index_ = GetFrameIndex(monitor_index);
-            cap_video_frame.handle_ = reinterpret_cast<uint64_t>(shared_handle);
-            cap_video_frame.frame_format_ = format;
-            cap_video_frame.adapter_uid_ = adapter_uid_;
-            cap_video_frame.monitor_index_ = static_cast<int8_t>(monitor_index);
-            auto mon_win_info = dxgi_output_duplication_[monitor_index].monitor_win_info_;
-            if (mon_win_info.Valid()) {
-                memset(cap_video_frame.display_name_, 0, sizeof(cap_video_frame.display_name_));
-                memcpy(cap_video_frame.display_name_, mon_win_info.name_.c_str(), mon_win_info.name_.size());
-                cap_video_frame.left_ = mon_win_info.left_;
-                cap_video_frame.top_ = mon_win_info.top_;
-                cap_video_frame.right_ = mon_win_info.right_;
-                cap_video_frame.bottom_ = mon_win_info.bottom_;
-            }
-
-            msg_notifier_->SendAppMessage(cap_video_frame);
+        if (!msg_notifier_) {
+            return;
         }
+        CaptureVideoFrame cap_video_frame{};
+        cap_video_frame.type_ = kCaptureVideoFrame;
+        cap_video_frame.capture_type_ = kCaptureVideoByHandle;
+        cap_video_frame.data_length = 0;
+        cap_video_frame.frame_width_ = width;
+        cap_video_frame.frame_height_ = height;
+        cap_video_frame.frame_index_ = GetFrameIndex(monitor_index);
+        cap_video_frame.handle_ = reinterpret_cast<uint64_t>(shared_handle);
+        cap_video_frame.frame_format_ = format;
+        cap_video_frame.adapter_uid_ = adapter_uid_;
+        cap_video_frame.monitor_index_ = static_cast<int8_t>(monitor_index);
+        auto mon_win_info = dxgi_output_duplication_[monitor_index].monitor_win_info_;
+        if (mon_win_info.Valid()) {
+            memset(cap_video_frame.display_name_, 0, sizeof(cap_video_frame.display_name_));
+            memcpy(cap_video_frame.display_name_, mon_win_info.name_.c_str(), mon_win_info.name_.size());
+            cap_video_frame.left_ = mon_win_info.left_;
+            cap_video_frame.top_ = mon_win_info.top_;
+            cap_video_frame.right_ = mon_win_info.right_;
+            cap_video_frame.bottom_ = mon_win_info.bottom_;
+        }
+        msg_notifier_->SendAppMessage(cap_video_frame);
     }
 
     int DDACapture::GetFrameIndex(MonitorIndex monitor_index) {

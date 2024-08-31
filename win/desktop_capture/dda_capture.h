@@ -64,6 +64,7 @@ namespace tc
         int GetFrameIndex(MonitorIndex monitor_index);
         bool IsTargetMonitor(int index);
         void CalculateVirtualDeskInfo();
+        std::vector<SupportedResolution> GetSupportedResolutions(const std::wstring& name);
 
     private:
         std::atomic<bool> stop_flag_ = false;

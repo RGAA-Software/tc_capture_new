@@ -99,6 +99,7 @@ namespace tc
                     .left_ = output_desc.DesktopCoordinates.left,
                     .right_ = output_desc.DesktopCoordinates.right,
                     .bottom_ = output_desc.DesktopCoordinates.bottom,
+                    .supported_res_ = GetSupportedResolutions(output_desc.DeviceName),
                 }});
                 dxgi_output_duplication_[index].output_desc_ = output_desc;
                 dxgi_output_duplication_[index].monitor_win_info_ = monitors_[index];
@@ -450,7 +451,7 @@ namespace tc
         int total_width = 0;
         int max_height = 0;
         int max_virtual_coord = 65535;
-        for (const auto& [idx, info] : monitors_) {
+        for (auto& [idx, info] : monitors_) {
             sorted_monitors_.push_back(info);
             total_width += info.Width();
             if (info.Height() > max_height) {
@@ -479,6 +480,31 @@ namespace tc
                  info.virtual_width_, info.virtual_height_, info.virtual_left_, info.virtual_right_, info.virtual_top_, info.virtual_bottom_,
                  info.virtual_bottom_ - info.virtual_top_);
         }
+    }
+
+    std::vector<SupportedResolution> DDACapture::GetSupportedResolutions(const std::wstring& name) {
+        std::vector<SupportedResolution> resolutions;
+        DEVMODE dm;
+        dm.dmSize = sizeof(dm);
+        dm.dmDriverExtra = 0;
+        int mode_num = 0;
+        while (EnumDisplaySettingsExW(name.c_str(), mode_num, &dm, 0)) {
+            mode_num++;
+            bool found = false;
+            for (auto& res : resolutions) {
+                if (res.width_ == dm.dmPelsWidth && res.height_ == dm.dmPelsHeight) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                resolutions.push_back(SupportedResolution{
+                    .width_ = dm.dmPelsWidth,
+                    .height_ = dm.dmPelsHeight,
+                });
+            }
+        }
+        return resolutions;
     }
 
 } // tc

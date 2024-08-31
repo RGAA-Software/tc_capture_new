@@ -15,6 +15,12 @@ namespace tc
 {
     using MonitorIndex = uint32_t;
 
+    class SupportedResolution {
+    public:
+        unsigned long width_ = 0;
+        unsigned long height_ = 0;
+    };
+
     class CaptureMonitorInfo {
     public:
         MonitorIndex index_{};
@@ -30,6 +36,7 @@ namespace tc
         long virtual_bottom_{};
         long virtual_width_;
         long virtual_height_;
+        std::vector<SupportedResolution> supported_res_;
     public:
 
         [[nodiscard]] long Width() const {

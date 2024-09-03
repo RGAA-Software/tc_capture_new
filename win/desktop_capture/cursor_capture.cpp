@@ -142,7 +142,7 @@ namespace tc
         return output;
     }
 
-    static void reshape_image_rgba_order(CaptureCursorBitmap *cursor) {
+    static void reorder_rgba(CaptureCursorBitmap *cursor) {
         int offset = 0;
         for (int row = 0; row < cursor->height_; ++row) {
             for (int col = 0; col < cursor->width_; ++col) {
@@ -255,7 +255,7 @@ namespace tc
         // RGB Data
         icon = CopyIcon(ci.hCursor);
         if (CaptureCursorIcon(&cursor_bitmap, icon)) {
-            reshape_image_rgba_order(&cursor_bitmap);
+            reorder_rgba(&cursor_bitmap);
         } else {
             return;
         }

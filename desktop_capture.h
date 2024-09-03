@@ -32,7 +32,7 @@ namespace tc
         std::string GetCapturingMonitorName();
 
     private:
-        static void RefreshScreen();
+        void RefreshScreen();
 
     protected:
         std::shared_ptr<MessageNotifier> msg_notifier_ = nullptr;
@@ -42,6 +42,7 @@ namespace tc
         int capturing_monitor_index_ = 0;
         int capture_fps_ = 60;
         std::vector<CaptureMonitorInfo> sorted_monitors_;
+        bool refresh_screen_ = false;
     };
 }
 

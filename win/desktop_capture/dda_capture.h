@@ -77,6 +77,7 @@ namespace tc
 
         std::map<MonitorIndex, SharedD3d11Texture2D> last_list_texture_;
         std::map<MonitorIndex, DXGIOutputDuplication> dxgi_output_duplication_;
+        std::map<MonitorIndex, CComPtr<ID3D11Texture2D>> cached_textures_;
         CComPtr<IDXGIFactory1> factory1_ = nullptr;
         CComPtr<IDXGIAdapter1> adapter1_ = nullptr;
         CComPtr<IDXGIOutput> dxgi_output_ = nullptr;

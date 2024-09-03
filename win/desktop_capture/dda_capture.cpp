@@ -289,7 +289,15 @@ namespace tc
                     Init();
                     continue;
                 } else if (res == DDACapture::CaptureResult::kTryAgain) {
-                    continue;
+                    if (refresh_screen_) {
+                        refresh_screen_ = false;
+                        if (cached_textures_.find(index) != cached_textures_.end()) {
+                            texture = cached_textures_[index];
+                            LOGI("Use cached texture!");
+                        }
+                    } else {
+                        continue;
+                    }
                 }
 
                 if (texture) {
@@ -374,6 +382,19 @@ namespace tc
                 return;
             }
             last_list_texture_[monitor_index].shared_handle_ = handle;
+
+            // cached textures
+            if (cached_textures_.find(monitor_index) != cached_textures_.end()) {
+                cached_textures_.erase(monitor_index);
+            }
+            CComPtr<ID3D11Texture2D> cached_texture;
+            result = d3d11_device_->CreateTexture2D(&create_desc, nullptr, &cached_texture);
+            if (FAILED(result)) {
+                LOGE("create cached texture failed with:{}", StringExt::GetErrorStr(result).c_str());
+                return;
+            }
+            cached_textures_[monitor_index] = cached_texture;
+            LOGI("Create cached texture success: {}", monitor_index);
         }
 
         ComPtr<IDXGIKeyedMutex> keyMutex;
@@ -389,6 +410,7 @@ namespace tc
         }
 
         d3d11_device_context_->CopyResource(last_list_texture_[monitor_index].texture2d_.Get(), texture);
+        d3d11_device_context_->CopyResource(cached_textures_[monitor_index], texture);
 
         if (keyMutex) {
             keyMutex->ReleaseSync(0);

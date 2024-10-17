@@ -314,9 +314,9 @@ namespace tc
             int64_t used_time = end - beg;
             int64_t diff = target_duration - used_time;
             // todo : more precise delay function.
-            if (diff > 5) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(diff));
-            }
+            //if (diff > 5) {
+                //std::this_thread::sleep_for(std::chrono::milliseconds(diff));
+            //}
         }
     }
 

@@ -61,7 +61,7 @@ if (WIN32)
 
     if (ENABLE_HOOK_CAPTURE)
         add_library(tc_capture_library SHARED ${DLL_SRCS})
-        target_link_libraries(tc_capture_library tc_common_new EasyHook64 Iphlpapi.lib PocoFoundationmt.lib) #yuv
+        target_link_libraries(tc_capture_library tc_common_new EasyHook64 Iphlpapi.lib) #yuv PocoFoundationmt.lib
 
         add_subdirectory(win/hk_obs)
         add_subdirectory(win/hk_gpu_lb)

@@ -33,42 +33,42 @@ namespace tc
         auto mtx_host_to_client_name = "mtx_host_to_client_" + std::to_string(this->pid_);
         auto mtx_client_to_host_name = "mtx_client_to_host_" + std::to_string(this->pid_);
 
-        host_to_client_event_ = std::make_shared<Poco::NamedEvent>(ipc_event_host_to_client_name);
-        client_to_host_event_ = std::make_shared<Poco::NamedEvent>(ipc_event_client_to_host_name);
-
-        client_to_host_shm_ = std::make_shared<Poco::SharedMemory>(ipc_shm_client_to_host_name, shm_buffer_size, Poco::SharedMemory::AccessMode::AM_WRITE);
-        LOGI("Shm buffer size: {}", shm_buffer_size);
-
-        host_to_client_mtx_ = std::make_shared<Poco::NamedMutex>(mtx_host_to_client_name);
-        client_to_host_mtx_ = std::make_shared<Poco::NamedMutex>(mtx_client_to_host_name);
+//        host_to_client_event_ = std::make_shared<Poco::NamedEvent>(ipc_event_host_to_client_name);
+//        client_to_host_event_ = std::make_shared<Poco::NamedEvent>(ipc_event_client_to_host_name);
+//
+//        client_to_host_shm_ = std::make_shared<Poco::SharedMemory>(ipc_shm_client_to_host_name, shm_buffer_size, Poco::SharedMemory::AccessMode::AM_WRITE);
+//        LOGI("Shm buffer size: {}", shm_buffer_size);
+//
+//        host_to_client_mtx_ = std::make_shared<Poco::NamedMutex>(mtx_host_to_client_name);
+//        client_to_host_mtx_ = std::make_shared<Poco::NamedMutex>(mtx_client_to_host_name);
     }
 
     static uint64_t last_send_time = TimeExt::GetCurrentTimestamp();
 
     void ClientIpcManager::Send(const char* data, int size) {
         std::lock_guard<std::mutex> guard(shm_send_mtx_);
-
-        if (size > shm_buffer_size_) {
-            return;
-        }
-
-        auto current_time = TimeExt::GetCurrentTimestamp();
-        auto diff = current_time - last_send_time;
-        last_send_time = current_time;
-        //LOGI("diff: {}", diff);
-
-        client_to_host_mtx_->lock();
-        auto begin = client_to_host_shm_->begin();
-        auto header = FixHeader {
-            .buffer_length = static_cast<uint32_t>(size),
-            .buffer_index = buffer_index_++,
-            .buffer_timestamp = TimeExt::GetCurrentTimePointUS(),
-        };
-        memcpy(begin, (char*)&header, sizeof(FixHeader));
-        memcpy(begin + sizeof(FixHeader), data, size);
-        client_to_host_mtx_->unlock();
-
-        client_to_host_event_->set();
+//
+//        if (size > shm_buffer_size_) {
+//            return;
+//        }
+//
+//        auto current_time = TimeExt::GetCurrentTimestamp();
+//        auto diff = current_time - last_send_time;
+//        last_send_time = current_time;
+//        //LOGI("diff: {}", diff);
+//
+//        client_to_host_mtx_->lock();
+//        auto begin = client_to_host_shm_->begin();
+//        auto header = FixHeader {
+//            .buffer_length = static_cast<uint32_t>(size),
+//            .buffer_index = buffer_index_++,
+//            .buffer_timestamp = TimeExt::GetCurrentTimePointUS(),
+//        };
+//        memcpy(begin, (char*)&header, sizeof(FixHeader));
+//        memcpy(begin + sizeof(FixHeader), data, size);
+//        client_to_host_mtx_->unlock();
+//
+//        client_to_host_event_->set();
     }
 
     void ClientIpcManager::Send(const std::shared_ptr<Data>& data) {
@@ -108,35 +108,35 @@ namespace tc
     }
 
     void ClientIpcManager::WaitForMessage() {
-        recv_thread_ = std::make_shared<std::thread>([=, this] () {
-            while(!exit_) {
-                host_to_client_event_->wait();
-                if (!host_to_client_shm_) {
-                    auto ipc_shm_host_to_client_name = "ipc_shm_host_to_client_" + std::to_string(pid_);
-                    host_to_client_shm_ = std::make_shared<Poco::SharedMemory>(ipc_shm_host_to_client_name, kHostToClientShmSize, Poco::SharedMemory::AccessMode::AM_READ);
-                }
-                host_to_client_mtx_->lock();
-                auto begin = host_to_client_shm_->begin();
-                auto header = (FixHeader*)begin;
-                auto buffer = Data::Make(begin + sizeof(FixHeader), (int)header->buffer_length);
-                host_to_client_mtx_->unlock();
-                auto parsed_message = this->ParseMessage(std::move(buffer));
-
-                auto in_msg = std::get<0>(parsed_message);
-                auto in_data = std::get<1>(parsed_message);
-                if (!in_msg) {
-                    LOGE("Error message in .");
-                    continue;
-                }
-
-                if (in_msg->type_ == kCaptureHelloMessage && ipc_hello_msg_callback_) {
-                    ipc_hello_msg_callback_(std::move(std::static_pointer_cast<CaptureHelloMessage>(in_msg)));
-                }
-                else if (in_msg && ipc_msg_callback_) {
-                    ipc_msg_callback_(in_msg, in_data);
-                }
-            }
-        });
+//        recv_thread_ = std::make_shared<std::thread>([=, this] () {
+//            while(!exit_) {
+//                host_to_client_event_->wait();
+//                if (!host_to_client_shm_) {
+//                    auto ipc_shm_host_to_client_name = "ipc_shm_host_to_client_" + std::to_string(pid_);
+//                    host_to_client_shm_ = std::make_shared<Poco::SharedMemory>(ipc_shm_host_to_client_name, kHostToClientShmSize, Poco::SharedMemory::AccessMode::AM_READ);
+//                }
+//                host_to_client_mtx_->lock();
+//                auto begin = host_to_client_shm_->begin();
+//                auto header = (FixHeader*)begin;
+//                auto buffer = Data::Make(begin + sizeof(FixHeader), (int)header->buffer_length);
+//                host_to_client_mtx_->unlock();
+//                auto parsed_message = this->ParseMessage(std::move(buffer));
+//
+//                auto in_msg = std::get<0>(parsed_message);
+//                auto in_data = std::get<1>(parsed_message);
+//                if (!in_msg) {
+//                    LOGE("Error message in .");
+//                    continue;
+//                }
+//
+//                if (in_msg->type_ == kCaptureHelloMessage && ipc_hello_msg_callback_) {
+//                    ipc_hello_msg_callback_(std::move(std::static_pointer_cast<CaptureHelloMessage>(in_msg)));
+//                }
+//                else if (in_msg && ipc_msg_callback_) {
+//                    ipc_msg_callback_(in_msg, in_data);
+//                }
+//            }
+//        });
     }
 
     void ClientIpcManager::Exit() {

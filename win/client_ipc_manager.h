@@ -11,9 +11,9 @@
 #include <mutex>
 #include <functional>
 
-#include <Poco/NamedEvent.h>
-#include <Poco/SharedMemory.h>
-#include <Poco/NamedMutex.h>
+//#include <Poco/NamedEvent.h>
+//#include <Poco/SharedMemory.h>
+//#include <Poco/NamedMutex.h>
 #include "tc_capture_new/capture_message.h"
 
 namespace tc
@@ -77,13 +77,13 @@ namespace tc
         uint32_t shm_buffer_size_ = 0;
         std::shared_ptr<std::thread> recv_thread_ = nullptr;
 
-        std::shared_ptr<Poco::NamedEvent> client_to_host_event_ = nullptr;
-        std::shared_ptr<Poco::SharedMemory> client_to_host_shm_ = nullptr;
-        std::shared_ptr<Poco::NamedMutex> client_to_host_mtx_ = nullptr;
-
-        std::shared_ptr<Poco::NamedEvent> host_to_client_event_ = nullptr;
-        std::shared_ptr<Poco::SharedMemory> host_to_client_shm_ = nullptr;
-        std::shared_ptr<Poco::NamedMutex> host_to_client_mtx_ = nullptr;
+//        std::shared_ptr<Poco::NamedEvent> client_to_host_event_ = nullptr;
+//        std::shared_ptr<Poco::SharedMemory> client_to_host_shm_ = nullptr;
+//        std::shared_ptr<Poco::NamedMutex> client_to_host_mtx_ = nullptr;
+//
+//        std::shared_ptr<Poco::NamedEvent> host_to_client_event_ = nullptr;
+//        std::shared_ptr<Poco::SharedMemory> host_to_client_shm_ = nullptr;
+//        std::shared_ptr<Poco::NamedMutex> host_to_client_mtx_ = nullptr;
 
         std::mutex shm_send_mtx_;
 

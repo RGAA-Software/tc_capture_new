@@ -204,6 +204,7 @@ namespace tc
         CaptureResult ret = CaptureResult::kSuccess;
         if (!dxgi_output_duplication_[mon_idx].duplication_) {
             if (!Init()) {
+                msg_notifier_->SendAppMessage(CaptureInitFailedMessage{});
                 std::this_thread::sleep_for(std::chrono::seconds(1));
                 return CaptureResult::kTryAgain;
             }
@@ -286,7 +287,11 @@ namespace tc
                     LOGE("CaptureNextFrame reinit, index = {}.", index);
                     Exit();
                     std::this_thread::sleep_for(std::chrono::milliseconds(200));
-                    Init();
+                    auto init_ok = Init();
+                    if (!init_ok) {
+                        msg_notifier_->SendAppMessage(CaptureInitFailedMessage{});
+                        LOGE("DDA re-init failed!");
+                    }
                     continue;
                 } else if (res == DDACapture::CaptureResult::kTryAgain) {
                     if (refresh_screen_) {

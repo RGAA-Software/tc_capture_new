@@ -179,6 +179,10 @@ namespace tc
     public:
     };
 
+    class CaptureInitFailedMessage {
+    public:
+    };
+
 }
 
 #endif //TC_APPLICATION_CAPTURE_MESSAGE_H

@@ -9,7 +9,7 @@
 #include <string>
 #include <string>
 #include <sstream>
-#include "tc_common_new/string_ext.h"
+#include <vector>
 
 namespace tc
 {

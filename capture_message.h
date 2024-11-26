@@ -15,6 +15,7 @@ namespace tc
     // type_
     // dll -> app
     class Data;
+    class Image;
 
     constexpr auto kCaptureVideoFrame = 0x0001;
     // dll -> app
@@ -60,6 +61,7 @@ namespace tc
         int top_{};
         int right_{};
         int bottom_{};
+        std::shared_ptr<Image> raw_image_ = nullptr;
     };
 
     class CaptureAudioFrame: public CaptureBaseMessage {

@@ -71,6 +71,12 @@ namespace tc
         }
     public:
         uint64_t frame_index_{};
+        uint32_t samples_ = 0;
+        uint32_t channels_ = 0;
+        uint32_t bits_ = 0;
+        std::shared_ptr<Data> full_data_ = nullptr;
+        std::shared_ptr<Data> left_ch_data_ = nullptr;
+        std::shared_ptr<Data> right_ch_data_ = nullptr;
     };
 
     class CaptureDebugInfo : public CaptureBaseMessage {

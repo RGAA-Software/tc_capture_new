@@ -17,7 +17,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/win/hk_obs/d3d8_api)
 
 #find_package(libyuv CONFIG REQUIRED)
 
-link_directories(${VCPKG_ROOT}/installed/x64-windows-static/lib)
+#link_directories(${VCPKG_ROOT}/installed/x64-windows-static/lib)
 link_directories(${VCPKG_ROOT}/packages/jemalloc_x64-windows-static/lib)
 
 if (WIN32)
@@ -61,7 +61,7 @@ if (WIN32)
 
     if (ENABLE_HOOK_CAPTURE)
         #add_library(tc_capture_library SHARED ${DLL_SRCS})
-        #target_link_libraries(tc_capture_library tc_common_new EasyHook64 Iphlpapi.lib) #yuv PocoFoundationmt.lib
+        #target_link_libraries(tc_capture_library tc_common_new EasyHook64 Iphlpapi.lib)
 
         add_subdirectory(win/hk_obs)
         add_subdirectory(win/hk_gpu_lb)

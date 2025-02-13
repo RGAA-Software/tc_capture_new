@@ -17,7 +17,7 @@ add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 find_library(DETOURS_LIBRARY detours REQUIRED)
-include_directories(${VCPKG_ROOT}/installed/x64-windows/include)
+#include_directories(${VCPKG_ROOT}/installed/x64-windows/include)
 message("--> ${DETOURS_INCLUDE_DIRS}")
 message("--> ${DETOURS_LIBRARY}")
 message("--> ${VCPKG_ROOT}/packages/detours_x64-windows-static/include/detours")
@@ -47,4 +47,4 @@ add_library(${PROJECT_NAME} SHARED
         ../../capture_message_maker.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC ${DETOURS_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${DETOURS_LIBRARY} tc_ipc_util tc_common_new dxgi d3d11 d3d12 dxguid Iphlpapi.lib) #PocoFoundationmt.lib
+target_link_libraries(${PROJECT_NAME} PUBLIC ${DETOURS_LIBRARY} tc_ipc_util tc_common_new dxgi d3d11 d3d12 dxguid Iphlpapi.lib)

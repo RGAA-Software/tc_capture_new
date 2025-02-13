@@ -15,13 +15,14 @@ namespace tc
     }
 
     AppSharedInfoReader::AppSharedInfoReader(const std::string& shm_name) {
-        target_memory_ = std::make_shared<Poco::SharedMemory>(shm_name, kAppSharedInfoReaderBuffSize, Poco::SharedMemory::AccessMode::AM_READ);
+        //target_memory_ = std::make_shared<Poco::SharedMemory>(shm_name, kAppSharedInfoReaderBuffSize, Poco::SharedMemory::AccessMode::AM_READ);
     }
 
     std::shared_ptr<AppSharedMessage> AppSharedInfoReader::ReadData() {
-        auto shm_msg = std::make_shared<AppSharedMessage>();
-        memcpy(shm_msg.get(), target_memory_->begin(), sizeof(AppSharedMessage));
-        return shm_msg;
+//        auto shm_msg = std::make_shared<AppSharedMessage>();
+//        memcpy(shm_msg.get(), target_memory_->begin(), sizeof(AppSharedMessage));
+//        return shm_msg;
+        return nullptr;
     }
 
     void AppSharedInfoReader::Exit() {

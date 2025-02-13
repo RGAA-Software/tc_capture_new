@@ -6,7 +6,7 @@ add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 find_library(DETOURS_LIBRARY detours REQUIRED)
-include_directories(${VCPKG_ROOT}/installed/x64-windows/include)
+#include_directories(${VCPKG_ROOT}/installed/x64-windows/include)
 message("--> ${DETOURS_INCLUDE_DIRS}")
 message("--> ${DETOURS_LIBRARY}")
 message("--> ${VCPKG_ROOT}/packages/detours_x64-windows-static/include/detours")

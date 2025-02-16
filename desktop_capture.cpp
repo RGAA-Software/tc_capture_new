@@ -39,6 +39,10 @@ namespace tc
     void DesktopCapture::RefreshScreen() {
         SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, nullptr, SPIF_SENDCHANGE);
         SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
+        HWND desktop = GetDesktopWindow();
+        if (InvalidateRect(desktop, NULL, TRUE)) {
+            UpdateWindow(desktop);
+        }
         refresh_screen_ = true;
     }
 

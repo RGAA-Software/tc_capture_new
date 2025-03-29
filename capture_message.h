@@ -56,6 +56,7 @@ namespace tc
         uint64_t handle_ = 0;
         int64_t adapter_uid_ = -1;
         char display_name_[64] = {0};
+        int monitor_index_ = -1;
         int left_{};
         int top_{};
         int right_{};

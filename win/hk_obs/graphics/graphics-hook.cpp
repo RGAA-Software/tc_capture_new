@@ -12,7 +12,7 @@
 #include "obfuscate.h"
 #include "tc_common_new/log.h"
 #include "tc_common_new/string_ext.h"
-#include "tc_common_new/file_ext.h"
+#include "tc_common_new/file_util.h"
 #include "tc_common_new/process_util.h"
 #include "hook_manager.h"
 #include "offsets/get-graphics-offsets.h"
@@ -821,7 +821,7 @@ std::string GetDllPath(HMODULE module) {
     if (GetModuleFileName(module, path, MAX_PATH)) {
         auto w_path = std::wstring(path);
         auto u_path = tc::StringExt::ToUTF8(w_path);
-        return tc::FileExt::GetFileFolder(u_path);
+        return tc::FileUtil::GetFileFolder(u_path);
     }
     return "";
 }

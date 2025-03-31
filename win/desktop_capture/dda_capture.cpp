@@ -6,7 +6,7 @@
 #include "tc_common_new/string_ext.h"
 #include "tc_common_new/message_notifier.h"
 #include "tc_common_new/log.h"
-#include "tc_common_new/time_ext.h"
+#include "tc_common_new/time_util.h"
 #include "tc_capture_new/capture_message.h"
 #include "cursor_capture.h"
 
@@ -272,7 +272,7 @@ namespace tc
     void DDACapture::Capture() {
         while (!stop_flag_) {
             auto target_duration = 1000 / capture_fps_;
-            auto beg = (int64_t)TimeExt::GetCurrentTimestamp();
+            auto beg = (int64_t)TimeUtil::GetCurrentTimestamp();
             for (uint8_t index = 0; index < monitor_count_; ++index) {
                 if (!IsTargetMonitor(index)) {
                     continue;
@@ -314,7 +314,7 @@ namespace tc
             if (cursor_capture_) {
                 cursor_capture_->Capture();
             }
-            int64_t end = TimeExt::GetCurrentTimestamp();
+            int64_t end = TimeUtil::GetCurrentTimestamp();
             int64_t used_time = end - beg;
             int64_t diff = target_duration - used_time;
             // todo : more precise delay function.

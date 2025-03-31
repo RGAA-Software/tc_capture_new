@@ -8,7 +8,7 @@
 #include "tc_common_new/ipc_msg_queue.h"
 #include "tc_common_new/log.h"
 #include "tc_common_new/data.h"
-#include "tc_common_new/time_ext.h"
+#include "tc_common_new/time_util.h"
 #include "capture_message.h"
 
 #include <thread>
@@ -43,7 +43,7 @@ namespace tc
 //        client_to_host_mtx_ = std::make_shared<Poco::NamedMutex>(mtx_client_to_host_name);
     }
 
-    static uint64_t last_send_time = TimeExt::GetCurrentTimestamp();
+    static uint64_t last_send_time = TimeUtil::GetCurrentTimestamp();
 
     void ClientIpcManager::Send(const char* data, int size) {
         std::lock_guard<std::mutex> guard(shm_send_mtx_);
@@ -52,7 +52,7 @@ namespace tc
 //            return;
 //        }
 //
-//        auto current_time = TimeExt::GetCurrentTimestamp();
+//        auto current_time = TimeUtil::GetCurrentTimestamp();
 //        auto diff = current_time - last_send_time;
 //        last_send_time = current_time;
 //        //LOGI("diff: {}", diff);
@@ -62,7 +62,7 @@ namespace tc
 //        auto header = FixHeader {
 //            .buffer_length = static_cast<uint32_t>(size),
 //            .buffer_index = buffer_index_++,
-//            .buffer_timestamp = TimeExt::GetCurrentTimePointUS(),
+//            .buffer_timestamp = TimeUtil::GetCurrentTimePointUS(),
 //        };
 //        memcpy(begin, (char*)&header, sizeof(FixHeader));
 //        memcpy(begin + sizeof(FixHeader), data, size);
@@ -98,7 +98,7 @@ namespace tc
                 this->Send(data);
                 std::this_thread::sleep_for(std::chrono::milliseconds(17));
 
-//                auto current_time = TimeExt::GetCurrentTimestamp();
+//                auto current_time = TimeUtil::GetCurrentTimestamp();
 //                auto diff = current_time - last_send_time;
 //                last_send_time = current_time;
 //                LOGI("diff: {}", diff);

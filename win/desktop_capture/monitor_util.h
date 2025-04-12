@@ -21,6 +21,19 @@ namespace tc
         unsigned long height_ = 0;
     };
 
+    class VirtulDesktopBoundRectangleInfo {
+    public:
+        int far_left_ = 0;
+        int far_top_ = 0;
+        int far_right_ = 0;
+        int far_bottom_ = 0;
+        [[nodiscard]] std::string Dump() const {
+            std::stringstream ss;
+            ss << "VirtulDesktopBoundRectangleInfo far_left: " << far_left_ << ", far_top: " << far_top_ << ", far_right: " << far_right_ << ", far_bottom: " << far_bottom_ << std::endl;
+            return ss.str();
+        }
+    };
+
     class CaptureMonitorInfo {
     public:
         std::string name_;
@@ -35,6 +48,7 @@ namespace tc
         long virtual_bottom_{};
         long virtual_width_;
         long virtual_height_;
+        
         std::vector<SupportedResolution> supported_res_;
         unsigned long adapter_uid_ = 0;
     public:

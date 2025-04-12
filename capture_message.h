@@ -183,6 +183,7 @@ namespace tc
     public:
         std::vector<CaptureMonitorInfo> monitors_;
         std::string capturing_monitor_name_;
+        VirtulDesktopBoundRectangleInfo virtual_desktop_bound_rectangle_info_;
     };
 
     class RefreshScreenMessage {

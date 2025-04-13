@@ -42,6 +42,8 @@ namespace tc
         long left_{};
         long right_{};
         long bottom_{};
+
+        //to do 待删除
         long virtual_top_{};
         long virtual_left_{};
         long virtual_right_{};

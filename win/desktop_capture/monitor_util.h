@@ -37,6 +37,7 @@ namespace tc
     class CaptureMonitorInfo {
     public:
         std::string name_;
+        bool primary_{};//to do:尚未生效
         bool attached_desktop_{};
         long top_{};
         long left_{};

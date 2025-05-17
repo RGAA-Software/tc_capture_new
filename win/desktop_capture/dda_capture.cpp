@@ -489,22 +489,22 @@ namespace tc
             return lh.left_ < rh.left_;
         });
         int left_monitor_virtual_size = 0;
-        for (auto& info : sorted_monitors_) {
+        /*for (auto& info : sorted_monitors_) {
             info.virtual_width_ = info.Width() * 1.0f / total_width * max_virtual_coord;
-            info.virtual_left_ = left_monitor_virtual_size;
-            info.virtual_right_ = info.virtual_left_ + info.virtual_width_;
+            info.virtual_desktop_left_ = left_monitor_virtual_size;
+            info.virtual_right_ = info.virtual_desktop_left_ + info.virtual_width_;
             left_monitor_virtual_size = info.virtual_right_;
 
             info.virtual_height_ = info.Height() * 1.0f / max_height * max_virtual_coord;
-            info.virtual_top_ = info.top_ * 1.0f / max_height * max_virtual_coord;
+            info.virtual_desktop_top_ = info.top_ * 1.0f / max_height * max_virtual_coord;
             info.virtual_bottom_ = info.bottom_ * 1.0f / max_height * max_virtual_coord;
 
             LOGI("SORTED, name: {}, left: {}, right: {}, top: {}, bottom: {}, \n "
                  "virtual width: {}, virtual height: {}, virtual left: {}, virtual right: {}, virtual top: {}, virtual bottom: {}, virtual h diff: {}",
                  info.name_, info.left_, info.right_, info.top_, info.bottom_,
-                 info.virtual_width_, info.virtual_height_, info.virtual_left_, info.virtual_right_, info.virtual_top_, info.virtual_bottom_,
-                 info.virtual_bottom_ - info.virtual_top_);
-        }
+                 info.virtual_width_, info.virtual_height_, info.virtual_desktop_left_, info.virtual_right_, info.virtual_desktop_top_, info.virtual_bottom_,
+                 info.virtual_bottom_ - info.virtual_desktop_top_);
+        }*/
     }
 
     std::vector<SupportedResolution> DDACapture::GetSupportedResolutions(const std::wstring& name) {

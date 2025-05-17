@@ -44,13 +44,13 @@ namespace tc
         long right_{};
         long bottom_{};
 
-        //to do 待删除
-        long virtual_top_{};
-        long virtual_left_{};
-        long virtual_right_{};
-        long virtual_bottom_{};
-        long virtual_width_;
-        long virtual_height_;
+        // 整个虚拟桌面信息
+        long virtual_desktop_top_{};
+        long virtual_desktop_left_{};
+        long virtual_desktop_right_{};
+        long virtual_desktop_bottom_{};
+        long virtual_desktop_width_;
+        long virtual_desktop_height_;
         
         std::vector<SupportedResolution> supported_res_;
         unsigned long adapter_uid_ = 0;

@@ -32,6 +32,7 @@ namespace tc
     // capture_type_
     constexpr auto kCaptureVideoByHandle = 0x1000;
     constexpr auto kCaptureVideoBySharedMemory = 0x1001;
+    constexpr auto kCaptureVideoByBitmapData = 0x1002;
 
     class CaptureBaseMessage {
     public:

@@ -65,7 +65,23 @@ namespace tc
         }
 
         [[nodiscard]] bool Valid() const {
-            return !name_.empty() && right_ > left_ && bottom_ > top_;
+            if (name_.empty()) {
+                return false;
+            }
+            // to do: kVirtualDesktopNameSign 定义在 gr_monitor_capture_plugin.h , 等将monitor_util.h 移出去
+            if ("virtual_desktop" == name_) {
+                return virtual_desktop_width_ > 0 && virtual_desktop_height_ > 0;
+            }
+
+            return right_ > left_ && bottom_ > top_;
+        }
+
+        [[nodiscard]] long VirtualDesktopWidth() const {
+            return virtual_desktop_width_;
+        }
+
+        [[nodiscard]] long VirtualDesktopHeight() const {
+            return virtual_desktop_height_;
         }
 
         [[nodiscard]] std::string Dump() const {

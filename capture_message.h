@@ -186,7 +186,8 @@ namespace tc
         std::string capturing_monitor_name_;
         VirtulDesktopBoundRectangleInfo virtual_desktop_bound_rectangle_info_;
     };
-
+    
+    // 弃用
     class RefreshScreenMessage {
     public:
     };

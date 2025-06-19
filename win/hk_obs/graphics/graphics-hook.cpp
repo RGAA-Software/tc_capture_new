@@ -11,7 +11,7 @@
 #include "graphics-hook-ver.h"
 #include "obfuscate.h"
 #include "tc_common_new/log.h"
-#include "tc_common_new/string_ext.h"
+#include "tc_common_new/string_util.h"
 #include "tc_common_new/file_util.h"
 #include "tc_common_new/process_util.h"
 #include "hook_manager.h"
@@ -820,7 +820,7 @@ std::string GetDllPath(HMODULE module) {
     wchar_t path[MAX_PATH] = {0};
     if (GetModuleFileName(module, path, MAX_PATH)) {
         auto w_path = std::wstring(path);
-        auto u_path = tc::StringExt::ToUTF8(w_path);
+        auto u_path = tc::StringUtil::ToUTF8(w_path);
         return tc::FileUtil::GetFileFolder(u_path);
     }
     return "";
@@ -881,7 +881,7 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID unused1) {
          * by the next FreeLibrary call */
         GetModuleFileNameW(hinst, name, MAX_PATH);
         LoadLibraryW(name);
-        LOGI("LoadLibrary: {}", StringExt::ToUTF8(name));
+        LOGI("LoadLibrary: {}", StringUtil::ToUTF8(name));
 
         capture_thread = CreateThread(
                 NULL, 0, (LPTHREAD_START_ROUTINE) main_capture_thread,

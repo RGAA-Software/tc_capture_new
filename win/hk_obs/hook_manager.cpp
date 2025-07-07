@@ -55,9 +55,9 @@ namespace tc
 
     void HookManager::PushIpcMessage(const std::shared_ptr<CaptureBaseMessage>& msg) {
         if (messages_.Size() > 512) {
-            messages_.Pop();
+            messages_.PopFront();
         }
-        messages_.Push(msg);
+        messages_.PushBack(msg);
     }
 
     UINT WINAPI HookedGetRawInputData(
@@ -226,7 +226,7 @@ namespace tc
         }
 
         std::shared_ptr<CaptureBaseMessage> msg = messages_.Front();
-        messages_.Pop();
+        messages_.PopFront();
 
         auto raw_input = (RAWINPUT*)pData;
         memset(raw_input, 0, sizeof(RAWINPUT));

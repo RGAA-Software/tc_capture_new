@@ -45,12 +45,12 @@ namespace tc
         long bottom_{};
 
         // 整个虚拟桌面信息
-        long virtual_desktop_top_{};
-        long virtual_desktop_left_{};
-        long virtual_desktop_right_{};
-        long virtual_desktop_bottom_{};
-        long virtual_desktop_width_;
-        long virtual_desktop_height_;
+        //long virtual_desktop_top_{};
+        //long virtual_desktop_left_{};
+        //long virtual_desktop_right_{};
+        //long virtual_desktop_bottom_{};
+        //long virtual_desktop_width_;
+        //long virtual_desktop_height_;
         
         std::vector<SupportedResolution> supported_res_;
         unsigned long adapter_uid_ = 0;
@@ -69,28 +69,28 @@ namespace tc
                 return false;
             }
             // to do: kVirtualDesktopNameSign 定义在 gr_monitor_capture_plugin.h , 等将monitor_util.h 移出去
-            if ("Virtual_Desktop" == name_) {
-                return virtual_desktop_width_ > 0 && virtual_desktop_height_ > 0;
-            }
+//            if ("Virtual_Desktop" == name_) {
+//                return virtual_desktop_width_ > 0 && virtual_desktop_height_ > 0;
+//            }
 
             return right_ > left_ && bottom_ > top_;
         }
 
-        [[nodiscard]] long VirtualDesktopWidth() const {
-            return virtual_desktop_width_;
-        }
-
-        [[nodiscard]] long VirtualDesktopHeight() const {
-            return virtual_desktop_height_;
-        }
+//        [[nodiscard]] long VirtualDesktopWidth() const {
+//            return virtual_desktop_width_;
+//        }
+//
+//        [[nodiscard]] long VirtualDesktopHeight() const {
+//            return virtual_desktop_height_;
+//        }
 
         [[nodiscard]] std::string Dump() const {
             std::stringstream ss;
             ss << "name: " << name_ << std::endl;
             ss << "attached desktop: " << attached_desktop_ << std::endl;
             ss << "left: " << left_ << ", top: " << top_ << ", right: " << right_ << ", bottom: " << bottom_ << std::endl;
-            ss << "virtual_desktop_top_: " << virtual_desktop_top_ << ", virtual_desktop_left_: " << virtual_desktop_left_ << 
-                ", virtual_desktop_width_: " << virtual_desktop_width_ << ", virtual_desktop_height_: " << virtual_desktop_height_ << std::endl;
+//            ss << "virtual_desktop_top_: " << virtual_desktop_top_ << ", virtual_desktop_left_: " << virtual_desktop_left_ <<
+//                ", virtual_desktop_width_: " << virtual_desktop_width_ << ", virtual_desktop_height_: " << virtual_desktop_height_ << std::endl;
             return ss.str();
         }
     };

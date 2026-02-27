@@ -63,6 +63,7 @@ namespace tc
         int right_{};
         int bottom_{};
         std::shared_ptr<Image> raw_image_ = nullptr;
+        bool request_idr_ = false;
     };
 
     class CaptureAudioFrame: public CaptureBaseMessage {
